@@ -1,5 +1,10 @@
 # asterust
 
+[![CI](https://github.com/asterust/asterust/actions/workflows/ci.yml/badge.svg)](https://github.com/asterust/asterust/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/asterust.svg)](https://crates.io/crates/asterust)
+[![docs.rs](https://docs.rs/asterust/badge.svg)](https://docs.rs/asterust)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
+
 Reusable parsing primitives for network device CLI output: prompts,
 timestamp banners, terminal artifact cleanup, path sanitization, and
 hierarchical configuration parsing.
