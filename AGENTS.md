@@ -1,8 +1,6 @@
 # Agent Guidelines for asterust
 
-`asterust` is a small, pure-Rust library: parsing primitives for network
-device CLI output (prompts, timestamp banners, terminal artifact
-cleanup, path sanitization) and vendor-namespaced hierarchical
+`asterust` is a small, pure-Rust library: vendor-namespaced hierarchical
 configuration parsing (`config::cisco`, `config::juniper`). It has no
 PyO3/binding dependency of its own — consumers (e.g. a PyO3 extension
 module) add their own bindings on top. These guidelines apply to this
@@ -33,26 +31,26 @@ micro-optimization.
 
 - Public functions, structs, enums, and methods should have doc
   comments explaining purpose, non-obvious parameters, and return
-  value. Match the existing style in this crate (see `src/prompt.rs`,
-  `src/date.rs`) rather than a generic template — most functions here
-  need only 1-3 lines, not full `# Arguments`/`# Returns` sections.
+  value. Match the existing style in this crate (see `src/config/mod.rs`,
+  `src/config/cisco.rs`) rather than a generic template — most functions
+  here need only 1-3 lines, not full `# Arguments`/`# Returns` sections.
 - Keep doc comments up to date with the code; stale docs are worse
   than no docs.
 
 ## Error Handling
 
 - Prefer `Option<T>` for "not found" / "didn't match" cases — this is
-  the common case in a parser (e.g. `match_prompt`, `try_parse_date`,
-  `find_child_with` all return `Option`, not an error).
+  the common case in a parser (e.g. `find_child_with`, `find_line_with`,
+  `match_str_group` all return `Option`, not an error).
 - Reserve `Result<T, E>` for operations that can genuinely fail with
   information the caller needs to act on. None of the current public
   API needs this; don't introduce `thiserror`/`anyhow` speculatively —
   add them only when a real fallible operation needs them.
 - `.unwrap()` is acceptable only on a compile-time-constant invariant
-  (e.g. `Regex::new("...a hardcoded, known-valid pattern...").unwrap()`
-  on a `static Lazy<Regex>`). Prefer `.expect("why this can't fail")`
-  over bare `.unwrap()` in new code so a panic (if the invariant is
-  ever violated by a future edit) is self-explanatory.
+  (e.g. `Regex::new("...a hardcoded, known-valid pattern...").unwrap()`).
+  Prefer `.expect("why this can't fail")` over bare `.unwrap()` in new
+  code so a panic (if the invariant is ever violated by a future edit)
+  is self-explanatory.
 - Never `.unwrap()` on anything derived from external/caller-supplied
   input.
 
@@ -77,8 +75,7 @@ micro-optimization.
   crate are this kind.
 - Black-box integration tests (`tests/*.rs`, a separate crate, `pub`
   API only) for end-to-end scenarios a real consumer would hit — see
-  `tests/config_cisco.rs`, `tests/config_juniper.rs`,
-  `tests/cli_utilities.rs`.
+  `tests/config_cisco.rs`, `tests/config_juniper.rs`.
 - New parsing behavior needs a test with realistic input (a real-ish
   config/capture snippet), not just a trivial one-liner.
 - Don't commit commented-out tests.

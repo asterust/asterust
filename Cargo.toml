@@ -1,8 +1,8 @@
 [package]
 name = "asterust"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "Reusable parsing primitives for network device CLI output (prompts, timestamp banners, terminal artifact cleanup, path sanitization)."
+description = "Vendor-aware hierarchical configuration parsing for network device CLI output (Cisco-style indentation, Juniper-style braces)."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/asterust/asterust"
 
@@ -11,4 +11,3 @@ name = "asterust"
 
 [dependencies]
 regex = "1"
-once_cell = "1"
