@@ -46,6 +46,8 @@ let ospf_blocks = config.find_blocks_by_pattern(r"router ospf");
 ## Development
 
 ```sh
-cargo test      # unit tests
-cargo clippy    # lint
+make test   # unit + integration tests
+make lint   # clippy, warnings as errors
+make fmt    # format with rustfmt
+make check  # everything CI runs (fmt --check, lint, test)
 ```
