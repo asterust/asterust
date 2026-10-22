@@ -30,7 +30,12 @@ pub struct ConfigLine {
 
 impl ConfigLine {
     pub fn new(text: impl Into<String>, indent_level: usize, line_number: usize) -> Self {
-        Self { text: text.into(), indent_level, line_number, children: Vec::new() }
+        Self {
+            text: text.into(),
+            indent_level,
+            line_number,
+            children: Vec::new(),
+        }
     }
 
     pub fn add_child(&mut self, child: ConfigLine) {
@@ -45,7 +50,9 @@ impl ConfigLine {
 
     /// All direct children whose text matches `pattern`.
     pub fn find_all_children_with(&self, pattern: &str) -> Vec<&ConfigLine> {
-        let Ok(re) = Regex::new(pattern) else { return Vec::new() };
+        let Ok(re) = Regex::new(pattern) else {
+            return Vec::new();
+        };
         self.children.iter().filter(|c| re.is_match(&c.text)).collect()
     }
 
@@ -114,8 +121,13 @@ impl ConfigBlock {
 
     /// Every line (at any depth) matching `pattern`.
     pub fn re_search_children(&self, pattern: &str) -> Vec<&ConfigLine> {
-        let Ok(re) = Regex::new(pattern) else { return Vec::new() };
-        self.get_all_lines().into_iter().filter(|l| re.is_match(&l.text)).collect()
+        let Ok(re) = Regex::new(pattern) else {
+            return Vec::new();
+        };
+        self.get_all_lines()
+            .into_iter()
+            .filter(|l| re.is_match(&l.text))
+            .collect()
     }
 }
 
@@ -158,7 +170,9 @@ impl Config {
     /// Wrap already-built root lines (e.g. from [`cisco::parse`] or
     /// [`juniper::parse_braces`]) into a `Config`.
     pub fn from_root_lines(root_lines: Vec<ConfigLine>) -> Self {
-        Self { blocks: root_lines.into_iter().map(ConfigBlock::new).collect() }
+        Self {
+            blocks: root_lines.into_iter().map(ConfigBlock::new).collect(),
+        }
     }
 
     pub fn get_block_count(&self) -> usize {
@@ -167,7 +181,9 @@ impl Config {
 
     /// All blocks whose root line matches `pattern`.
     pub fn find_blocks_by_pattern(&self, pattern: &str) -> Vec<&ConfigBlock> {
-        let Ok(re) = Regex::new(pattern) else { return Vec::new() };
+        let Ok(re) = Regex::new(pattern) else {
+            return Vec::new();
+        };
         self.blocks.iter().filter(|b| re.is_match(&b.root_line.text)).collect()
     }
 }
@@ -263,7 +279,10 @@ mod tests {
         root.add_child(area);
 
         let block = ConfigBlock::new(root);
-        assert_eq!(block.find_line_with("interface").unwrap().text, "interface GigabitEthernet0/0/0/0");
+        assert_eq!(
+            block.find_line_with("interface").unwrap().text,
+            "interface GigabitEthernet0/0/0/0"
+        );
     }
 
     #[test]

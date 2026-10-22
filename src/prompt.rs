@@ -6,9 +6,8 @@ use regex::Regex;
 
 /// A device prompt optionally followed by the command typed at it, e.g.
 ///   RP/0/RSP1/CPU0:router#show running-config
-static XR_PROMPT_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(?:RP|LC|SC)/\d+/\S+/CPU\d+:(?P<host>[A-Za-z0-9_.\-]+)#\s*(?P<cmd>.*)$").unwrap()
-});
+static XR_PROMPT_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(?:RP|LC|SC)/\d+/\S+/CPU\d+:(?P<host>[A-Za-z0-9_.\-]+)#\s*(?P<cmd>.*)$").unwrap());
 
 /// Generic IOS / IOS-XE / NX-OS / ASA style prompt, optionally with an ASA
 /// multi-context suffix ("/context") and/or a config-mode suffix such as
@@ -48,7 +47,11 @@ pub fn match_prompt(line: &str) -> Option<PromptMatch> {
         hostname = format!("{hostname}/{}", ctx.as_str());
     }
     let command = caps["cmd"].trim().to_string();
-    Some(PromptMatch { hostname, command, raw: line.to_string() })
+    Some(PromptMatch {
+        hostname,
+        command,
+        raw: line.to_string(),
+    })
 }
 
 /// Expand a small set of safe leading-word abbreviations, e.g. "sh run" ->

@@ -47,7 +47,11 @@ fn parses_all_top_level_blocks() {
 #[test]
 fn reads_flat_leaf_statements_in_system_block() {
     let config = juniper::parse_braces(SAMPLE_CONFIG);
-    let system = config.find_blocks_by_pattern("system").into_iter().next().expect("system block");
+    let system = config
+        .find_blocks_by_pattern("system")
+        .into_iter()
+        .next()
+        .expect("system block");
     assert!(system.find_child_with("host-name router1").is_some());
     assert!(system.find_child_with("domain-name example.com").is_some());
 }
@@ -55,7 +59,11 @@ fn reads_flat_leaf_statements_in_system_block() {
 #[test]
 fn navigates_nested_interface_hierarchy() {
     let config = juniper::parse_braces(SAMPLE_CONFIG);
-    let interfaces = config.find_blocks_by_pattern("interfaces").into_iter().next().expect("interfaces block");
+    let interfaces = config
+        .find_blocks_by_pattern("interfaces")
+        .into_iter()
+        .next()
+        .expect("interfaces block");
 
     let address = interfaces.find_line_with(r"address \S+").expect("address line");
     assert_eq!(address.text, "address 10.0.0.1/24");
@@ -67,7 +75,11 @@ fn navigates_nested_interface_hierarchy() {
 #[test]
 fn navigates_nested_protocol_blocks() {
     let config = juniper::parse_braces(SAMPLE_CONFIG);
-    let protocols = config.find_blocks_by_pattern("protocols").into_iter().next().expect("protocols block");
+    let protocols = config
+        .find_blocks_by_pattern("protocols")
+        .into_iter()
+        .next()
+        .expect("protocols block");
 
     let isis_level = protocols.find_line_with(r"level 2").expect("isis level line");
     assert_eq!(isis_level.text, "level 2 metric 10");

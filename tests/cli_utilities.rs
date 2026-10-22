@@ -28,7 +28,14 @@ fn cleans_terminal_artifacts_before_date_parsing() {
     let raw = "Mon Oct 19 02:45:08.742 UTC\x1b[0m";
     let cleaned = clean_line(raw).expect("not a pagination prompt");
     let parsed = try_parse_date(&cleaned, 2026).expect("date banner");
-    assert_eq!(parsed.date(), CaptureDate { year: 2026, month: 10, day: 19 });
+    assert_eq!(
+        parsed.date(),
+        CaptureDate {
+            year: 2026,
+            month: 10,
+            day: 19
+        }
+    );
 }
 
 #[test]

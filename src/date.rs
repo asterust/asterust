@@ -125,14 +125,28 @@ mod tests {
     fn parses_explicit_clock_banner() {
         let parsed = try_parse_date("*02:45:08.742 UTC Mon Oct 19 2026", 1999).unwrap();
         assert!(parsed.had_explicit_year());
-        assert_eq!(parsed.date(), CaptureDate { year: 2026, month: 10, day: 19 });
+        assert_eq!(
+            parsed.date(),
+            CaptureDate {
+                year: 2026,
+                month: 10,
+                day: 19
+            }
+        );
     }
 
     #[test]
     fn parses_year_inferred_xr_banner() {
         let parsed = try_parse_date("Mon Oct 19 02:45:08.742 UTC", 2026).unwrap();
         assert!(!parsed.had_explicit_year());
-        assert_eq!(parsed.date(), CaptureDate { year: 2026, month: 10, day: 19 });
+        assert_eq!(
+            parsed.date(),
+            CaptureDate {
+                year: 2026,
+                month: 10,
+                day: 19
+            }
+        );
     }
 
     #[test]
@@ -142,7 +156,11 @@ mod tests {
 
     #[test]
     fn iso_roundtrip() {
-        let d = CaptureDate { year: 2026, month: 1, day: 5 };
+        let d = CaptureDate {
+            year: 2026,
+            month: 1,
+            day: 5,
+        };
         assert_eq!(CaptureDate::from_iso(&d.to_iso()), Some(d));
     }
 }
