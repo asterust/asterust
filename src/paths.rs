@@ -3,8 +3,7 @@
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static ILLEGAL_PATH_CHARS_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"[\\/:*?"<>|\x00-\x1f]"#).unwrap());
+static ILLEGAL_PATH_CHARS_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"[\\/:*?"<>|\x00-\x1f]"#).unwrap());
 
 /// Make a string safe to use as a single path segment.
 pub fn sanitize_path_component(name: &str) -> String {

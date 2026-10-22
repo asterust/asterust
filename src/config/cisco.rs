@@ -72,7 +72,6 @@ fn parse_lines_to_hierarchy(config_text: &str) -> Vec<ConfigLine> {
     root_lines
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -52,7 +52,10 @@ fn reads_interface_configuration_details() {
         .expect("uplink interface block");
 
     assert!(uplink.find_child_with("description").is_some());
-    assert_eq!(uplink.find_child_with("description").unwrap().text, "description Uplink to core");
+    assert_eq!(
+        uplink.find_child_with("description").unwrap().text,
+        "description Uplink to core"
+    );
     // "no shutdown" contains "shutdown" as a substring, so this must be anchored.
     assert!(uplink.find_child_with("^shutdown$").is_none());
 
@@ -76,14 +79,20 @@ fn navigates_nested_isis_hierarchy() {
     let process_id = isis.get_root_line().match_str_group(r"router isis (\S+)");
     assert_eq!(process_id.as_deref(), Some("CORE"));
 
-    let iface_line = isis.find_line_with(r"interface GigabitEthernet0/0/0/0").expect("isis interface line");
+    let iface_line = isis
+        .find_line_with(r"interface GigabitEthernet0/0/0/0")
+        .expect("isis interface line");
     assert!(iface_line.has_child_with("address-family ipv4"));
 }
 
 #[test]
 fn navigates_nested_bgp_hierarchy() {
     let config = cisco::parse(SAMPLE_CONFIG);
-    let bgp = config.find_blocks_by_pattern(r"router bgp").into_iter().next().expect("bgp block");
+    let bgp = config
+        .find_blocks_by_pattern(r"router bgp")
+        .into_iter()
+        .next()
+        .expect("bgp block");
 
     let asn = bgp.get_root_line().match_int_group(r"router bgp (\d+)");
     assert_eq!(asn, Some(65000));
