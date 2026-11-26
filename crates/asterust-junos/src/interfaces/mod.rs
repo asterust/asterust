@@ -1,13 +1,19 @@
 //! `interfaces { ... }`: physical interfaces and their logical units.
 
+mod aggregated_ether_options;
+mod ether_options;
 mod hold_time;
 mod unit;
 
+pub use aggregated_ether_options::{AggregatedEtherOptions, Lacp};
+pub use ether_options::{EtherOptions, Ieee8023ad};
 pub use hold_time::HoldTime;
 pub use unit::InterfaceUnit;
 
-use crate::{active_children, arg_of, has_leaf, named_children, top_level};
+use crate::{active_children, arg_of, child_block, has_leaf, named_children, top_level};
+use aggregated_ether_options::parse_aggregated_ether_options;
 use asterust::config::{Config, ConfigLine};
+use ether_options::parse_ether_options;
 use hold_time::parse_hold_time;
 use unit::parse_unit;
 
@@ -30,6 +36,8 @@ pub struct Interface {
     pub per_unit_scheduler: bool,
     pub no_gratuitous_arp_request: bool,
     pub hold_time: Option<HoldTime>,
+    pub ether_options: Option<EtherOptions>,
+    pub aggregated_ether_options: Option<AggregatedEtherOptions>,
     pub units: Vec<InterfaceUnit>,
 }
 
@@ -59,6 +67,8 @@ fn parse_interface(line: &ConfigLine) -> Interface {
         per_unit_scheduler: has_leaf(line, "per-unit-scheduler"),
         no_gratuitous_arp_request: has_leaf(line, "no-gratuitous-arp-request"),
         hold_time: parse_hold_time(line),
+        ether_options: parse_ether_options(line),
+        aggregated_ether_options: child_block(line, "aggregated-ether-options").map(parse_aggregated_ether_options),
         units: named_children(line, "unit")
             .map(|(number, unit)| parse_unit(number, unit))
             .collect(),

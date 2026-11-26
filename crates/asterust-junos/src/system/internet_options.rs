@@ -1,6 +1,6 @@
 //! `system { internet-options { ... } }`.
 
-use crate::{arg_of, has_leaf, statement_words, value_after};
+use crate::{arg_of, has_leaf, statement_words, toggle, value_after};
 use asterust::config::ConfigLine;
 
 /// An `icmpv4-rate-limit` or `icmpv6-rate-limit`.
@@ -57,17 +57,6 @@ pub(super) fn parse_internet_options(options: &ConfigLine) -> InternetOptions {
         source_port_upper_limit: statement_words(options, "source-port")
             .and_then(|words| value_after(&words, "upper-limit")),
         ipv6_duplicate_addr_detection_transmits: field("ipv6-duplicate-addr-detection-transmits"),
-    }
-}
-
-/// `Some(true)` for `<name>;`, `Some(false)` for `no-<name>;`, `None` if neither is present.
-fn toggle(options: &ConfigLine, name: &str) -> Option<bool> {
-    if has_leaf(options, name) {
-        Some(true)
-    } else if has_leaf(options, &format!("no-{name}")) {
-        Some(false)
-    } else {
-        None
     }
 }
 
