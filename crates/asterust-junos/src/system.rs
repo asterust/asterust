@@ -170,6 +170,8 @@ pub struct Services {
 pub struct System {
     pub host_name: Option<String>,
     pub domain_name: Option<String>,
+    /// e.g. `"UTC"` or `"America/New_York"`.
+    pub time_zone: Option<String>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
     pub syslog: Option<Syslog>,
@@ -183,6 +185,7 @@ pub fn system(config: &Config) -> Option<System> {
     Some(System {
         host_name: arg_of(system, "host-name").map(str::to_string),
         domain_name: arg_of(system, "domain-name").map(str::to_string),
+        time_zone: arg_of(system, "time-zone").map(str::to_string),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),
         syslog: child_block(system, "syslog").map(parse_syslog),
@@ -770,6 +773,18 @@ system {
     fn domain_name_is_optional() {
         let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
         assert_eq!(system.domain_name, None);
+    }
+
+    #[test]
+    fn extracts_time_zone() {
+        let system = system(&juniper::parse_braces("system {\n    time-zone America/New_York;\n}\n")).unwrap();
+        assert_eq!(system.time_zone.as_deref(), Some("America/New_York"));
+    }
+
+    #[test]
+    fn time_zone_is_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert_eq!(system.time_zone, None);
     }
 
     #[test]

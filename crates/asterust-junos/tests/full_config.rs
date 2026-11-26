@@ -6,6 +6,7 @@ const CONFIG: &str = r#"
 system {
     host-name pe1;
     domain-name example.net;
+    time-zone UTC;
     name-server {
         192.0.2.53;
     }
@@ -120,6 +121,7 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(device.firewall().unwrap().filters[0].name, "PROTECT-RE");
     assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
     assert_eq!(device.system().unwrap().domain_name.as_deref(), Some("example.net"));
+    assert_eq!(device.system().unwrap().time_zone.as_deref(), Some("UTC"));
     assert_eq!(device.system().unwrap().name_servers[0].address, "192.0.2.53");
     assert!(device.system().unwrap().ntp.unwrap().servers[0].prefer);
     assert_eq!(device.system().unwrap().syslog.unwrap().hosts[0].address, "192.0.2.5");
