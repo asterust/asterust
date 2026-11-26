@@ -24,6 +24,7 @@ directly. Bindings and platform support live in separate crates in this workspac
 | `asterust` (root) | Config tree and the `cisco` / `juniper` parsers | `cargo add asterust` |
 | [`asterust-iosxr`](crates/asterust-iosxr) | IOS XR views: interface, OSPF, BGP, IS-IS, VRF | `cargo add asterust-iosxr` |
 | [`asterust-iosxe`](crates/asterust-iosxe) | IOS XE views: interface, OSPF, BGP, IS-IS, VRF | `cargo add asterust-iosxe` |
+| [`asterust-junos`](crates/asterust-junos) | JunOS views: interfaces, OSPF, BGP, IS-IS, routing instances | `cargo add asterust-junos` |
 | [`asterust-py`](crates/asterust-py) | PyO3 bindings, published to PyPI as `asterust` | `pip install asterust` |
 
 Rust users depend only on the platform they need. The Python wheel bundles all platforms; import only the
@@ -77,7 +78,7 @@ generic tree. See the [Python package README](crates/asterust-py/README.md).
   similar CLIs).
 - `config::juniper`: brace-delimited hierarchy, `;`-terminated leaves (JunOS `show configuration`).
 
-Typed views exist for IOS XR and IOS XE. Each platform crate's README lists what it extracts and which
+Typed views exist for IOS XR, IOS XE and JunOS. Each platform crate's README lists what it extracts and which
 Cisco documentation its test fixtures come from.
 
 ## Development
