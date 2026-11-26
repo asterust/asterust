@@ -22,6 +22,8 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<iosxe::PyIosXeBgpNeighbor>()?;
     m.add_class::<iosxe::PyIosXeBgpProcess>()?;
     m.add_class::<iosxe::PyIosXeIsisInstance>()?;
+    m.add_class::<iosxe::PyIosXeVrfAddressFamily>()?;
+    m.add_class::<iosxe::PyIosXeVrf>()?;
 
     m.add_class::<iosxr::PyIosXrDevice>()?;
     m.add_class::<iosxr::PyInterface>()?;
@@ -30,5 +32,14 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<iosxr::PyBgpNeighbor>()?;
     m.add_class::<iosxr::PyBgpProcess>()?;
     m.add_class::<iosxr::PyIsisInstance>()?;
+    m.add_class::<iosxr::PyBgpTimers>()?;
+    m.add_class::<iosxr::PyBgpNeighborAddressFamily>()?;
+    m.add_class::<iosxr::PyBgpAfGroup>()?;
+    m.add_class::<iosxr::PyBgpNeighborGroup>()?;
+    m.add_class::<iosxr::PyBgpSessionGroup>()?;
+    m.add_class::<iosxr::PyBgpAddressFamily>()?;
+    m.add_class::<iosxr::PyBgpVrf>()?;
+    m.add_class::<iosxr::PyVrfAddressFamily>()?;
+    m.add_class::<iosxr::PyVrf>()?;
     Ok(())
 }

@@ -8,6 +8,7 @@ use asterust_iosxe::bgp::{BgpNeighbor, BgpProcess};
 use asterust_iosxe::interface::Interface;
 use asterust_iosxe::isis::IsisInstance;
 use asterust_iosxe::ospf::{OspfNetwork, OspfProcess};
+use asterust_iosxe::vrf::{Vrf, VrfAddressFamily};
 use asterust_iosxe::IosXeDevice;
 use pyo3::prelude::*;
 
@@ -137,16 +138,62 @@ impl From<IsisInstance> for PyIosXeIsisInstance {
     }
 }
 
+#[pyclass(name = "IosXeVrfAddressFamily", module = "asterust.iosxe", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyIosXeVrfAddressFamily {
+    name: String,
+    import_route_targets: Vec<String>,
+    export_route_targets: Vec<String>,
+    import_map: Option<String>,
+    export_map: Option<String>,
+}
+
+impl From<VrfAddressFamily> for PyIosXeVrfAddressFamily {
+    fn from(a: VrfAddressFamily) -> Self {
+        Self {
+            name: a.name,
+            import_route_targets: a.import_route_targets,
+            export_route_targets: a.export_route_targets,
+            import_map: a.import_map,
+            export_map: a.export_map,
+        }
+    }
+}
+
+#[pyclass(name = "IosXeVrf", module = "asterust.iosxe", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyIosXeVrf {
+    name: String,
+    description: Option<String>,
+    rd: Option<String>,
+    address_families: Vec<PyIosXeVrfAddressFamily>,
+    legacy: bool,
+}
+
+impl From<Vrf> for PyIosXeVrf {
+    fn from(v: Vrf) -> Self {
+        Self {
+            name: v.name,
+            description: v.description,
+            rd: v.rd,
+            address_families: v.address_families.into_iter().map(Into::into).collect(),
+            legacy: v.legacy,
+        }
+    }
+}
+
 impl_repr!(
     PyIosXeInterface,
     PyIosXeOspfNetwork,
     PyIosXeOspfProcess,
     PyIosXeBgpNeighbor,
     PyIosXeBgpProcess,
-    PyIosXeIsisInstance
+    PyIosXeIsisInstance,
+    PyIosXeVrfAddressFamily,
+    PyIosXeVrf
 );
 
-/// A parsed IOS XE running config. `interfaces`, `ospf`, `bgp` and `isis` extract typed blocks.
+/// A parsed IOS XE running config. `interfaces`, `ospf`, `bgp`, `isis` and `vrfs` extract typed blocks.
 #[pyclass(name = "IosXeDevice", module = "asterust.iosxe", frozen)]
 pub struct PyIosXeDevice {
     inner: IosXeDevice,
@@ -194,5 +241,10 @@ impl PyIosXeDevice {
     #[getter]
     fn isis(&self) -> Vec<PyIosXeIsisInstance> {
         self.inner.isis().into_iter().map(Into::into).collect()
+    }
+
+    #[getter]
+    fn vrfs(&self) -> Vec<PyIosXeVrf> {
+        self.inner.vrfs().into_iter().map(Into::into).collect()
     }
 }
