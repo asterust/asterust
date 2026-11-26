@@ -78,7 +78,7 @@ mod tests {
     use super::*;
     use asterust::config::juniper;
 
-    // Written from JunOS hierarchy knowledge, not adapted from documentation; see the README "Sources".
+    // Not from documentation: covers statements the Juniper examples do not use. See the README "Sources".
     const CONFIG: &str = r#"
 interfaces {
     ge-0/0/0 {
@@ -155,5 +155,87 @@ interfaces {
     #[test]
     fn missing_interfaces_block_is_empty() {
         assert!(interfaces(&juniper::parse_braces("system {\n host-name r1;\n}\n")).is_empty());
+    }
+
+    // The DOC_* fixtures are adapted from Juniper's BGP User Guide, "BGP Peering Sessions"; see the README "Sources".
+
+    // "Example: Configuring External BGP Point-to-Point Peer Sessions", Device E `show interfaces` (two of four interfaces).
+    const DOC_POINT_TO_POINT: &str = r#"
+interfaces {
+    ge-1/2/0 {
+        unit 0 {
+            description to-A;
+            family inet {
+                address 10.10.10.1/30;
+            }
+        }
+    }
+    ge-0/0/1 {
+        unit 5 {
+            description to-B;
+            family inet {
+                address 10.10.10.5/30;
+            }
+        }
+    }
+}
+"#;
+
+    // "Example: Configure Multiple Single-Hop EBGP Sessions on Different Links Using the Same IPv6 Link-Local
+    // Address", R1 `show interfaces`.
+    const DOC_LINK_LOCAL: &str = r#"
+interfaces {
+    ge-0/0/1 {
+        description R1-to-R2-Link;
+        vlan-tagging;
+        unit 1 {
+            vlan-id 1;
+            family inet6 {
+                address fe80::10/64;
+            }
+        }
+        unit 2 {
+            vlan-id 2;
+            family inet6 {
+                address fe80::10/64;
+            }
+        }
+    }
+    lo0 {
+        unit 0 {
+            family inet {
+                address 198.51.100.1/24 {
+                    primary;
+                }
+            }
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn doc_point_to_point_interfaces() {
+        let ifaces = interfaces(&juniper::parse_braces(DOC_POINT_TO_POINT));
+        let names: Vec<_> = ifaces.iter().map(|i| i.name.as_str()).collect();
+        assert_eq!(names, ["ge-1/2/0", "ge-0/0/1"]);
+        assert_eq!(ifaces[0].units[0].number, "0");
+        assert_eq!(ifaces[0].units[0].description.as_deref(), Some("to-A"));
+        assert_eq!(ifaces[0].units[0].inet_addresses, ["10.10.10.1/30"]);
+        assert_eq!(ifaces[1].units[0].number, "5");
+        assert_eq!(ifaces[1].units[0].inet_addresses, ["10.10.10.5/30"]);
+    }
+
+    #[test]
+    fn doc_link_local_units_vlans_and_primary_address() {
+        let ifaces = interfaces(&juniper::parse_braces(DOC_LINK_LOCAL));
+        let ge = &ifaces[0];
+        assert_eq!(ge.description.as_deref(), Some("R1-to-R2-Link"));
+        assert_eq!(ge.units.len(), 2);
+        assert_eq!(ge.units[0].vlan_id, Some(1));
+        assert_eq!(ge.units[1].vlan_id, Some(2));
+        assert_eq!(ge.units[0].inet6_addresses, ["fe80::10/64"]);
+
+        let lo0 = &ifaces[1];
+        assert_eq!(lo0.units[0].inet_addresses, ["198.51.100.1/24"]);
     }
 }

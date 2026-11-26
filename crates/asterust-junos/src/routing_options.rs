@@ -42,4 +42,15 @@ mod tests {
     fn missing_block_is_none() {
         assert!(routing_options(&juniper::parse_braces("system {\n host-name r1;\n}\n")).is_none());
     }
+
+    #[test]
+    fn doc_router_id_and_autonomous_system() {
+        // Adapted from Juniper's BGP User Guide, "BGP Peering Sessions", "Example: Configuring Internal BGP Peer
+        // Sessions", Device A `show routing-options`; see the README "Sources".
+        let config =
+            juniper::parse_braces("routing-options {\n    router-id 192.168.6.5;\n    autonomous-system 17;\n}\n");
+        let options = routing_options(&config).unwrap();
+        assert_eq!(options.router_id.as_deref(), Some("192.168.6.5"));
+        assert_eq!(options.autonomous_system.as_deref(), Some("17"));
+    }
 }

@@ -34,19 +34,24 @@ inheritance are not resolved.
 
 ## Sources
 
-These views are **not yet grounded in vendor documentation or a real device**. The test fixtures were written
-from knowledge of the JunOS configuration hierarchy and are marked as such in each module's tests. Treat the
-extracted fields as unverified until they have been compared against Juniper documentation or real output.
+The BGP, interface, OSPF and `routing-options` test fixtures (the `DOC_*` constants and `doc_*` tests) are
+adapted from Juniper's BGP User Guide, read on 2026-11-26. They are reindented and shortened, not verbatim, and
+the guide's typographic quotes are written as plain quotes.
 
-The following Juniper documentation pages were intended as references. When this crate was written none could
-be read: the juniper.net URLs redirected to `networkingdocs.hpe.com`, which returned HTTP 404, so the fixtures
-are **not** adapted from them and the URLs themselves may be wrong.
+| Page | Example used | Fixtures |
+| --- | --- | --- |
+| [BGP Peering Sessions](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-peering-sessions.html) | Example: Configuring External BGP Point-to-Point Peer Sessions (Device E) | `bgp::DOC_EXTERNAL_PEERS`, `interface::DOC_POINT_TO_POINT` |
+| same page | Example: Configuring Internal BGP Peer Sessions (Device A) | `bgp::DOC_INTERNAL_PEERS`, `ospf::DOC_OSPF`, the `routing_options` doc test |
+| same page | Example: Configure Multiple Single-Hop EBGP Sessions on Different Links Using the Same IPv6 Link-Local Address (R1) | `bgp::DOC_LINK_LOCAL` (quoted neighbor names), `interface::DOC_LINK_LOCAL` (VLAN units, `primary` address) |
+| [BGP Route Reflectors](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-rr.html) | Example: Configuring a Route Reflector (Device A) | `bgp::DOC_ROUTE_REFLECTOR` (the guide's rendering of this output drops a closing brace, which is restored) |
 
-| Intended reference | URL tried |
-| --- | --- |
-| Internal BGP peering sessions example (`protocols bgp group`, `neighbor`, `local-address`, `family`) | `https://www.juniper.net/documentation/us/en/software/junos/bgp/topics/example/bgp-ibgp-configuring.html` |
-| Multiarea OSPF example (`protocols ospf area`, `interface`, `routing-options router-id`) | `https://www.juniper.net/documentation/us/en/software/junos/ospf/topics/example/ospf-multiarea-configuring.html` |
-| Basic Layer 3 VPN example (`routing-instances`, `instance-type vrf`, `route-distinguisher`, `vrf-target`) | `https://www.juniper.net/documentation/us/en/software/junos/vpn-l3/topics/example/vpns-layer-3-basic-configuring.html` |
+Other pages consulted but not used for fixtures:
+- [Junos OS documentation index](https://networkingdocs.hpe.com/documentation/product/us/en/junos-os/)
+- [BGP Configuration Overview](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/task/routing-protocol-bgp-security-configuring.html), which links to the examples above
+- [OSPF User Guide](https://networkingdocs.hpe.com/documentation/us/en/software/junos/ospf/index.html), whose topic pages have not been read
 
-A working link to Juniper's documentation, or a sanitized `show configuration` snippet from a real device,
-would let these fixtures be replaced with grounded ones and this section updated.
+**Not yet grounded in documentation or a real device:** `protocols isis`, `routing-instances` (VRFs, `vrf-target`,
+`vrf-import`/`vrf-export`), the `inactive:` handling, `disable`, bracketed policy lists (`export [ a b ]`), and
+the other extra cases in the tests. Those fixtures are marked "not from documentation" in the code and were
+written from knowledge of the JunOS hierarchy, so treat the corresponding fields as unverified. A Juniper
+IS-IS or Layer 3 VPN example page, or a sanitized `show configuration` snippet, would let these be replaced.

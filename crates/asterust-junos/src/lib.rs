@@ -53,7 +53,8 @@ pub(crate) fn named_children<'a>(
     line: &'a ConfigLine,
     keyword: &'a str,
 ) -> impl Iterator<Item = (&'a str, &'a ConfigLine)> {
-    active_children(line).filter_map(move |c| Some((c.arg(keyword)?, c)))
+    // Names can be quoted, e.g. `neighbor "fe80::20%ge-0/0/1.1";`.
+    active_children(line).filter_map(move |c| Some((unquote(c.arg(keyword)?), c)))
 }
 
 /// The active child that is exactly `name`.

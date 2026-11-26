@@ -50,7 +50,7 @@ mod tests {
     use super::*;
     use asterust::config::juniper;
 
-    // Written from JunOS hierarchy knowledge, not adapted from documentation; see the README "Sources".
+    // Not from documentation: covers statements the Juniper examples do not use. See the README "Sources".
     const CONFIG: &str = r#"
 protocols {
     ospf {
@@ -95,5 +95,32 @@ protocols {
     #[test]
     fn no_ospf_is_none() {
         assert!(ospf(&juniper::parse_braces("protocols {\n isis {\n }\n}\n")).is_none());
+    }
+
+    // Adapted from Juniper's BGP User Guide, "BGP Peering Sessions", "Example: Configuring Internal BGP Peer
+    // Sessions", Device A `show protocols` (OSPF part); see the README "Sources".
+    const DOC_OSPF: &str = r#"
+protocols {
+    ospf {
+        area 0.0.0.0 {
+            interface lo0.1 {
+                passive;
+            }
+            interface ge-0/1/0.1;
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn doc_area_with_passive_loopback() {
+        let ospf = ospf(&juniper::parse_braces(DOC_OSPF)).unwrap();
+        assert_eq!(ospf.areas.len(), 1);
+        let area = &ospf.areas[0];
+        assert_eq!(area.id, "0.0.0.0");
+        assert_eq!(area.interfaces[0].name, "lo0.1");
+        assert!(area.interfaces[0].passive);
+        assert_eq!(area.interfaces[1].name, "ge-0/1/0.1");
+        assert!(!area.interfaces[1].passive);
     }
 }
