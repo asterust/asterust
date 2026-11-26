@@ -31,18 +31,27 @@
 //! - [accept-remote-nexthop](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/accept-remote-nexthop-edit-protocols-bgp.html)
 //! - [vpn-apply-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vpn-apply-export-edit-protocols-bgp-vp.html)
 
+mod bfd_liveness_detection;
+mod graceful_restart;
 mod local_as;
 mod multihop;
+mod multipath;
 mod remove_private;
 
+pub use bfd_liveness_detection::BgpBfd;
+pub use graceful_restart::BgpGracefulRestart;
 pub use local_as::LocalAs;
 pub use multihop::Multihop;
+pub use multipath::BgpMultipath;
 pub use remove_private::RemovePrivate;
 
 use crate::{arg_of, has_leaf, statement_words, toggle};
 use asterust::config::ConfigLine;
+use bfd_liveness_detection::parse_bfd;
+use graceful_restart::parse_graceful_restart;
 use local_as::parse_local_as;
 use multihop::parse_multihop;
+use multipath::parse_multipath;
 use remove_private::parse_remove_private;
 
 /// The session settings shared by the `bgp`, `group` and `neighbor` levels. Settings inherited from an outer level
@@ -53,6 +62,9 @@ pub struct BgpPeerOptions {
     pub local_as_options: Option<LocalAs>,
     pub multihop: Option<Multihop>,
     pub remove_private: Option<RemovePrivate>,
+    pub bfd_liveness_detection: Option<BgpBfd>,
+    pub graceful_restart: Option<BgpGracefulRestart>,
+    pub multipath: Option<BgpMultipath>,
     /// `aes-128-cmac-96`, `hmac-sha-1-96` or `md5`.
     pub authentication_algorithm: Option<String>,
     /// An `authentication-key` is configured.
@@ -99,6 +111,9 @@ pub(super) fn parse_peer_options(line: &ConfigLine) -> BgpPeerOptions {
         local_as_options: parse_local_as(line),
         multihop: parse_multihop(line),
         remove_private: parse_remove_private(line),
+        bfd_liveness_detection: parse_bfd(line),
+        graceful_restart: parse_graceful_restart(line),
+        multipath: parse_multipath(line),
         authentication_algorithm: field("authentication-algorithm"),
         has_authentication_key: arg_of(line, "authentication-key").is_some(),
         authentication_key_chain: field("authentication-key-chain"),
