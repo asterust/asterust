@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.1...asterust-junos-v0.3.2) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces ether-options and aggregated-ether-options
+
+### Other
+
+- Merge pull request #72 from asterust/feat/junos-interfaces-ethernet-lag
+- Merge origin/main into feat/junos-interfaces-ethernet-lag
+
 ## [0.3.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.0...asterust-junos-v0.3.1) - 2026-11-26
 
 ### Added
