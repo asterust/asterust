@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/asterust/asterust/compare/asterust-iosxr-v0.2.0...asterust-iosxr-v0.2.1) - 2026-11-26
+
+### Added
+
+- *(iosxr,iosxe)* add VRF definition views
+
 ## [0.2.0](https://github.com/asterust/asterust/compare/asterust-iosxr-v0.1.0...asterust-iosxr-v0.2.0) - 2026-11-26
 
 ### Added

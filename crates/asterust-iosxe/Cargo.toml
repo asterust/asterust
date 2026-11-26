@@ -1,6 +1,6 @@
 [package]
 name = "asterust-iosxe"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Typed Cisco IOS XE config blocks (interface, OSPF, BGP, IS-IS) extracted from an asterust config tree."
 license = "MIT OR Apache-2.0"
