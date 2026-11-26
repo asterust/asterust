@@ -1,5 +1,7 @@
 //! `system { services { ... } }`.
 
+use super::flow_tap_dtcp::{parse_flow_tap_dtcp, FlowTapDtcp};
+use super::service_deployment::{parse_service_deployment, ServiceDeployment};
 use super::subscriber::{
     parse_dhcp_local_server, parse_local_policy_decision_function, parse_static_subscribers,
     parse_subscriber_management, DhcpLocalServer, LocalPolicyDecisionFunction, StaticSubscribers, SubscriberManagement,
@@ -153,6 +155,8 @@ pub struct Services {
     pub static_subscribers: Option<StaticSubscribers>,
     pub dhcp_local_server: Option<DhcpLocalServer>,
     pub local_policy_decision_function: Option<LocalPolicyDecisionFunction>,
+    pub flow_tap_dtcp: Option<FlowTapDtcp>,
+    pub service_deployment: Option<ServiceDeployment>,
 }
 
 pub(super) fn parse_services(services: &ConfigLine) -> Services {
@@ -196,6 +200,8 @@ pub(super) fn parse_services(services: &ConfigLine) -> Services {
         dhcp_local_server: child_block(services, "dhcp-local-server").map(parse_dhcp_local_server),
         local_policy_decision_function: child_block(services, "local-policy-decision-function")
             .map(parse_local_policy_decision_function),
+        flow_tap_dtcp: child_block(services, "flow-tap-dtcp").map(parse_flow_tap_dtcp),
+        service_deployment: child_block(services, "service-deployment").map(parse_service_deployment),
     }
 }
 
