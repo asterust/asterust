@@ -1,4 +1,21 @@
+//! `system`
 //! `system { ... }`.
+//!
+//! Each statement with children of its own lives in a submodule named after it.
+//!
+//! # See also
+//!
+//! - [`[edit system]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-system.html)
+//! - [host-name (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/host-name-edit-system.html)
+//! - [domain-name (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/domain-name-edit-system.html)
+//! - [time-zone](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/time-zone-edit-system.html)
+//! - [domain-search](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/domain-search-edit-system.html)
+//! - [authentication-order (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/authentication-order-edit-system.html)
+//! - [max-configurations-on-flash (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/max-configurations-on-flash-edit-system.html)
+//! - [no-redirects (IPv4 Traffic)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-redirects-edit-system.html)
+//! - [default-address-selection](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/default-address-selection-edit-system.html)
+//! - [diag-port-authentication](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/diag-port-authentication-edit-system.html)
+//! - [pic-console-authentication](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/pic-console-authentication-edit-system.html)
 
 mod accounting;
 mod archival;
@@ -130,7 +147,8 @@ pub struct System {
     pub accounting: Option<Accounting>,
     pub root_authentication: Option<RootAuthentication>,
     pub master_password: Option<MasterPassword>,
-    /// Method name of `diag-port-authentication`, e.g. `encrypted-password`; the password is not extracted.
+    /// Method name of `diag-port-authentication`, e.g. `encrypted-password`; the password is not
+    /// extracted.
     pub diag_port_authentication: Vec<String>,
     /// Method names of `pic-console-authentication`; the password is not extracted.
     pub pic_console_authentication: Vec<String>,
@@ -142,7 +160,18 @@ pub struct System {
     pub services: Option<Services>,
 }
 
-/// The top-level `system` block, or `None` if there is none.
+/// Returns the top-level `system` block, or `None` if there is none.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::system::system;
+///
+/// let config = juniper::parse_braces("system {\n    host-name pe1;\n}\n");
+/// let system = system(&config).unwrap();
+/// assert_eq!(system.host_name.as_deref(), Some("pe1"));
+/// ```
 pub fn system(config: &Config) -> Option<System> {
     let system = top_level(config, "system")?;
     Some(System {
@@ -202,7 +231,8 @@ pub fn system(config: &Config) -> Option<System> {
     })
 }
 
-/// Servers written as `<keyword> <address> { ... }`, or as `<keyword> { <address> { ... } }`, with their option lines.
+/// Servers written as `<keyword> <address> { ... }`, or as `<keyword> { <address> { ... } }`, with
+/// their option lines.
 fn servers<'a>(system: &'a ConfigLine, keyword: &str) -> Vec<(&'a str, &'a ConfigLine)> {
     let mut found = Vec::new();
     for child in active_children(system) {
@@ -229,8 +259,8 @@ fn password_methods(system: &ConfigLine, keyword: &str) -> Vec<String> {
     methods
 }
 
-/// The name of each statement in an `authentication` block. Secrets can carry a trailing `## SECRET-DATA` marker,
-/// so only the first word is kept.
+/// The name of each statement in an `authentication` block. Secrets can carry a trailing `##
+/// SECRET-DATA` marker, so only the first word is kept.
 fn authentication_methods(auth: &ConfigLine) -> Vec<String> {
     active_children(auth)
         .filter_map(|c| c.text.split_whitespace().next())

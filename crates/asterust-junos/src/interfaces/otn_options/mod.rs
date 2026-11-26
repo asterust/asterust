@@ -1,4 +1,12 @@
+//! `otn-options`
 //! `interfaces { <name> { otn-options { ... } } }`.
+//!
+//! # See also
+//!
+//! - [otn-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/otn-options-edit-interfaces.html)
+//! - [fec](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/fec-edit-interfaces-otn-options.html)
+//! - [tti](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/tti-edit-interfaces-otn-options.html)
+//! - [bytes (otn-options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/bytes-edit-interfaces-otn-options.html)
 
 mod rate;
 mod signal_degrade;
@@ -11,8 +19,8 @@ use asterust::config::ConfigLine;
 use rate::parse_rate;
 use signal_degrade::parse_signal_degrade;
 
-/// The OTN settings of an interface. `odu-delay-management`, `odu-signal-degrade`, `preemptive-fast-reroute`, `tca`,
-/// `trigger` and the loopback statements are not extracted.
+/// The OTN settings of an interface. `odu-delay-management`, `odu-signal-degrade`,
+/// `preemptive-fast-reroute`, `tca`, `trigger` and the loopback statements are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct OtnOptions {

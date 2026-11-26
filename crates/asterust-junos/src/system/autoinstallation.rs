@@ -1,4 +1,9 @@
+//! `autoinstallation`
 //! `system { autoinstallation { ... } }`.
+//!
+//! # See also
+//!
+//! - [autoinstallation](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/autoinstallation-edit-system.html)
 
 use super::archival::redact_password;
 use crate::{active_children, child_block, has_leaf, unquote};
@@ -13,7 +18,8 @@ pub struct AutoinstallationInterface {
     pub rarp: bool,
 }
 
-/// The `system autoinstallation` configuration. A bare `autoinstallation;` has no servers or interfaces.
+/// The `system autoinstallation` configuration. A bare `autoinstallation;` has no servers or
+/// interfaces.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Autoinstallation {

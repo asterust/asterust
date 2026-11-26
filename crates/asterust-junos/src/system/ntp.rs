@@ -1,4 +1,9 @@
+//! `ntp`
 //! `system { ntp { ... } }`.
+//!
+//! # See also
+//!
+//! - [ntp](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ntp-edit-system.html)
 
 use crate::{active_children, arg_of, args_of, first_word, has_leaf, list_values, split_name};
 use asterust::config::ConfigLine;
@@ -58,8 +63,8 @@ pub(super) fn parse_ntp(ntp: &ConfigLine) -> Ntp {
     }
 }
 
-/// A host written `<address> [key n] [prefer] [version n] [routing-instance x]`, with the options on the line
-/// or in a block.
+/// A host written `<address> [key n] [prefer] [version n] [routing-instance x]`, with the options
+/// on the line or in a block.
 fn ntp_host(arg: &str, line: &ConfigLine) -> NtpHost {
     let (address, options) = split_name(arg);
     let mut words = options.split_whitespace();

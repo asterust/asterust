@@ -1,4 +1,10 @@
+//! `netconf`
 //! `system { services { netconf { ... } } }`.
+//!
+//! # See also
+//!
+//! - [netconf](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/netconf-edit-system-services.html)
+//! - [ssh (NETCONF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ssh-edit-system-services-netconf.html)
 
 use crate::{arg_of, child_block, has_leaf};
 use asterust::config::ConfigLine;

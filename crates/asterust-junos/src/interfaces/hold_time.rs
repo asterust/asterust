@@ -1,4 +1,9 @@
+//! `hold-time`
 //! `interfaces { <name> { hold-time up <ms> down <ms>; } }`.
+//!
+//! # See also
+//!
+//! - [hold-time (ae interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/hold-time-edit-interfaces.html)
 
 use crate::{statement_words, value_after};
 use asterust::config::ConfigLine;

@@ -1,4 +1,9 @@
+//! `xnm-clear-text`
 //! `system { services { xnm-clear-text { ... } } }`.
+//!
+//! # See also
+//!
+//! - [xnm-clear-text](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/xnm-clear-text-edit-system.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

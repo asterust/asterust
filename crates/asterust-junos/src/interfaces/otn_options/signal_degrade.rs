@@ -1,4 +1,9 @@
+//! `signal-degrade`
 //! `interfaces { <name> { otn-options { signal-degrade { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [signal-degrade](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/signal-degrade-edit-interfaces-otn-options-qfx-series.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

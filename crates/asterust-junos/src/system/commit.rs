@@ -1,4 +1,9 @@
+//! `commit`
 //! `system { commit { ... } }`.
+//!
+//! # See also
+//!
+//! - [commit (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/commit-edit-system-config.html)
 
 use crate::has_leaf;
 use asterust::config::ConfigLine;
@@ -16,7 +21,8 @@ pub struct Commit {
     pub force_commit_log: bool,
     pub notification: bool,
     pub server: bool,
-    /// `Some(true)` for `persist-groups-inheritance`, `Some(false)` for `no-persist-groups-inheritance`.
+    /// `Some(true)` for `persist-groups-inheritance`, `Some(false)` for
+    /// `no-persist-groups-inheritance`.
     pub persist_groups_inheritance: Option<bool>,
 }
 

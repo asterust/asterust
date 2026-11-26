@@ -1,4 +1,9 @@
+//! `root-authentication`
 //! `system { root-authentication { ... } }`.
+//!
+//! # See also
+//!
+//! - [root-authentication](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/root-authentication-edit-system.html)
 
 use super::authentication_methods;
 use crate::child_block;

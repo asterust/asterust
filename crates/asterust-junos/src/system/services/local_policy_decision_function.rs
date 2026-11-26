@@ -1,4 +1,9 @@
+//! `local-policy-decision-function`
 //! `system { services { local-policy-decision-function { ... } } }`.
+//!
+//! # See also
+//!
+//! - [`[edit system]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-system.html)
 
 use crate::{active_children, arg_of, child_block, named_children};
 use asterust::config::ConfigLine;

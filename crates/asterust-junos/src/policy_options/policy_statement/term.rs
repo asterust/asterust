@@ -1,6 +1,13 @@
+//! `term`
 //! `policy-options { policy-statement <name> { term <name> { from { ... } to { ... } then { ... } } } }`.
 //!
-//! A policy written without `term` statements is a single unnamed term.
+//! A policy written without `term` statements is a single unnamed term. Each term carries `from`,
+//! `to` and `then` statements.
+//!
+//! # See also
+//!
+//! - [policy-statement](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/policy-statement-edit-policy-options.html)
+//! - [route-filter](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/route-filter-edit-policy-options.html)
 
 use crate::{list_values, split_keyword, split_name, statements, unquote};
 use asterust::config::ConfigLine;
@@ -14,7 +21,8 @@ pub struct RouteFilter {
     pub match_type: Option<String>,
 }
 
-/// The match conditions of a term's `from` or `to` statement. Conditions not listed here are ignored.
+/// The match conditions of a term's `from` or `to` statement. Conditions not listed here are
+/// ignored.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct PolicyConditions {
@@ -75,7 +83,8 @@ pub struct PolicyActions {
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct PolicyTerm {
-    /// `None` for the unnamed term, which is the only one in a policy written without `term` statements.
+    /// `None` for the unnamed term, which is the only one in a policy written without `term`
+    /// statements.
     pub name: Option<String>,
     pub from: PolicyConditions,
     pub to: PolicyConditions,

@@ -1,16 +1,34 @@
 //! Typed views of common JunOS config statements, extracted from a tree parsed by
 //! [`asterust::config::juniper`] (brace-delimited `show configuration` output).
 //!
-//! JunOS nests everything under a few top-level blocks (`interfaces`, `protocols`, `routing-options`,
-//! `routing-instances`, `policy-options`, `firewall`, `system`), so each module exposes a free function that reads the relevant block from a
-//! [`asterust::config::Config`] rather than a per-block constructor. [`JunosDevice`] bundles a parsed
-//! config with all of them as getters.
+//! JunOS nests everything under a few top-level blocks (`interfaces`, `protocols`,
+//! `routing-options`, `routing-instances`, `policy-options`, `firewall`, `system`), so each module
+//! exposes a free function that reads the relevant block from a [`asterust::config::Config`] rather
+//! than a per-block constructor. [`JunosDevice`] bundles a parsed config with all of them as
+//! getters.
 //!
 //! The module tree mirrors the configuration hierarchy: `system { radius-server ... }` is
-//! `system::radius_server`, `protocols { bgp { ... } }` is `protocols::bgp`. A statement with many children of
-//! its own gets a folder, e.g. `system::services::ssh` for `system { services { ssh { ... } } }`.
+//! `system::radius_server` and `protocols { bgp { ... } }` is `protocols::bgp`. A statement with
+//! many children of its own gets a folder, so `system::services::ssh` models the `ssh` statement
+//! of `system services`.
 //!
 //! Statements deactivated with `inactive:` are skipped. `| display set` output is not supported.
+//!
+//! Each module documents its configuration path and links to the matching pages of the Junos CLI
+//! Reference.
+//!
+//! # Examples
+//!
+//! ```
+//! use asterust_junos::JunosDevice;
+//!
+//! let device = JunosDevice::parse("interfaces {\n    lo0 {\n        unit 0;\n    }\n}\n");
+//! assert_eq!(device.interfaces()[0].name, "lo0");
+//! ```
+//!
+//! # See also
+//!
+//! - [Junos CLI Reference](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/index.html)
 
 pub mod device;
 pub mod firewall;
@@ -53,7 +71,8 @@ pub(crate) fn has_leaf(line: &ConfigLine, name: &str) -> bool {
     active_children(line).any(|c| c.text == name)
 }
 
-/// `Some(true)` for `<name>`, `Some(false)` for `no-<name>`, `None` if neither is present. Either may carry options.
+/// `Some(true)` for `<name>`, `Some(false)` for `no-<name>`, `None` if neither is present. Either
+/// may carry options.
 pub(crate) fn toggle(line: &ConfigLine, name: &str) -> Option<bool> {
     let written = |statement: &str| active_children(line).any(|c| c.text == statement || c.arg(statement).is_some());
     if written(name) {
@@ -136,7 +155,8 @@ pub(crate) fn statements<'a>(line: &'a ConfigLine, keyword: &str) -> Vec<&'a str
     found
 }
 
-/// Words of the first active `<keyword> ...` statement: those on its own line, then those of each child statement.
+/// Words of the first active `<keyword> ...` statement: those on its own line, then those of each
+/// child statement.
 pub(crate) fn statement_words<'a>(parent: &'a ConfigLine, keyword: &str) -> Option<Vec<&'a str>> {
     let statement = active_children(parent).find(|c| c.text == keyword || c.arg(keyword).is_some())?;
     Some(

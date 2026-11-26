@@ -1,4 +1,9 @@
+//! `static-host-mapping`
 //! `system { static-host-mapping { <hostname> { ... } } }`.
+//!
+//! # See also
+//!
+//! - [static-host-mapping](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/static-host-mapping-edit-system.html)
 
 use crate::{active_children, arg_of, args_of, child_block, list_values, unquote};
 use asterust::config::ConfigLine;

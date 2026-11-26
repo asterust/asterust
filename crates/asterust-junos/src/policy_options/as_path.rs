@@ -1,4 +1,9 @@
+//! `as-path`
 //! `policy-options { as-path <name> <regular-expression>; }`.
+//!
+//! # See also
+//!
+//! - [as-path (Policy Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/as-path-edit-policy-options.html)
 
 use crate::{split_name, unquote};
 use asterust::config::ConfigLine;

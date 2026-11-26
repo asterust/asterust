@@ -1,9 +1,15 @@
+//! `rpf-check`
 //! `interfaces { <name> { unit <n> { family <name> { rpf-check { ... } } } } }`.
+//!
+//! # See also
+//!
+//! - [rpf-check](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rpf-check-edit-interfaces.html)
 
 use crate::{statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The `rpf-check` unicast reverse-path-forwarding settings; both fields are `None` for a bare `rpf-check;`.
+/// The `rpf-check` unicast reverse-path-forwarding settings; both fields are `None` for a bare
+/// `rpf-check;`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct RpfCheck {

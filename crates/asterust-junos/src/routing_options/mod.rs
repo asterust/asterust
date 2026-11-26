@@ -1,4 +1,11 @@
+//! `routing-options`
 //! `routing-options { ... }`.
+//!
+//! # See also
+//!
+//! - [`[edit routing-options]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-routing-options.html)
+//! - [router-id](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/router-id-edit-routing-options.html)
+//! - [autonomous-system](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/autonomous-system-edit-routing-options.html)
 
 use crate::{arg_of, first_word, top_level};
 use asterust::config::Config;
@@ -11,7 +18,19 @@ pub struct RoutingOptions {
     pub autonomous_system: Option<String>,
 }
 
-/// The top-level `routing-options` block, or `None` if it is absent.
+/// Returns the top-level `routing-options` block, or `None` if it is absent.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::routing_options::routing_options;
+///
+/// let config = juniper::parse_braces("routing-options {\n    router-id 192.0.2.1;\n    autonomous-system 65000;\n}\n");
+/// let options = routing_options(&config).unwrap();
+/// assert_eq!(options.router_id.as_deref(), Some("192.0.2.1"));
+/// assert_eq!(options.autonomous_system.as_deref(), Some("65000"));
+/// ```
 pub fn routing_options(config: &Config) -> Option<RoutingOptions> {
     let root = top_level(config, "routing-options")?;
     Some(RoutingOptions {

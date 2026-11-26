@@ -1,4 +1,9 @@
+//! `auto-configure`
 //! `interfaces { <name> { auto-configure { ... } } }`.
+//!
+//! # See also
+//!
+//! - [auto-configure](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/auto-configure-edit-interfaces.html)
 
 mod ranges;
 

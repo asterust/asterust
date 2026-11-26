@@ -1,4 +1,14 @@
+//! `address`
 //! `interfaces { <name> { unit <n> { family <name> { address <address> { ... } } } } }`.
+//!
+//! # See also
+//!
+//! - [address (IP Address)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/address-edit-interfaces-unit-family.html)
+//! - [primary (Address on Interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/primary-edit-interfaces.html)
+//! - [preferred](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/preferred-edit-interfaces.html)
+//! - [arp](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/arp-edit-interfaces.html)
+//! - [destination (Tunnels)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/destination-edit-interfaces.html)
+//! - [master-only](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/master-only-edit-interfaces.html)
 
 mod vrrp_group;
 

@@ -1,4 +1,9 @@
+//! `static-subscribers`
 //! `system { services { static-subscribers { ... } } }`.
+//!
+//! # See also
+//!
+//! - [static-subscribers (Dynamic Service Provisioning)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/static-subscribers-edit-system-services.html)
 
 use crate::{arg_of, args_of, named_children};
 use asterust::config::ConfigLine;
@@ -19,12 +24,13 @@ pub struct StaticSubscriberGroup {
     pub name: String,
     pub access_profile: Option<String>,
     pub dynamic_profiles: Vec<StaticSubscriberProfile>,
-    /// Each `interface` as written, e.g. `"ge-1/0/0.100 upto ge-1/0/0.200"` or `"ge-1/0/0.5 exclude"`.
+    /// Each `interface` as written, e.g. `"ge-1/0/0.100 upto ge-1/0/0.200"` or `"ge-1/0/0.5
+    /// exclude"`.
     pub interfaces: Vec<String>,
 }
 
-/// The `system services static-subscribers` settings. Authentication settings, which include a password, are not
-/// extracted.
+/// The `system services static-subscribers` settings. Authentication settings, which include a
+/// password, are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct StaticSubscribers {

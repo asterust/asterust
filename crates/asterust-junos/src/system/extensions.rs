@@ -1,10 +1,15 @@
+//! `extensions`
 //! `system { extensions { ... } }`.
+//!
+//! # See also
+//!
+//! - [extensions](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/extensions-edit-system.html)
 
 use crate::{active_children, arg_of, args_of, child_block, has_leaf, list_values, named_children, split_name};
 use asterust::config::ConfigLine;
 
-/// A `file <name>` of `extension-service application`. `cert-file`, `checksum`, `source`, `refresh` and `start`
-/// options are not extracted.
+/// A `file <name>` of `extension-service application`. `cert-file`, `checksum`, `source`, `refresh`
+/// and `start` options are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct ExtensionApplication {

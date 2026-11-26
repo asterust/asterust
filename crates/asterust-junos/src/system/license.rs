@@ -1,4 +1,9 @@
+//! `license`
 //! `system { license { ... } }`.
+//!
+//! # See also
+//!
+//! - [license](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/license-edit-system.html)
 
 use super::archival::redact_password;
 use crate::{active_children, arg_of, child_block, statement_words, unquote, value_after};
@@ -8,7 +13,8 @@ use asterust::config::ConfigLine;
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct LicenseAutoupdate {
-    /// The license server URL, without any password embedded in it. The `password` option is not extracted.
+    /// The license server URL, without any password embedded in it. The `password` option is not
+    /// extracted.
     pub url: Option<String>,
 }
 
@@ -22,7 +28,8 @@ pub struct LicenseRenew {
     pub interval: Option<String>,
 }
 
-/// The `system license` configuration. License keys are not extracted, only how many are configured.
+/// The `system license` configuration. License keys are not extracted, only how many are
+/// configured.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct License {

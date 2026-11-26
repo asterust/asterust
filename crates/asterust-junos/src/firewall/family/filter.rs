@@ -1,4 +1,10 @@
+//! `filter`
 //! `firewall { family <family> { filter <name> { term <name> { from { ... } then { ... } } } } }`.
+//!
+//! # See also
+//!
+//! - [filter (Configuring)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/filter-edit-firewall.html)
+//! - [term (Firewall Filter)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/term-edit-firewall.html)
 
 use crate::{active_children, list_values, named_children, split_keyword, statements, unquote};
 use asterust::config::ConfigLine;
@@ -8,7 +14,8 @@ use asterust::config::ConfigLine;
 #[non_exhaustive]
 pub struct MatchCondition {
     pub name: String,
-    /// Values as written, including any trailing modifier such as `except`; empty for a flag like `first-fragment`.
+    /// Values as written, including any trailing modifier such as `except`; empty for a flag like
+    /// `first-fragment`.
     pub values: Vec<String>,
 }
 

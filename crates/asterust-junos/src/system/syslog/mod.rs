@@ -1,4 +1,10 @@
+//! `syslog`
 //! `system { syslog { ... } }`.
+//!
+//! # See also
+//!
+//! - [syslog (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/syslog-edit-system.html)
+//! - [console (System Logging)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/console-edit-system-syslog.html)
 
 mod archive;
 mod file;
@@ -43,7 +49,8 @@ pub struct Syslog {
     pub log_rotate_frequency: Option<String>,
 }
 
-/// Children written `<facility> <severity>`, which tells them apart from options such as `port 514`.
+/// Children written `<facility> <severity>`, which tells them apart from options such as `port
+/// 514`.
 fn syslog_rules(destination: &ConfigLine) -> Vec<SyslogRule> {
     const SEVERITIES: [&str; 10] = [
         "any",

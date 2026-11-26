@@ -1,10 +1,15 @@
+//! `vlan-tags`
 //! `interfaces { <name> { unit <n> { vlan-tags ...; } } }`.
+//!
+//! # See also
+//!
+//! - [vlan-tags (Stacked VLAN Tags)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vlan-tags-edit-interfaces.html)
 
 use crate::{statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The `vlan-tags` of a dual-tagged unit. Each tag is written `<tpid>.<vlan-id>`, e.g. `"0x8100.100"`, or as a bare
-/// VLAN ID. `inner-list` is not extracted.
+/// The `vlan-tags` of a dual-tagged unit. Each tag is written `<tpid>.<vlan-id>`, e.g.
+/// `"0x8100.100"`, or as a bare VLAN ID. `inner-list` is not extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct VlanTags {

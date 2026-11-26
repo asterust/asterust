@@ -1,4 +1,9 @@
+//! `password`
 //! `system { login { password { ... } } }`.
+//!
+//! # See also
+//!
+//! - [password (Login)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/password-edit-system-login.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

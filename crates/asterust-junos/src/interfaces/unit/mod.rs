@@ -1,4 +1,11 @@
+//! `unit`
 //! `interfaces { <name> { unit <n> { ... } } }`.
+//!
+//! # See also
+//!
+//! - [unit (interfaces)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/unit-edit-interfaces.html)
+//! - [encapsulation (Logical Interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/encapsulation-edit-interfaces-logical.html)
+//! - [vlan-id (VLAN ID to Be Bound to a Logical Interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vlan-id-edit-interfaces.html)
 
 mod family;
 mod vlan_map;
@@ -17,8 +24,8 @@ use family::parse_family;
 use vlan_map::parse_vlan_map;
 use vlan_tags::parse_vlan_tags;
 
-/// A logical `unit <n>` of an interface. Addresses are the raw `address` values (e.g. `"10.0.0.1/24"`;
-/// IS-IS NETs for `family iso`).
+/// A logical `unit <n>` of an interface. Addresses are the raw `address` values (e.g.
+/// `"10.0.0.1/24"`; IS-IS NETs for `family iso`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct InterfaceUnit {

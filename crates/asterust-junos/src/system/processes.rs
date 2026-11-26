@@ -1,9 +1,15 @@
+//! `processes`
 //! `system { processes { ... } }`.
+//!
+//! # See also
+//!
+//! - [processes](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/processes-edit-system.html)
 
 use crate::active_children;
 use asterust::config::ConfigLine;
 
-/// A process under `system processes`, e.g. `routing` or `dhcp-service`; `all-processes` appears here too.
+/// A process under `system processes`, e.g. `routing` or `dhcp-service`; `all-processes` appears
+/// here too.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Process {

@@ -1,4 +1,9 @@
+//! `master-password`
 //! `system { master-password { ... } }`.
+//!
+//! # See also
+//!
+//! - [master-password](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/master-password-edit-system.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

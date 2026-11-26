@@ -1,9 +1,15 @@
+//! `scripts`
 //! `system { scripts { ... } }`.
+//!
+//! # See also
+//!
+//! - [scripts](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/scripts-edit-system.html)
 
 use crate::{arg_of, child_block, has_leaf, named_children};
 use asterust::config::ConfigLine;
 
-/// The `system scripts` configuration. Per-file options such as `source` and `checksum` are not extracted.
+/// The `system scripts` configuration. Per-file options such as `source` and `checksum` are not
+/// extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Scripts {

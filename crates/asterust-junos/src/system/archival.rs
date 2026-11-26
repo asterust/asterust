@@ -1,4 +1,9 @@
+//! `archival`
 //! `system { archival { ... } }`.
+//!
+//! # See also
+//!
+//! - [archival](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/archival-edit-system.html)
 
 use crate::{arg_of, child_block, has_leaf, statements, unquote};
 use asterust::config::ConfigLine;
@@ -7,7 +12,8 @@ use asterust::config::ConfigLine;
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct ArchivalConfiguration {
-    /// Archive site URLs, with any password embedded in the URL removed. The `password` option is not extracted.
+    /// Archive site URLs, with any password embedded in the URL removed. The `password` option is
+    /// not extracted.
     pub archive_sites: Vec<String>,
     /// Minutes between transfers.
     pub transfer_interval: Option<String>,

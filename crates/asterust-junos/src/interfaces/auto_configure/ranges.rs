@@ -1,4 +1,11 @@
+//! `vlan-ranges` and `stacked-vlan-ranges`
 //! `interfaces { <name> { auto-configure { vlan-ranges { ... } stacked-vlan-ranges { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [vlan-ranges](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vlan-ranges-edit-interfaces.html)
+//! - [stacked-vlan-ranges](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/stacked-vlan-ranges-edit-interfaces.html)
+//! - [dynamic-profile (VLAN)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/dynamic-profile-edit-interfaces-vlan-ranges.html)
 
 use crate::{arg_of, args_of, child_block, named_children};
 use asterust::config::ConfigLine;

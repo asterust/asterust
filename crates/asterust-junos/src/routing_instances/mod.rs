@@ -1,4 +1,14 @@
-//! `routing-instances { ... }`, including VRFs.
+//! `routing-instances`
+//! `routing-instances { ... }`.
+//!
+//! # See also
+//!
+//! - [`[edit routing-instances]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-routing-instances.html)
+//! - [instance-type](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/instance-type-edit-routing-instances-vp.html)
+//! - [route-distinguisher](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/route-distinguisher-edit-routing-instances-vp.html)
+//! - [vrf-target](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrf-target-edit-routing-instances-vp.html)
+//! - [vrf-import](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrf-import-edit-routing-instances-vp.html)
+//! - [vrf-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrf-export-edit-routing-instances-vp.html)
 
 use crate::{active_children, arg_of, args_of, child_block, list_values, top_level};
 use asterust::config::{Config, ConfigLine};
@@ -28,7 +38,19 @@ impl RoutingInstance {
     }
 }
 
-/// Every instance under the top-level `routing-instances` block.
+/// Returns every instance under the top-level `routing-instances` block.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::routing_instances::routing_instances;
+///
+/// let config = juniper::parse_braces("routing-instances {\n    CUSTOMER-A {\n        instance-type vrf;\n    }\n}\n");
+/// let instances = routing_instances(&config);
+/// assert_eq!(instances[0].name, "CUSTOMER-A");
+/// assert!(instances[0].is_vrf());
+/// ```
 pub fn routing_instances(config: &Config) -> Vec<RoutingInstance> {
     let Some(root) = top_level(config, "routing-instances") else {
         return Vec::new();

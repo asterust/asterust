@@ -1,4 +1,10 @@
-//! `interfaces { <name> { unit <n> { input-vlan-map { ... } } } }` and `output-vlan-map`.
+//! `input-vlan-map` and `output-vlan-map`
+//! `interfaces { <name> { unit <n> { input-vlan-map { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [input-vlan-map](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/input-vlan-map-edit-interfaces-ge.html)
+//! - [output-vlan-map](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/output-vlan-map-edit-interfaces-ge.html)
 
 use crate::{statement_words, value_after};
 use asterust::config::ConfigLine;

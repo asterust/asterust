@@ -1,4 +1,9 @@
+//! `retry-options`
 //! `system { login { retry-options { ... } } }`.
+//!
+//! # See also
+//!
+//! - [retry-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/retry-options-edit-system.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

@@ -1,4 +1,11 @@
+//! `ospf`
 //! `protocols { ospf { ... } }`.
+//!
+//! # See also
+//!
+//! - [ospf](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ospf-edit-protocols.html)
+//! - [area](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/area-edit-protocols-ospf.html)
+//! - [interface (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interface-edit-protocols-ospf.html)
 
 use crate::{arg_of, child_block, has_leaf, named_children, top_level};
 use asterust::config::Config;
@@ -27,7 +34,19 @@ pub struct Ospf {
     pub areas: Vec<OspfArea>,
 }
 
-/// The `protocols ospf` block, or `None` if OSPF is not configured.
+/// Returns the `protocols ospf` block, or `None` if OSPF is not configured.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::protocols::ospf::ospf;
+///
+/// let config = juniper::parse_braces("protocols {\n    ospf {\n        area 0.0.0.0 {\n            interface lo0.0 {\n                passive;\n            }\n        }\n    }\n}\n");
+/// let ospf = ospf(&config).unwrap();
+/// assert_eq!(ospf.areas[0].id, "0.0.0.0");
+/// assert!(ospf.areas[0].interfaces[0].passive);
+/// ```
 pub fn ospf(config: &Config) -> Option<Ospf> {
     let ospf = child_block(top_level(config, "protocols")?, "ospf")?;
     let areas = named_children(ospf, "area")

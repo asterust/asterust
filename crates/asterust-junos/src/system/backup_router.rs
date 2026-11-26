@@ -1,4 +1,10 @@
+//! `backup-router` and `inet6-backup-router`
 //! `system { backup-router ... }` and `system { inet6-backup-router ... }`.
+//!
+//! # See also
+//!
+//! - [backup-router](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/backup-router-edit-system.html)
+//! - [inet6-backup-router](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/inet6-backup-router-edit-system.html)
 
 use crate::{list_values, split_name};
 

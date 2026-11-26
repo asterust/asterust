@@ -1,4 +1,9 @@
+//! `community`
 //! `policy-options { community <name> members ...; }`.
+//!
+//! # See also
+//!
+//! - [community (Policy Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/community-edit-policy-options.html)
 
 use crate::{active_children, list_values, split_keyword, split_name};
 use asterust::config::ConfigLine;

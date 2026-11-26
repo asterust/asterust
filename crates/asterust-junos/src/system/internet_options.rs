@@ -1,4 +1,9 @@
+//! `internet-options`
 //! `system { internet-options { ... } }`.
+//!
+//! # See also
+//!
+//! - [internet-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/internet-options-edit-system.html)
 
 use crate::{arg_of, has_leaf, statement_words, toggle, value_after};
 use asterust::config::ConfigLine;
@@ -15,8 +20,9 @@ pub struct IcmpRateLimit {
 
 /// The `system internet-options` configuration.
 ///
-/// Options that come as an enable/disable pair (`path-mtu-discovery` and `no-path-mtu-discovery`) are `None` when
-/// neither is written, `Some(true)` for the plain form and `Some(false)` for the `no-` form.
+/// Options that come as an enable/disable pair (`path-mtu-discovery` and `no-path-mtu-discovery`)
+/// are `None` when neither is written, `Some(true)` for the plain form and `Some(false)` for the
+/// `no-` form.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct InternetOptions {

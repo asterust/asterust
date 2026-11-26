@@ -1,4 +1,9 @@
+//! `flow-tap-dtcp`
 //! `system { services { flow-tap-dtcp { ... } } }`.
+//!
+//! # See also
+//!
+//! - [flow-tap-dtcp](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/flow-tap-dtcp-edit-system.html)
 
 use crate::{arg_of, child_block};
 use asterust::config::ConfigLine;

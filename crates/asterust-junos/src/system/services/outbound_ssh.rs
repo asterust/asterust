@@ -1,4 +1,9 @@
+//! `outbound-ssh`
 //! `system { services { outbound-ssh { client <id> { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [outbound-ssh](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/outbound-ssh-edit-system.html)
 
 use crate::{active_children, arg_of, args_of, list_values, named_children};
 use asterust::config::ConfigLine;

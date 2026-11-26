@@ -1,4 +1,4 @@
-//! [`JunosDevice`]: one parsed JunOS config with every supported view as a getter.
+//! Bundles one parsed Junos configuration with every supported view as a getter.
 
 use crate::firewall::{firewall, Firewall};
 use crate::interfaces::{interfaces, Interface};
@@ -11,24 +11,34 @@ use crate::routing_options::{routing_options, RoutingOptions};
 use crate::system::{system, System};
 use asterust::config::{juniper, Config};
 
-/// A parsed JunOS `show configuration` (brace format).
+/// Holds a parsed Junos `show configuration` (brace format) and exposes each supported view.
+///
+/// # Examples
+///
+/// ```
+/// use asterust_junos::JunosDevice;
+///
+/// let device = JunosDevice::parse("system {\n    host-name pe1;\n}\n");
+/// assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
+/// assert!(device.bgp().is_none());
+/// ```
 #[derive(Clone, Debug)]
 pub struct JunosDevice {
     config: Config,
 }
 
 impl JunosDevice {
-    /// Parse raw brace-format `show configuration` text.
+    /// Parses raw brace-format `show configuration` text.
     pub fn parse(config_text: &str) -> Self {
         Self::from_config(juniper::parse_braces(config_text))
     }
 
-    /// Wrap an already-parsed [`Config`].
+    /// Wraps an already-parsed [`Config`].
     pub fn from_config(config: Config) -> Self {
         Self { config }
     }
 
-    /// The underlying generic config tree.
+    /// Returns the underlying generic config tree.
     pub fn config(&self) -> &Config {
         &self.config
     }

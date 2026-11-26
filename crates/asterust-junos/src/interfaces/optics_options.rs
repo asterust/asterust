@@ -1,4 +1,14 @@
+//! `optics-options`
 //! `interfaces { <name> { optics-options { ... } } }`.
+//!
+//! # See also
+//!
+//! - [optics-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/optics-options-edit-interfaces.html)
+//! - [alarm (optics-options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/alarm-edit-interfaces.html)
+//! - [warning](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/warning-edit-interfaces-optics-options-qfx-series.html)
+//! - [wavelength](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/wavelength-edit-interfaces.html)
+//! - [tx-power](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/tx-power-edit-interfaces-optics-options-qfx-series.html)
+//! - [fec](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/fec-edit-interfaces-optics-options-qfx-series.html)
 
 use crate::{arg_of, has_leaf, named_children, toggle};
 use asterust::config::ConfigLine;
@@ -12,8 +22,8 @@ pub struct OpticsLowLight {
     pub syslog: bool,
 }
 
-/// The optics settings of an interface. `signal-degrade`, `tca`, `loopback`, `lane`, `host-side-fec`, `media-side-fec`
-/// and `application` are not extracted.
+/// The optics settings of an interface. `signal-degrade`, `tca`, `loopback`, `lane`,
+/// `host-side-fec`, `media-side-fec` and `application` are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct OpticsOptions {
