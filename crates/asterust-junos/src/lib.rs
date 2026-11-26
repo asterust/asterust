@@ -53,6 +53,18 @@ pub(crate) fn has_leaf(line: &ConfigLine, name: &str) -> bool {
     active_children(line).any(|c| c.text == name)
 }
 
+/// `Some(true)` for `<name>`, `Some(false)` for `no-<name>`, `None` if neither is present. Either may carry options.
+pub(crate) fn toggle(line: &ConfigLine, name: &str) -> Option<bool> {
+    let written = |statement: &str| active_children(line).any(|c| c.text == statement || c.arg(statement).is_some());
+    if written(name) {
+        Some(true)
+    } else if written(&format!("no-{name}")) {
+        Some(false)
+    } else {
+        None
+    }
+}
+
 /// Active children written `<keyword> <name>` (as a block or a leaf), with the name.
 pub(crate) fn named_children<'a>(
     line: &'a ConfigLine,
