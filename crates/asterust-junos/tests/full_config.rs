@@ -60,6 +60,13 @@ routing-instances {
         vrf-target target:65000:1;
     }
 }
+policy-options {
+    policy-statement EXPORT-LOOPBACK {
+        from protocol direct;
+        then accept;
+    }
+    community EDGE members 65000:100;
+}
 "#;
 
 #[test]
@@ -75,6 +82,9 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(device.ospf().unwrap().areas[0].id, "0.0.0.0");
     assert_eq!(device.bgp().unwrap().groups[0].neighbors[0].address, "10.255.0.2");
     assert!(device.routing_instances()[0].is_vrf());
+    let policies = device.policy_options().unwrap();
+    assert_eq!(policies.policy_statements[0].name, "EXPORT-LOOPBACK");
+    assert_eq!(policies.communities[0].members, ["65000:100"]);
 }
 
 #[test]
@@ -82,5 +92,5 @@ fn usable_through_the_device_trait() {
     fn block_count<D: Device>(text: &str) -> usize {
         D::parse(text).config().get_block_count()
     }
-    assert_eq!(block_count::<JunosDevice>(CONFIG), 5);
+    assert_eq!(block_count::<JunosDevice>(CONFIG), 6);
 }

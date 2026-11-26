@@ -2,7 +2,7 @@
 //! [`asterust::config::juniper`] (brace-delimited `show configuration` output).
 //!
 //! JunOS nests everything under a few top-level blocks (`interfaces`, `protocols`, `routing-options`,
-//! `routing-instances`), so each module exposes a free function that reads the relevant block from a
+//! `routing-instances`, `policy-options`), so each module exposes a free function that reads the relevant block from a
 //! [`asterust::config::Config`] rather than a per-block constructor. [`JunosDevice`] bundles a parsed
 //! config with all of them as getters.
 //!
@@ -13,6 +13,7 @@ pub mod device;
 pub mod interface;
 pub mod isis;
 pub mod ospf;
+pub mod policy_options;
 pub mod routing_instance;
 pub mod routing_options;
 
@@ -67,14 +68,27 @@ pub(crate) fn top_level<'a>(config: &'a Config, name: &str) -> Option<&'a Config
     config.blocks.iter().map(|b| b.get_root_line()).find(|l| l.text == name)
 }
 
-/// Values of a JunOS list: `[ a b ]` or a single bare value.
+/// Values of a JunOS list: `[ a b ]` or a single bare value. A quoted value may contain spaces.
 pub(crate) fn list_values(arg: &str) -> Vec<String> {
-    arg.trim()
-        .trim_start_matches('[')
-        .trim_end_matches(']')
-        .split_whitespace()
-        .map(str::to_string)
-        .collect()
+    let inner = arg.trim().trim_start_matches('[').trim_end_matches(']');
+    let mut values = Vec::new();
+    let mut current = String::new();
+    let mut quoted = false;
+    for ch in inner.chars() {
+        match ch {
+            '"' => quoted = !quoted,
+            c if c.is_whitespace() && !quoted => {
+                if !current.is_empty() {
+                    values.push(std::mem::take(&mut current));
+                }
+            }
+            c => current.push(c),
+        }
+    }
+    if !current.is_empty() {
+        values.push(current);
+    }
+    values
 }
 
 /// First whitespace-separated word of `arg`.

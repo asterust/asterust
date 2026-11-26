@@ -2,7 +2,7 @@
 name = "asterust-junos"
 version = "0.1.0"
 edition = "2021"
-description = "Typed Juniper JunOS config views (interfaces, OSPF, BGP, IS-IS, routing instances) extracted from an asterust config tree."
+description = "Typed Juniper JunOS config views (interfaces, OSPF, BGP, IS-IS, routing instances, policy options) extracted from an asterust config tree."
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/asterust/asterust"
