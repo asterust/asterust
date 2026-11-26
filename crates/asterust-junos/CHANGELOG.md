@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.4...asterust-junos-v0.1.5) - 2026-11-26
+
+### Added
+
+- *(junos)* add system internet-options and default-address-selection
+
+### Other
+
+- Merge pull request #53 from asterust/feat/junos-system-internet-options
+- Merge pull request #52 from asterust/refactor/junos-system-modules
+- *(junos)* split system into submodules
+
 ## [0.1.4](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.3...asterust-junos-v0.1.4) - 2026-11-26
 
 ### Added
