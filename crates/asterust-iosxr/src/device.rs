@@ -32,15 +32,15 @@ impl IosXrDevice {
         interfaces(&self.config)
     }
 
-    pub fn ospf_processes(&self) -> Vec<OspfProcess> {
+    pub fn ospf(&self) -> Vec<OspfProcess> {
         ospf_processes(&self.config)
     }
 
-    pub fn bgp_processes(&self) -> Vec<BgpProcess> {
+    pub fn bgp(&self) -> Vec<BgpProcess> {
         bgp_processes(&self.config)
     }
 
-    pub fn isis_instances(&self) -> Vec<IsisInstance> {
+    pub fn isis(&self) -> Vec<IsisInstance> {
         isis_instances(&self.config)
     }
 }
@@ -70,9 +70,9 @@ router bgp 65000
 ",
         );
         assert_eq!(device.interfaces()[0].name, "Loopback0");
-        assert_eq!(device.isis_instances()[0].tag, "CORE");
-        assert_eq!(device.ospf_processes()[0].process_id, "1");
-        assert_eq!(device.bgp_processes()[0].neighbors[0].address, "10.255.0.2");
+        assert_eq!(device.isis()[0].tag, "CORE");
+        assert_eq!(device.ospf()[0].process_id, "1");
+        assert_eq!(device.bgp()[0].neighbors[0].address, "10.255.0.2");
         assert_eq!(device.config().get_block_count(), 4);
     }
 }
