@@ -77,9 +77,9 @@ pub struct PyBgpNeighbor {
 impl From<BgpNeighbor> for PyBgpNeighbor {
     fn from(n: BgpNeighbor) -> Self {
         Self {
+            remote_as: n.remote_as.clone(),
+            description: n.description.clone(),
             address: n.address,
-            remote_as: n.remote_as,
-            description: n.description,
         }
     }
 }
@@ -98,7 +98,7 @@ impl From<BgpProcess> for PyBgpProcess {
         Self {
             asn: p.asn,
             router_id: p.router_id,
-            address_families: p.address_families,
+            address_families: p.address_families.into_iter().map(|af| af.name).collect(),
             neighbors: p.neighbors.into_iter().map(Into::into).collect(),
         }
     }

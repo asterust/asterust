@@ -10,7 +10,7 @@ tree parsed by [asterust](https://github.com/asterust/asterust).
 | --- | --- | --- |
 | `interface` | `interface <name>` | description, vrf, ipv4/ipv6 addresses, shutdown |
 | `ospf` | `router ospf <id>` | router-id, areas and their interfaces |
-| `bgp` | `router bgp <asn>` | router-id, address-families, neighbors (remote-as, description) |
+| `bgp` | `router bgp <asn>` | router-id, timers, confederation, route-reflector cluster-id, address-families (networks, aggregates, redistribution), neighbors, neighbor/session/af-group templates, VRFs |
 | `isis` | `router isis <tag>` | net, interfaces |
 
 ```rust
@@ -24,3 +24,21 @@ for iface in device.interfaces() {
 
 The per-module functions (e.g. `interface::interfaces(&config)`) work on any
 `asterust::config::Config` if you already have one parsed.
+
+## Sources
+
+The BGP model and its test fixtures follow Cisco's
+[Implementing BGP on Cisco IOS XR Software](https://www.cisco.com/c/en/us/td/docs/routers/xr12000/software/xr12k_r4-1/routing/configuration/guide/routing_cg41xr12k_chapter1.html)
+(Cisco IOS XR Routing Configuration Guide for the XR 12000 Series Router, Release 4.1, updated April 2011).
+
+| Test fixture (`src/bgp.rs`) | Documentation section |
+| --- | --- |
+| `ENABLING_BGP` | Configuration Examples: "Enabling BGP: Example" |
+| `TEMPLATES` | BGP Configuration: "Viewing Inherited Configurations" sample configuration |
+| `ROUTE_REFLECTOR` | "Configuring a Route Reflector for BGP" and "Adjusting BGP Timers" |
+| `PE_CE` | "Configuring BGP as a PE-CE Protocol" |
+
+The fixtures are adapted, not copied verbatim: the guide mostly shows interactive CLI sessions, so
+they are reindented into running-config form and shortened. Release 4.1 is old; the neighbor,
+`neighbor-group`, `session-group`, `af-group` and VRF structure is unchanged in current IOS XR, but
+check newer syntax against a real device before relying on a command.
