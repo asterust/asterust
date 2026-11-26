@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.3...asterust-junos-v0.3.4) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces vrrp-group and aggregated-ether-options bfd-liveness-detection
+
+### Other
+
+- Merge pull request #76 from asterust/feat/junos-interfaces-vrrp-bfd
+- Merge origin/main into feat/junos-interfaces-vrrp-bfd
+
 ## [0.3.3](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.2...asterust-junos-v0.3.3) - 2026-11-26
 
 ### Added
