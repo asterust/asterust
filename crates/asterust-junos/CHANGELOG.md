@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.1...asterust-junos-v0.2.2) - 2026-11-26
+
+### Added
+
+- *(junos)* add system services web-management, netconf and xnm details
+- *(junos)* add system commit, processes, scripts and flags
+
+### Other
+
+- Merge pull request #61 from asterust/feat/junos-system-services-details
+- Merge pull request #60 from asterust/feat/junos-system-commit-processes-scripts
+
 ## [0.2.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.0...asterust-junos-v0.2.1) - 2026-11-26
 
 ### Added
