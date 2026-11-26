@@ -17,6 +17,16 @@ device.bgp    # list of BgpProcess
 device.isis   # list of IsisInstance
 ```
 
+IOS XE works the same way from `asterust.iosxe`:
+
+```python
+from asterust.iosxe import IosXeDevice
+
+device = IosXeDevice(running_config_text)
+device.interfaces  # includes ospf_area / isis_tag set per interface
+device.bgp         # neighbors assembled from `neighbor <addr> ...` lines
+```
+
 The generic tree is available for any platform:
 
 ```python

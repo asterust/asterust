@@ -122,17 +122,6 @@ impl From<IsisInstance> for PyIsisInstance {
     }
 }
 
-macro_rules! impl_repr {
-    ($($ty:ty),*) => {$(
-        #[pymethods]
-        impl $ty {
-            fn __repr__(&self) -> String {
-                format!("{self:?}")
-            }
-        }
-    )*};
-}
-
 impl_repr!(
     PyInterface,
     PyOspfArea,
