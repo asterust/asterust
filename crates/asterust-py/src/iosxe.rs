@@ -12,6 +12,8 @@ use asterust_iosxe::vrf::{Vrf, VrfAddressFamily};
 use asterust_iosxe::IosXeDevice;
 use pyo3::prelude::*;
 
+/// An IOS XE interface. Address fields hold the raw argument text
+/// (e.g. `"10.0.0.1 255.255.255.0"`, `"2001:db8::1/64"`).
 #[pyclass(name = "IosXeInterface", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeInterface {
@@ -21,8 +23,10 @@ pub struct PyIosXeInterface {
     ipv4_addresses: Vec<String>,
     ipv6_addresses: Vec<String>,
     shutdown: bool,
+    /// Process id and area from `ip ospf <process> area <area>`.
     ospf_process_id: Option<String>,
     ospf_area: Option<String>,
+    /// Tag from `ip router isis [tag]`; empty string for the untagged process.
     isis_tag: Option<String>,
 }
 
@@ -42,6 +46,7 @@ impl From<Interface> for PyIosXeInterface {
     }
 }
 
+/// A `network <prefix> <wildcard> area <area>` statement.
 #[pyclass(name = "IosXeOspfNetwork", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeOspfNetwork {
@@ -60,6 +65,8 @@ impl From<OspfNetwork> for PyIosXeOspfNetwork {
     }
 }
 
+/// An IOS XE OSPF process. Interfaces enabled with `ip ospf <process> area <area>`
+/// are on `IosXeInterface`, not here.
 #[pyclass(name = "IosXeOspfProcess", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeOspfProcess {
@@ -82,6 +89,7 @@ impl From<OspfProcess> for PyIosXeOspfProcess {
     }
 }
 
+/// A BGP neighbor assembled from its `neighbor <address> ...` lines.
 #[pyclass(name = "IosXeBgpNeighbor", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeBgpNeighbor {
@@ -102,6 +110,8 @@ impl From<BgpNeighbor> for PyIosXeBgpNeighbor {
     }
 }
 
+/// An IOS XE BGP process. `asn` is kept as text since it may be asdot (`"1.10"`).
+/// Peer-group definitions are not listed as neighbors.
 #[pyclass(name = "IosXeBgpProcess", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeBgpProcess {
@@ -122,9 +132,12 @@ impl From<BgpProcess> for PyIosXeBgpProcess {
     }
 }
 
+/// An IOS XE IS-IS process. Interfaces enabled with `ip router isis` are on
+/// `IosXeInterface`, not here.
 #[pyclass(name = "IosXeIsisInstance", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeIsisInstance {
+    /// `None` for the untagged process (plain `router isis`).
     tag: Option<String>,
     nets: Vec<String>,
 }
@@ -138,10 +151,13 @@ impl From<IsisInstance> for PyIosXeIsisInstance {
     }
 }
 
+/// Route targets and maps for one address family of a VRF.
 #[pyclass(name = "IosXeVrfAddressFamily", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeVrfAddressFamily {
+    /// e.g. `"ipv4"` or `"ipv6"`.
     name: String,
+    /// `route-target both` entries appear in both lists.
     import_route_targets: Vec<String>,
     export_route_targets: Vec<String>,
     import_map: Option<String>,
@@ -160,6 +176,8 @@ impl From<VrfAddressFamily> for PyIosXeVrfAddressFamily {
     }
 }
 
+/// An IOS XE VRF. The legacy `ip vrf` form has no address-family sections; its route targets and
+/// maps are reported as a single `"ipv4"` address family.
 #[pyclass(name = "IosXeVrf", module = "asterust.iosxe", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIosXeVrf {
@@ -167,6 +185,7 @@ pub struct PyIosXeVrf {
     description: Option<String>,
     rd: Option<String>,
     address_families: Vec<PyIosXeVrfAddressFamily>,
+    /// `true` for `ip vrf <name>`, `false` for `vrf definition <name>`.
     legacy: bool,
 }
 
@@ -193,7 +212,16 @@ impl_repr!(
     PyIosXeVrf
 );
 
-/// A parsed IOS XE running config. `interfaces`, `ospf`, `bgp`, `isis` and `vrfs` extract typed blocks.
+/// Holds a parsed IOS XE running config. The `interfaces`, `ospf`, `bgp`, `isis` and `vrfs`
+/// getters extract typed blocks.
+///
+/// ```python
+/// from asterust.iosxe import IosXeDevice
+///
+/// device = IosXeDevice(running_config_text)
+/// for iface in device.interfaces:
+///     print(iface.name, iface.ipv4_addresses, iface.shutdown)
+/// ```
 #[pyclass(name = "IosXeDevice", module = "asterust.iosxe", frozen)]
 pub struct PyIosXeDevice {
     inner: IosXeDevice,
@@ -208,7 +236,7 @@ impl PyIosXeDevice {
         }
     }
 
-    /// Build from an already-parsed `asterust.Config`.
+    /// Builds a device from an already-parsed `asterust.Config`.
     #[staticmethod]
     fn from_config(config: PyRef<'_, PyConfig>) -> Self {
         Self {
@@ -216,6 +244,7 @@ impl PyIosXeDevice {
         }
     }
 
+    /// Returns the underlying generic `Config` tree.
     #[getter]
     fn config(&self) -> PyConfig {
         PyConfig {
@@ -223,26 +252,31 @@ impl PyIosXeDevice {
         }
     }
 
+    /// Returns every `interface` block as an `IosXeInterface`.
     #[getter]
     fn interfaces(&self) -> Vec<PyIosXeInterface> {
         self.inner.interfaces().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router ospf` process as an `IosXeOspfProcess`.
     #[getter]
     fn ospf(&self) -> Vec<PyIosXeOspfProcess> {
         self.inner.ospf().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router bgp` process as an `IosXeBgpProcess`.
     #[getter]
     fn bgp(&self) -> Vec<PyIosXeBgpProcess> {
         self.inner.bgp().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router isis` process as an `IosXeIsisInstance`.
     #[getter]
     fn isis(&self) -> Vec<PyIosXeIsisInstance> {
         self.inner.isis().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `vrf definition` (and legacy `ip vrf`) as an `IosXeVrf`.
     #[getter]
     fn vrfs(&self) -> Vec<PyIosXeVrf> {
         self.inner.vrfs().into_iter().map(Into::into).collect()
