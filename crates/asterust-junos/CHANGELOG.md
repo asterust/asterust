@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.2...asterust-junos-v0.3.3) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces unit family filter, rpf-check, policer, sampling and address options
+
+### Other
+
+- Merge pull request #74 from asterust/feat/junos-interfaces-unit-family
+- Merge origin/main into feat/junos-interfaces-unit-family
+
 ## [0.3.2](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.1...asterust-junos-v0.3.2) - 2026-11-26
 
 ### Added
