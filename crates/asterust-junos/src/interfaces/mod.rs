@@ -4,12 +4,18 @@ mod aggregated_ether_options;
 mod auto_configure;
 mod ether_options;
 mod hold_time;
+mod link_degrade_monitor;
+mod optics_options;
+mod otn_options;
 mod unit;
 
 pub use aggregated_ether_options::{AggregatedEtherOptions, BfdLivenessDetection, Lacp};
 pub use auto_configure::{AutoConfigure, AutoConfigureProfile, AutoConfigureRanges};
 pub use ether_options::{EtherOptions, Ieee8023ad};
 pub use hold_time::HoldTime;
+pub use link_degrade_monitor::{LinkDegradeMonitor, LinkDegradeThresholds};
+pub use optics_options::{OpticsLowLight, OpticsOptions};
+pub use otn_options::{OtnOptions, OtnRate, SignalDegrade};
 pub use unit::{
     AddressArp, BandwidthThreshold, FamilyFilter, FamilyPolicer, FamilySampling, InterfaceUnit, RpfCheck,
     TrackedInterface, TrackedRoute, UnitAddress, UnitFamily, VlanMap, VlanTags, VrrpGroup, VrrpInheritFrom, VrrpTrack,
@@ -21,6 +27,9 @@ use asterust::config::{Config, ConfigLine};
 use auto_configure::parse_auto_configure;
 use ether_options::parse_ether_options;
 use hold_time::parse_hold_time;
+use link_degrade_monitor::parse_link_degrade_monitor;
+use optics_options::parse_optics_options;
+use otn_options::parse_otn_options;
 use unit::parse_unit;
 
 /// A physical or loopback interface such as `ge-0/0/0` or `lo0`.
@@ -45,6 +54,9 @@ pub struct Interface {
     pub ether_options: Option<EtherOptions>,
     pub aggregated_ether_options: Option<AggregatedEtherOptions>,
     pub auto_configure: Option<AutoConfigure>,
+    pub optics_options: Option<OpticsOptions>,
+    pub otn_options: Option<OtnOptions>,
+    pub link_degrade_monitor: Option<LinkDegradeMonitor>,
     pub units: Vec<InterfaceUnit>,
 }
 
@@ -77,6 +89,9 @@ fn parse_interface(line: &ConfigLine) -> Interface {
         ether_options: parse_ether_options(line),
         aggregated_ether_options: child_block(line, "aggregated-ether-options").map(parse_aggregated_ether_options),
         auto_configure: child_block(line, "auto-configure").map(parse_auto_configure),
+        optics_options: child_block(line, "optics-options").map(parse_optics_options),
+        otn_options: child_block(line, "otn-options").map(parse_otn_options),
+        link_degrade_monitor: child_block(line, "link-degrade-monitor").map(parse_link_degrade_monitor),
         units: named_children(line, "unit")
             .map(|(number, unit)| parse_unit(number, unit))
             .collect(),

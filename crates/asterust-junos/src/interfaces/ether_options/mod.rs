@@ -25,6 +25,8 @@ pub struct EtherOptions {
     pub speed: Option<String>,
     /// `full-duplex`, `half-duplex` or `automatic`.
     pub link_mode: Option<String>,
+    /// e.g. `"fec91"`, `"fec74"`, `"fec108"` or `"none"`.
+    pub fec: Option<String>,
     /// The bundle this interface is a member of; the statement is `802.3ad`.
     pub ieee_802_3ad: Option<Ieee8023ad>,
 }
@@ -43,6 +45,7 @@ pub(super) fn parse_ether_options(interface: &ConfigLine) -> Option<EtherOptions
         source_filtering: toggle(options, "source-filtering"),
         speed: arg_of(options, "speed").map(str::to_string),
         link_mode: arg_of(options, "link-mode").map(str::to_string),
+        fec: arg_of(options, "fec").map(str::to_string),
         ieee_802_3ad: parse_ieee_802_3ad(options),
     })
 }
@@ -85,6 +88,7 @@ interfaces {
                 backup;
             }
             link-mode full-duplex;
+            fec fec91;
             no-loopback;
             no-source-filtering;
             flow-control;
@@ -130,6 +134,7 @@ interfaces {
         let ifaces = interfaces(&juniper::parse_braces(CONFIG));
         let options = ifaces[2].ether_options.as_ref().unwrap();
         assert_eq!(options.link_mode.as_deref(), Some("full-duplex"));
+        assert_eq!(options.fec.as_deref(), Some("fec91"));
         assert_eq!(options.loopback, Some(false));
         assert_eq!(options.source_filtering, Some(false));
         assert_eq!(options.flow_control, Some(true));
