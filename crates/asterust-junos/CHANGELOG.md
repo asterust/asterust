@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.4...asterust-junos-v0.3.0) - 2026-11-26
+
+### Other
+
+- Merge pull request #68 from asterust/refactor/junos-mirror-config-layout
+- Merge origin/main into refactor/junos-mirror-config-layout
+- *(junos)* [**breaking**] mirror the config hierarchy in the module tree
+
 ## [0.2.4](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.3...asterust-junos-v0.2.4) - 2026-11-26
 
 ### Added
