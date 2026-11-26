@@ -1,6 +1,6 @@
 //! `policy-options { ... }`: policy statements, communities, prefix lists and AS paths.
 
-use crate::{active_children, list_values, named_children, top_level, unquote};
+use crate::{active_children, list_values, named_children, split_keyword, split_name, statements, top_level, unquote};
 use asterust::config::{Config, ConfigLine};
 
 /// A `route-filter <prefix> <match-type>` condition.
@@ -152,35 +152,6 @@ pub fn policy_options(config: &Config) -> Option<PolicyOptions> {
             })
             .collect(),
     })
-}
-
-/// Split `<name> <rest>`, where the name may be quoted.
-fn split_name(arg: &str) -> (&str, &str) {
-    if let Some((name, rest)) = arg.strip_prefix('"').and_then(|quoted| quoted.split_once('"')) {
-        return (name, rest.trim());
-    }
-    arg.split_once(char::is_whitespace)
-        .map_or((arg, ""), |(name, rest)| (name, rest.trim()))
-}
-
-/// Split `<keyword> <argument>` into its two parts; the argument is empty for a bare keyword.
-fn split_keyword(statement: &str) -> (&str, &str) {
-    statement
-        .split_once(char::is_whitespace)
-        .map_or((statement, ""), |(keyword, arg)| (keyword, arg.trim()))
-}
-
-/// Statements under `line`'s `keyword` entries, whether written `from x;` or `from { x; y; }`.
-fn statements<'a>(line: &'a ConfigLine, keyword: &str) -> Vec<&'a str> {
-    let mut found = Vec::new();
-    for child in active_children(line) {
-        if child.text == keyword {
-            found.extend(active_children(child).map(|s| s.text.as_str()));
-        } else if let Some(arg) = child.arg(keyword) {
-            found.push(arg);
-        }
-    }
-    found
 }
 
 fn parse_policy(name: &str, line: &ConfigLine) -> PolicyStatement {

@@ -67,6 +67,16 @@ policy-options {
     }
     community EDGE members 65000:100;
 }
+firewall {
+    family inet {
+        filter PROTECT-RE {
+            term SSH {
+                from destination-port ssh;
+                then accept;
+            }
+        }
+    }
+}
 "#;
 
 #[test]
@@ -85,6 +95,7 @@ fn extracts_every_supported_view_from_one_config() {
     let policies = device.policy_options().unwrap();
     assert_eq!(policies.policy_statements[0].name, "EXPORT-LOOPBACK");
     assert_eq!(policies.communities[0].members, ["65000:100"]);
+    assert_eq!(device.firewall().unwrap().filters[0].name, "PROTECT-RE");
 }
 
 #[test]
@@ -92,5 +103,5 @@ fn usable_through_the_device_trait() {
     fn block_count<D: Device>(text: &str) -> usize {
         D::parse(text).config().get_block_count()
     }
-    assert_eq!(block_count::<JunosDevice>(CONFIG), 6);
+    assert_eq!(block_count::<JunosDevice>(CONFIG), 7);
 }

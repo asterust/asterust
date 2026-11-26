@@ -12,6 +12,7 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 | `routing_instance` | `routing-instances` | instance-type, route-distinguisher, interfaces, vrf-target, vrf-import/vrf-export |
 | `routing_options` | `routing-options` | router-id, autonomous-system |
 | `policy_options` | `policy-options` | policy statements (terms with `from`/`to` conditions and `then` actions), communities, prefix lists, AS paths and AS path groups |
+| `firewall` | `firewall` | `family` filters (terms with `from` conditions and `then` actions) and policers |
 
 ```rust
 use asterust_junos::JunosDevice;
@@ -46,6 +47,7 @@ the guide's typographic quotes are written as plain quotes.
 | same page | Example: Configure Multiple Single-Hop EBGP Sessions on Different Links Using the Same IPv6 Link-Local Address (R1) | `bgp::DOC_LINK_LOCAL` (quoted neighbor names), `interface::DOC_LINK_LOCAL` (VLAN units, `primary` address) |
 | [BGP Route Reflectors](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-rr.html) | Example: Configuring a Route Reflector (Device A) | `bgp::DOC_ROUTE_REFLECTOR` (the guide's rendering of this output drops a closing brace, which is restored) |
 | [Routing Policies for BGP Communities](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/routing-policies-communities.html) | Examples: Redistribute BGP Routes with a Specific Community Tag into IS-IS (Device C), Removes BGP Communities (R1, R2), Based on the Number of BGP Communities (R2) | `policy_options::DOC_COMMUNITY_TAG`, `policy_options::DOC_COMMUNITY_ACTIONS` (the rendered output wraps lines mid-statement, which are rejoined) |
+| [TCP Access Restriction for BGP](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/tcp_access_restriction.html) | Examples: Configuring a Filter to Block TCP Access to a Port Except from Specified BGP Peers (Device E), Configuring a Filter to Limit TCP Access to a Port Based On a Prefix List | `firewall::DOC_BGP179_PEERS`, `firewall::DOC_BGP179_PREFIX_LIST` (wrapped lines are rejoined) |
 
 Other pages consulted but not used for fixtures:
 - [Junos OS documentation index](https://networkingdocs.hpe.com/documentation/product/us/en/junos-os/)
@@ -55,6 +57,8 @@ Other pages consulted but not used for fixtures:
 **Not yet grounded in documentation or a real device:** `protocols isis`, `routing-instances` (VRFs, `vrf-target`,
 `vrf-import`/`vrf-export`), the `inactive:` handling, `disable`, bracketed policy lists (`export [ a b ]`), and
 the other extra cases in the tests, including `policy_options` prefix lists, AS paths and AS path groups,
-`local-preference`, `next-hop`, `as-path-prepend`, `next term`/`next policy` and block-form communities. Those fixtures are marked "not from documentation" in the code and were
+`local-preference`, `next-hop`, `as-path-prepend`, `next term`/`next policy` and block-form communities, and
+the `firewall` policers, flag and list match conditions, and the `count`, `policer`, `log`, `syslog`,
+`forwarding-class` and `loss-priority` actions. Those fixtures are marked "not from documentation" in the code and were
 written from knowledge of the JunOS hierarchy, so treat the corresponding fields as unverified. A Juniper
 IS-IS or Layer 3 VPN example page, or a sanitized `show configuration` snippet, would let these be replaced.
