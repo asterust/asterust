@@ -74,6 +74,18 @@ pub struct SyslogHost {
     pub log_prefix: Option<String>,
 }
 
+/// A syslog `archive` statement. `archive-sites`, `start-time` and `transfer-interval` are not extracted.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SyslogArchive {
+    /// Maximum number of archived files.
+    pub files: Option<String>,
+    /// Maximum file size, e.g. `"1m"`.
+    pub size: Option<String>,
+    /// `Some(true)` for `world-readable`, `Some(false)` for `no-world-readable`.
+    pub world_readable: Option<bool>,
+}
+
 /// A `file <name>` or `user <name>` destination.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -81,9 +93,11 @@ pub struct SyslogTarget {
     /// File name, or user name (`*` for all users).
     pub name: String,
     pub rules: Vec<SyslogRule>,
+    /// Only files have an archive.
+    pub archive: Option<SyslogArchive>,
 }
 
-/// The `system syslog` configuration. Archive settings are not extracted.
+/// The `system syslog` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Syslog {
@@ -94,6 +108,8 @@ pub struct Syslog {
     pub source_address: Option<String>,
     /// e.g. `"year millisecond"`.
     pub time_format: Option<String>,
+    /// The default archive settings that files inherit.
+    pub archive: Option<SyslogArchive>,
 }
 
 /// A login `class`.
@@ -291,6 +307,7 @@ fn parse_syslog(syslog: &ConfigLine) -> Syslog {
         console: child_block(syslog, "console").map(syslog_rules).unwrap_or_default(),
         source_address: arg_of(syslog, "source-address").map(str::to_string),
         time_format: arg_of(syslog, "time-format").map(str::to_string),
+        archive: syslog_archive(syslog),
     }
 }
 
@@ -299,8 +316,31 @@ fn syslog_targets(syslog: &ConfigLine, keyword: &str) -> Vec<SyslogTarget> {
         .map(|(name, target)| SyslogTarget {
             name: name.to_string(),
             rules: syslog_rules(target),
+            archive: syslog_archive(target),
         })
         .collect()
+}
+
+/// An `archive` written as a block or on one line (`archive size 1m files 5 world-readable;`).
+fn syslog_archive(parent: &ConfigLine) -> Option<SyslogArchive> {
+    let archive = active_children(parent).find(|c| c.text == "archive" || c.arg("archive").is_some())?;
+    // Both forms reduce to one stream of words: the options on the line itself, then one statement per child.
+    let mut words = archive
+        .text
+        .split_whitespace()
+        .skip(1)
+        .chain(active_children(archive).flat_map(|c| c.text.split_whitespace()));
+    let mut settings = SyslogArchive::default();
+    while let Some(word) = words.next() {
+        match word {
+            "files" => settings.files = words.next().map(str::to_string),
+            "size" => settings.size = words.next().map(str::to_string),
+            "world-readable" => settings.world_readable = Some(true),
+            "no-world-readable" => settings.world_readable = Some(false),
+            _ => {}
+        }
+    }
+    Some(settings)
 }
 
 /// Children written `<facility> <severity>`, which tells them apart from options such as `port 514`.
@@ -605,6 +645,45 @@ system {
         let syslog = system(&juniper::parse_braces(SYSLOG)).unwrap().syslog.unwrap();
         assert_eq!(syslog.source_address.as_deref(), Some("192.0.2.1"));
         assert_eq!(syslog.time_format.as_deref(), Some("year millisecond"));
+    }
+
+    #[test]
+    fn extracts_syslog_archive_in_line_and_block_form() {
+        let syslog = system(&juniper::parse_braces(
+            r#"
+system {
+    syslog {
+        archive {
+            files 20;
+            size 5m;
+            world-readable;
+        }
+        file messages {
+            any notice;
+            archive size 100k files 10 no-world-readable;
+        }
+        file plain {
+            any info;
+        }
+    }
+}
+"#,
+        ))
+        .unwrap()
+        .syslog
+        .unwrap();
+
+        let default = syslog.archive.unwrap();
+        assert_eq!(default.files.as_deref(), Some("20"));
+        assert_eq!(default.size.as_deref(), Some("5m"));
+        assert_eq!(default.world_readable, Some(true));
+
+        let messages = syslog.files[0].archive.as_ref().unwrap();
+        assert_eq!(messages.files.as_deref(), Some("10"));
+        assert_eq!(messages.size.as_deref(), Some("100k"));
+        assert_eq!(messages.world_readable, Some(false));
+
+        assert_eq!(syslog.files[1].archive, None);
     }
 
     #[test]
