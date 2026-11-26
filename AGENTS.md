@@ -3,8 +3,10 @@
 `asterust` is a small, pure-Rust library: vendor-namespaced hierarchical
 configuration parsing (`config::cisco`, `config::juniper`). It has no
 PyO3/binding dependency of its own — consumers (e.g. a PyO3 extension
-module) add their own bindings on top. These guidelines apply to this
-crate specifically; prune/extend them if the crate's scope changes.
+module) add their own bindings on top. The repo is a Cargo workspace:
+platform crates live under `crates/` and depend on this core. These
+guidelines apply to the core crate and, unless noted, the crates under
+`crates/`; prune/extend them if the scope changes.
 
 ## Core Principle
 

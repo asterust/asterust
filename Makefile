@@ -9,13 +9,13 @@ help: ## Show available commands
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-10s$(RESET) %s\n", $$1, $$2}'
 
-build: ## Build the crate
+build: ## Build every crate in the workspace
 	@echo "$(YELLOW)Building...$(RESET)"
-	cargo build
+	cargo build --workspace
 
 test: ## Run unit and integration tests
 	@echo "$(YELLOW)Running tests...$(RESET)"
-	cargo test --all-targets
+	cargo test --workspace --all-targets
 
 fmt: ## Format code with rustfmt
 	@echo "$(YELLOW)Formatting...$(RESET)"
@@ -23,7 +23,7 @@ fmt: ## Format code with rustfmt
 
 lint: ## Run clippy (warnings treated as errors)
 	@echo "$(YELLOW)Running clippy...$(RESET)"
-	cargo clippy --all-targets -- -D warnings
+	cargo clippy --workspace --all-targets -- -D warnings
 
 check: ## Run the same checks as CI (fmt --check, clippy, test)
 	cargo fmt --all -- --check
