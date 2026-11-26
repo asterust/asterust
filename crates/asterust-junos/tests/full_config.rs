@@ -7,6 +7,9 @@ system {
     host-name pe1;
     domain-name example.net;
     time-zone UTC;
+    root-authentication {
+        encrypted-password "$6$salt$hash";
+    }
     name-server {
         192.0.2.53;
     }
@@ -122,6 +125,10 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
     assert_eq!(device.system().unwrap().domain_name.as_deref(), Some("example.net"));
     assert_eq!(device.system().unwrap().time_zone.as_deref(), Some("UTC"));
+    assert_eq!(
+        device.system().unwrap().root_authentication.unwrap().methods,
+        ["encrypted-password"]
+    );
     assert_eq!(device.system().unwrap().name_servers[0].address, "192.0.2.53");
     assert!(device.system().unwrap().ntp.unwrap().servers[0].prefer);
     assert_eq!(device.system().unwrap().syslog.unwrap().hosts[0].address, "192.0.2.5");

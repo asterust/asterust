@@ -164,6 +164,14 @@ pub struct Services {
     pub https: bool,
 }
 
+/// The `system root-authentication` methods. Passwords and keys are not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct RootAuthentication {
+    /// One entry per statement, e.g. `"encrypted-password"`, `"ssh-rsa"`, `"no-public-keys"`.
+    pub methods: Vec<String>,
+}
+
 /// The top-level `system` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -172,6 +180,7 @@ pub struct System {
     pub domain_name: Option<String>,
     /// e.g. `"UTC"` or `"America/New_York"`.
     pub time_zone: Option<String>,
+    pub root_authentication: Option<RootAuthentication>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
     pub syslog: Option<Syslog>,
@@ -186,6 +195,9 @@ pub fn system(config: &Config) -> Option<System> {
         host_name: arg_of(system, "host-name").map(str::to_string),
         domain_name: arg_of(system, "domain-name").map(str::to_string),
         time_zone: arg_of(system, "time-zone").map(str::to_string),
+        root_authentication: child_block(system, "root-authentication").map(|auth| RootAuthentication {
+            methods: authentication_methods(auth),
+        }),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),
         syslog: child_block(system, "syslog").map(parse_syslog),
@@ -220,6 +232,15 @@ fn parse_ssh(ssh: &ConfigLine) -> SshService {
     }
 }
 
+/// The name of each statement in an `authentication` block. Secrets can carry a trailing `## SECRET-DATA` marker,
+/// so only the first word is kept.
+fn authentication_methods(auth: &ConfigLine) -> Vec<String> {
+    active_children(auth)
+        .filter_map(|c| c.text.split_whitespace().next())
+        .map(str::to_string)
+        .collect()
+}
+
 fn parse_login(login: &ConfigLine) -> Login {
     Login {
         message: arg_of(login, "message").map(str::to_string),
@@ -245,13 +266,7 @@ fn parse_login(login: &ConfigLine) -> Login {
                 uid: arg_of(user, "uid").map(str::to_string),
                 full_name: arg_of(user, "full-name").map(str::to_string),
                 authentication_methods: child_block(user, "authentication")
-                    .map(|auth| {
-                        // Secrets may carry a trailing `## SECRET-DATA` marker; only the method name is kept.
-                        active_children(auth)
-                            .filter_map(|c| c.text.split_whitespace().next())
-                            .map(str::to_string)
-                            .collect()
-                    })
+                    .map(authentication_methods)
                     .unwrap_or_default(),
             })
             .collect(),
@@ -785,6 +800,41 @@ system {
     fn time_zone_is_optional() {
         let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
         assert_eq!(system.time_zone, None);
+    }
+
+    #[test]
+    fn extracts_root_authentication_methods_without_secrets() {
+        let system = system(&juniper::parse_braces(
+            r#"
+system {
+    root-authentication {
+        encrypted-password "$6$salt$hash"; ## SECRET-DATA
+        ssh-rsa "ssh-rsa AAAAB3Nza root@host"; ## SECRET-DATA
+        ssh-rsa "ssh-rsa AAAAB3Nzb ops@host" {
+            from 192.0.2.0/24;
+        }
+    }
+}
+"#,
+        ))
+        .unwrap();
+        let root = system.root_authentication.unwrap();
+        assert_eq!(root.methods, ["encrypted-password", "ssh-rsa", "ssh-rsa"]);
+    }
+
+    #[test]
+    fn root_authentication_can_disable_public_keys() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    root-authentication {\n        no-public-keys;\n    }\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.root_authentication.unwrap().methods, ["no-public-keys"]);
+    }
+
+    #[test]
+    fn no_root_authentication_is_none() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.root_authentication.is_none());
     }
 
     #[test]
