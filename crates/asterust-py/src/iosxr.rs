@@ -13,6 +13,8 @@ use asterust_iosxr::vrf::{Vrf, VrfAddressFamily};
 use asterust_iosxr::IosXrDevice;
 use pyo3::prelude::*;
 
+/// An IOS XR interface. Address fields hold the raw argument text
+/// (e.g. `"10.0.0.1 255.255.255.0"`, `"2001:db8::1/64"`).
 #[pyclass(name = "Interface", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyInterface {
@@ -37,6 +39,7 @@ impl From<Interface> for PyInterface {
     }
 }
 
+/// An OSPF area and the interfaces configured under it.
 #[pyclass(name = "OspfArea", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyOspfArea {
@@ -53,6 +56,7 @@ impl From<OspfArea> for PyOspfArea {
     }
 }
 
+/// An IOS XR OSPF process.
 #[pyclass(name = "OspfProcess", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyOspfProcess {
@@ -71,6 +75,7 @@ impl From<OspfProcess> for PyOspfProcess {
     }
 }
 
+/// Keepalive and hold-time from `timers [bgp] <keepalive> <hold-time>`.
 #[pyclass(name = "BgpTimers", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyBgpTimers {
@@ -87,9 +92,11 @@ impl From<BgpTimers> for PyBgpTimers {
     }
 }
 
-/// A Python class made of some identifying string fields plus the shared address-family settings.
+/// Defines a Python class made of some identifying string fields plus the shared address-family
+/// settings.
 macro_rules! af_settings_class {
-    ($rust:ident, $py:literal, $src:ty, [$($key:ident),+]) => {
+    ($rust:ident, $py:literal, $doc:literal, $src:ty, [$($key:ident),+]) => {
+        #[doc = $doc]
         #[pyclass(name = $py, module = "asterust.iosxr", frozen, get_all, eq)]
         #[derive(Clone, Debug, PartialEq, Eq)]
         pub struct $rust {
@@ -140,14 +147,22 @@ macro_rules! af_settings_class {
 af_settings_class!(
     PyBgpNeighborAddressFamily,
     "BgpNeighborAddressFamily",
+    "An `address-family <afi> <safi>` section under a neighbor or neighbor group.",
     BgpNeighborAddressFamily,
     [name]
 );
-af_settings_class!(PyBgpAfGroup, "BgpAfGroup", BgpAfGroup, [name, address_family]);
+af_settings_class!(
+    PyBgpAfGroup,
+    "BgpAfGroup",
+    "An `af-group <name> address-family <afi> <safi>` template.",
+    BgpAfGroup,
+    [name, address_family]
+);
 
-/// A Python class made of one identifying string field plus the shared peer settings.
+/// Defines a Python class made of one identifying string field plus the shared peer settings.
 macro_rules! peer_settings_class {
-    ($rust:ident, $py:literal, $src:ty, $key:ident) => {
+    ($rust:ident, $py:literal, $doc:literal, $src:ty, $key:ident) => {
+        #[doc = $doc]
         #[pyclass(name = $py, module = "asterust.iosxr", frozen, get_all, eq)]
         #[derive(Clone, Debug, PartialEq, Eq)]
         pub struct $rust {
@@ -185,13 +200,34 @@ macro_rules! peer_settings_class {
     };
 }
 
-peer_settings_class!(PyBgpNeighbor, "BgpNeighbor", BgpNeighbor, address);
-peer_settings_class!(PyBgpNeighborGroup, "BgpNeighborGroup", BgpNeighborGroup, name);
-peer_settings_class!(PyBgpSessionGroup, "BgpSessionGroup", BgpSessionGroup, name);
+peer_settings_class!(
+    PyBgpNeighbor,
+    "BgpNeighbor",
+    "A `neighbor <address>` block. Peer settings are reachable directly (`neighbor.remote_as`).",
+    BgpNeighbor,
+    address
+);
+peer_settings_class!(
+    PyBgpNeighborGroup,
+    "BgpNeighborGroup",
+    "A `neighbor-group <name>` template.",
+    BgpNeighborGroup,
+    name
+);
+peer_settings_class!(
+    PyBgpSessionGroup,
+    "BgpSessionGroup",
+    "A `session-group <name>` template (address-family-independent settings only).",
+    BgpSessionGroup,
+    name
+);
 
+/// A router- or VRF-level `address-family <afi> <safi>` section. Values are the raw argument text
+/// (e.g. `"10.2.0.0/24 route-policy foo"`).
 #[pyclass(name = "BgpAddressFamily", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyBgpAddressFamily {
+    /// e.g. `"ipv4 unicast"`.
     name: String,
     networks: Vec<String>,
     aggregate_addresses: Vec<String>,
@@ -209,6 +245,7 @@ impl From<BgpAddressFamily> for PyBgpAddressFamily {
     }
 }
 
+/// A `vrf <name>` section under `router bgp`.
 #[pyclass(name = "BgpVrf", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyBgpVrf {
@@ -231,11 +268,13 @@ impl From<BgpVrf> for PyBgpVrf {
     }
 }
 
+/// An IOS XR BGP process. `asn` is kept as text since it may be asdot (`"1.10"`).
 #[pyclass(name = "BgpProcess", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyBgpProcess {
     asn: String,
     router_id: Option<String>,
+    /// `timers bgp <keepalive> <hold-time>` (default for all neighbors).
     timers: Option<PyBgpTimers>,
     default_local_preference: Option<u32>,
     cluster_id: Option<String>,
@@ -271,6 +310,7 @@ impl From<BgpProcess> for PyBgpProcess {
     }
 }
 
+/// An IOS XR IS-IS instance.
 #[pyclass(name = "IsisInstance", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyIsisInstance {
@@ -289,9 +329,11 @@ impl From<IsisInstance> for PyIsisInstance {
     }
 }
 
+/// An `address-family <afi> <safi>` section of a VRF definition.
 #[pyclass(name = "VrfAddressFamily", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyVrfAddressFamily {
+    /// e.g. `"ipv4 unicast"`.
     name: String,
     maximum_prefix: Option<u32>,
     import_route_policy: Option<String>,
@@ -313,6 +355,7 @@ impl From<VrfAddressFamily> for PyVrfAddressFamily {
     }
 }
 
+/// An IOS XR VRF definition.
 #[pyclass(name = "Vrf", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PyVrf {
@@ -349,7 +392,16 @@ impl_repr!(
     PyVrf
 );
 
-/// A parsed IOS XR running config. `interfaces`, `ospf`, `bgp`, `isis` and `vrfs` extract typed blocks.
+/// Holds a parsed IOS XR running config. The `interfaces`, `ospf`, `bgp`, `isis` and `vrfs`
+/// getters extract typed blocks.
+///
+/// ```python
+/// from asterust.iosxr import IosXrDevice
+///
+/// device = IosXrDevice(running_config_text)
+/// for iface in device.interfaces:
+///     print(iface.name, iface.ipv4_addresses, iface.shutdown)
+/// ```
 #[pyclass(name = "IosXrDevice", module = "asterust.iosxr", frozen)]
 pub struct PyIosXrDevice {
     inner: IosXrDevice,
@@ -364,7 +416,7 @@ impl PyIosXrDevice {
         }
     }
 
-    /// Build from an already-parsed `asterust.Config`.
+    /// Builds a device from an already-parsed `asterust.Config`.
     #[staticmethod]
     fn from_config(config: PyRef<'_, PyConfig>) -> Self {
         Self {
@@ -372,6 +424,7 @@ impl PyIosXrDevice {
         }
     }
 
+    /// Returns the underlying generic `Config` tree.
     #[getter]
     fn config(&self) -> PyConfig {
         PyConfig {
@@ -379,26 +432,31 @@ impl PyIosXrDevice {
         }
     }
 
+    /// Returns every `interface` block as an `Interface`.
     #[getter]
     fn interfaces(&self) -> Vec<PyInterface> {
         self.inner.interfaces().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router ospf` process as an `OspfProcess`.
     #[getter]
     fn ospf(&self) -> Vec<PyOspfProcess> {
         self.inner.ospf().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router bgp` process as a `BgpProcess`.
     #[getter]
     fn bgp(&self) -> Vec<PyBgpProcess> {
         self.inner.bgp().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `router isis` instance as an `IsisInstance`.
     #[getter]
     fn isis(&self) -> Vec<PyIsisInstance> {
         self.inner.isis().into_iter().map(Into::into).collect()
     }
 
+    /// Returns every `vrf` definition as a `Vrf`.
     #[getter]
     fn vrfs(&self) -> Vec<PyVrf> {
         self.inner.vrfs().into_iter().map(Into::into).collect()

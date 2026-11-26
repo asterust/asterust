@@ -1,4 +1,5 @@
-//! Shared `__repr__` for the data classes: their `Debug` output with the Rust-side `Py` prefix dropped.
+//! Implements a shared `__repr__` for the data classes: their `Debug` output with the Rust-side
+//! `Py` prefix dropped.
 
 macro_rules! impl_repr {
     ($($ty:ty),*) => {$(

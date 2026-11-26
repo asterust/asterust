@@ -1,3 +1,9 @@
+//! Python bindings for `asterust` and its platform crates, built as one extension module.
+//!
+//! Everything is compiled into `asterust._core`; the `python/asterust` package re-exports the
+//! generic config types at the top level and the platform views from submodules such as
+//! `asterust.iosxr`.
+
 #[macro_use]
 mod repr;
 
@@ -7,6 +13,8 @@ mod iosxr;
 
 use pyo3::prelude::*;
 
+/// Native extension module behind the `asterust` package. Import `asterust` or a platform
+/// submodule such as `asterust.iosxr` rather than this module.
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<config::PyConfig>()?;
