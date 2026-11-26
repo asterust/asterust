@@ -5,6 +5,4 @@ git_tag_name = "{{ package }}-v{{ version }}"
 [[package]]
 name = "asterust-py"
 git_only = true
-git_tag_name = "py-v{{ version }}"
-git_release_name = "py-v{{ version }}"
 semver_check = false
