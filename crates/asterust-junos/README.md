@@ -13,7 +13,7 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 | `routing_options` | `routing-options` | router-id, autonomous-system |
 | `policy_options` | `policy-options` | policy statements (terms with `from`/`to` conditions and `then` actions), communities, prefix lists, AS paths and AS path groups |
 | `firewall` | `firewall` | `family` filters (terms with `from` conditions and `then` actions) and policers |
-| `system` | `system` | host-name, domain-name, time-zone, root-authentication (method names only), name-servers, ntp (servers, peers, boot-server, source-address, trusted keys; key values are not extracted), syslog (hosts, files, users, console and their facility/severity rules, archive size/files), login (message, announcement, classes, users; passwords and keys are not extracted), services (ssh settings, telnet, ftp, netconf over ssh, web-management http/https) |
+| `system` | `system` | host-name, domain-name, time-zone, root-authentication (method names only), name-servers, ntp (servers, peers, boot-server, source-address, trusted keys; key values are not extracted), syslog (hosts, files, users, console and their facility/severity rules, archive size/files), login (message, announcement, classes, users; passwords and keys are not extracted), services (ssh settings, telnet, ftp, netconf over ssh, web-management http/https, outbound-ssh clients; secrets are not extracted) |
 
 ```rust
 use asterust_junos::JunosDevice;
@@ -64,4 +64,4 @@ the `firewall` policers, flag and list match conditions, and the `count`, `polic
 written from knowledge of the JunOS hierarchy, so treat the corresponding fields as unverified. A Juniper
 IS-IS or Layer 3 VPN example page, or a sanitized `show configuration` snippet, would let these be replaced.
 
-The `system` fixtures (`host-name`, `domain-name`, `time-zone`, `root-authentication`, `name-server`, `ntp`, `syslog`, `login`, `services`) follow the syntax in the Junos CLI Reference pages, not an example configuration.
+The `system` fixtures (`host-name`, `domain-name`, `time-zone`, `root-authentication`, `name-server`, `ntp`, `syslog`, `login`, `services`, `outbound-ssh`) follow the syntax in the Junos CLI Reference pages, not an example configuration.
