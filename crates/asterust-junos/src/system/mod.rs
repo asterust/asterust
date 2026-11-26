@@ -13,6 +13,7 @@ mod ports;
 mod processes;
 mod scripts;
 mod services;
+mod subscriber;
 mod syslog;
 
 pub use accounting::{Accounting, AccountingDestination};
@@ -31,6 +32,11 @@ pub use services::{
     Netconf, NetconfSsh, OutboundSshClient, OutboundSshServer, Services, SshService, WebManagement, WebManagementHttp,
     WebManagementHttps, XnmClearText, XnmSsl,
 };
+pub use subscriber::{
+    AaclStatisticsProfile, DhcpLocalServer, DhcpLocalServerGroup, DynamicProfileOptions, LocalPolicyDecisionFunction,
+    RedundancyInterface, StaticSubscriberGroup, StaticSubscriberProfile, StaticSubscribers, SubscriberManagement,
+    SubscriberRedundancy,
+};
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogStructuredData, SyslogTarget};
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
@@ -48,6 +54,7 @@ use ports::parse_ports;
 use processes::parse_processes;
 use scripts::parse_scripts;
 use services::parse_services;
+use subscriber::parse_dynamic_profile_options;
 use syslog::parse_syslog;
 
 /// The top-level `system` configuration.
@@ -76,6 +83,7 @@ pub struct System {
     pub internet_options: Option<InternetOptions>,
     pub commit: Option<Commit>,
     pub processes: Vec<Process>,
+    pub dynamic_profile_options: Option<DynamicProfileOptions>,
     pub scripts: Option<Scripts>,
     pub no_multicast_echo: bool,
     pub no_ping_record_route: bool,
@@ -126,6 +134,7 @@ pub fn system(config: &Config) -> Option<System> {
         processes: child_block(system, "processes")
             .map(parse_processes)
             .unwrap_or_default(),
+        dynamic_profile_options: child_block(system, "dynamic-profile-options").map(parse_dynamic_profile_options),
         scripts: child_block(system, "scripts").map(parse_scripts),
         no_multicast_echo: has_leaf(system, "no-multicast-echo"),
         no_ping_record_route: has_leaf(system, "no-ping-record-route"),
