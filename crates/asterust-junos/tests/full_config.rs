@@ -16,6 +16,11 @@ system {
             any notice;
         }
     }
+    login {
+        user admin {
+            class super-user;
+        }
+    }
 }
 interfaces {
     ge-0/0/0 {
@@ -111,6 +116,7 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(device.system().unwrap().name_servers[0].address, "192.0.2.53");
     assert!(device.system().unwrap().ntp.unwrap().servers[0].prefer);
     assert_eq!(device.system().unwrap().syslog.unwrap().hosts[0].address, "192.0.2.5");
+    assert_eq!(device.system().unwrap().login.unwrap().users[0].name, "admin");
 }
 
 #[test]
