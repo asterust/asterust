@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.1...asterust-junos-v0.1.2) - 2026-11-26
+
+### Added
+
+- *(junos)* add system services
+- *(junos)* add system login
+
+### Other
+
+- Merge pull request #41 from asterust/feat/junos-system-services
+- Merge pull request #39 from asterust/feat/junos-system-login
+
 ## [0.1.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.0...asterust-junos-v0.1.1) - 2026-11-26
 
 ### Added
