@@ -11,4 +11,4 @@ repository = "https://github.com/asterust/asterust"
 name = "asterust_junos"
 
 [dependencies]
-asterust = { path = "../..", version = "0.2.1" }
+asterust = { path = "../..", version = "0.2.4" }
