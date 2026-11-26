@@ -1,6 +1,7 @@
 //! `system { accounting { ... } }`.
 
-use super::auth::{radius_servers, tacplus_servers};
+use super::radius_server::radius_servers;
+use super::tacplus_server::tacplus_servers;
 use super::{RadiusServer, TacplusServer};
 use crate::{arg_of, args_of, child_block, list_values};
 use asterust::config::ConfigLine;

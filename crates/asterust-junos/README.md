@@ -5,15 +5,21 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 
 | Module | Block | Extracted |
 | --- | --- | --- |
-| `interface` | `interfaces` | description, disable, units (description, vlan-id, families, inet/inet6/iso addresses) |
-| `ospf` | `protocols ospf` | areas and their interfaces (passive, metric) |
-| `bgp` | `protocols bgp` | groups (type, peer-as, local-as, local-address, cluster, families, import/export policies) and neighbors |
-| `isis` | `protocols isis` | interfaces (passive, point-to-point) |
-| `routing_instance` | `routing-instances` | instance-type, route-distinguisher, interfaces, vrf-target, vrf-import/vrf-export |
+| `interfaces` | `interfaces` | description, disable, units (description, vlan-id, families, inet/inet6/iso addresses) |
+| `protocols::ospf` | `protocols ospf` | areas and their interfaces (passive, metric) |
+| `protocols::bgp` | `protocols bgp` | groups (type, peer-as, local-as, local-address, cluster, families, import/export policies) and neighbors |
+| `protocols::isis` | `protocols isis` | interfaces (passive, point-to-point) |
+| `routing_instances` | `routing-instances` | instance-type, route-distinguisher, interfaces, vrf-target, vrf-import/vrf-export |
 | `routing_options` | `routing-options` | router-id, autonomous-system |
 | `policy_options` | `policy-options` | policy statements (terms with `from`/`to` conditions and `then` actions), communities, prefix lists, AS paths and AS path groups |
 | `firewall` | `firewall` | `family` filters (terms with `from` conditions and `then` actions) and policers |
 | `system` | `system` | host-name, domain-name, domain-search, time-zone, static-host-mapping, backup-router, authentication-order, radius-server and tacplus-server (secrets are not extracted), root-authentication (method names only), master-password (iteration count and function), diag-port-authentication and pic-console-authentication (method names only), license (autoupdate URL, key count, renew), location, ports (console, auxiliary), max-configurations-on-flash, max-configuration-rollbacks, no-redirects, default-address-selection, internet-options, commit, processes, scripts, dynamic-profile-options, extensions (JET applications and providers), autoinstallation (server URLs without passwords), schema, pixel-tracing, system flags (no-multicast-echo, auto-snapshot, ...), archival (site URLs without passwords), accounting (events and destination servers), name-servers, ntp (servers, peers, boot-server, source-address, trusted keys; key values are not extracted), syslog (hosts, files, users, console and their facility/severity rules, archive size/files, per-destination options such as match and explicit-priority), login (message, announcement, idle-timeout, deny-sources, password policy, retry-options, classes with access restrictions, users; passwords and keys are not extracted), services (ssh settings including ciphers, macs, key-exchange and authentication switches, telnet, ftp, netconf over ssh, web-management (http, https, interfaces, ports, certificates, session limits), netconf, xnm-clear-text, xnm-ssl, outbound-ssh clients, subscriber-management, static-subscribers, dhcp-local-server groups, local-policy-decision-function statistics, flow-tap-dtcp, service-deployment; secrets are not extracted) |
+
+The source tree mirrors the configuration hierarchy so a statement is easy to find: a folder per top-level block
+(`system/`, `protocols/`, `policy_options/`), a file per statement inside it (`system/radius_server.rs`,
+`system/root_authentication.rs`), and a folder instead of a file when that statement has many children of its own
+(`system/services/ssh.rs`, `system/login/class.rs`, `system/syslog/host.rs`). The types of each level are re-exported
+from its parent, e.g. `system::RadiusServer`.
 
 ```rust
 use asterust_junos::JunosDevice;
@@ -43,10 +49,10 @@ the guide's typographic quotes are written as plain quotes.
 
 | Page | Example used | Fixtures |
 | --- | --- | --- |
-| [BGP Peering Sessions](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-peering-sessions.html) | Example: Configuring External BGP Point-to-Point Peer Sessions (Device E) | `bgp::DOC_EXTERNAL_PEERS`, `interface::DOC_POINT_TO_POINT` |
-| same page | Example: Configuring Internal BGP Peer Sessions (Device A) | `bgp::DOC_INTERNAL_PEERS`, `ospf::DOC_OSPF`, the `routing_options` doc test |
-| same page | Example: Configure Multiple Single-Hop EBGP Sessions on Different Links Using the Same IPv6 Link-Local Address (R1) | `bgp::DOC_LINK_LOCAL` (quoted neighbor names), `interface::DOC_LINK_LOCAL` (VLAN units, `primary` address) |
-| [BGP Route Reflectors](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-rr.html) | Example: Configuring a Route Reflector (Device A) | `bgp::DOC_ROUTE_REFLECTOR` (the guide's rendering of this output drops a closing brace, which is restored) |
+| [BGP Peering Sessions](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-peering-sessions.html) | Example: Configuring External BGP Point-to-Point Peer Sessions (Device E) | `protocols::bgp::DOC_EXTERNAL_PEERS`, `interfaces::DOC_POINT_TO_POINT` |
+| same page | Example: Configuring Internal BGP Peer Sessions (Device A) | `protocols::bgp::DOC_INTERNAL_PEERS`, `protocols::ospf::DOC_OSPF`, the `routing_options` doc test |
+| same page | Example: Configure Multiple Single-Hop EBGP Sessions on Different Links Using the Same IPv6 Link-Local Address (R1) | `protocols::bgp::DOC_LINK_LOCAL` (quoted neighbor names), `interfaces::DOC_LINK_LOCAL` (VLAN units, `primary` address) |
+| [BGP Route Reflectors](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-rr.html) | Example: Configuring a Route Reflector (Device A) | `protocols::bgp::DOC_ROUTE_REFLECTOR` (the guide's rendering of this output drops a closing brace, which is restored) |
 | [Routing Policies for BGP Communities](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/routing-policies-communities.html) | Examples: Redistribute BGP Routes with a Specific Community Tag into IS-IS (Device C), Removes BGP Communities (R1, R2), Based on the Number of BGP Communities (R2) | `policy_options::DOC_COMMUNITY_TAG`, `policy_options::DOC_COMMUNITY_ACTIONS` (the rendered output wraps lines mid-statement, which are rejoined) |
 | [TCP Access Restriction for BGP](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/tcp_access_restriction.html) | Examples: Configuring a Filter to Block TCP Access to a Port Except from Specified BGP Peers (Device E), Configuring a Filter to Limit TCP Access to a Port Based On a Prefix List | `firewall::DOC_BGP179_PEERS`, `firewall::DOC_BGP179_PREFIX_LIST` (wrapped lines are rejoined) |
 

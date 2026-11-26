@@ -6,16 +6,18 @@
 //! [`asterust::config::Config`] rather than a per-block constructor. [`JunosDevice`] bundles a parsed
 //! config with all of them as getters.
 //!
+//! The module tree mirrors the configuration hierarchy: `system { radius-server ... }` is
+//! `system::radius_server`, `protocols { bgp { ... } }` is `protocols::bgp`. A statement with many children of
+//! its own gets a folder, e.g. `system::services::ssh` for `system { services { ssh { ... } } }`.
+//!
 //! Statements deactivated with `inactive:` are skipped. `| display set` output is not supported.
 
-pub mod bgp;
 pub mod device;
 pub mod firewall;
-pub mod interface;
-pub mod isis;
-pub mod ospf;
+pub mod interfaces;
 pub mod policy_options;
-pub mod routing_instance;
+pub mod protocols;
+pub mod routing_instances;
 pub mod routing_options;
 pub mod system;
 

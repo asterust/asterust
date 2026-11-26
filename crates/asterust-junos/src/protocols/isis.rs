@@ -13,7 +13,7 @@ pub struct IsisInterface {
 }
 
 /// The `protocols isis` configuration. The NET lives on the loopback's `family iso` address, see
-/// [`crate::interface::InterfaceUnit::iso_addresses`].
+/// [`crate::interfaces::InterfaceUnit::iso_addresses`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Isis {
