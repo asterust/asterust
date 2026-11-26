@@ -11,6 +11,7 @@ pub mod device;
 pub mod interface;
 pub mod isis;
 pub mod ospf;
+pub mod vrf;
 
 pub use device::IosXrDevice;
 

@@ -4,6 +4,7 @@ use crate::bgp::{bgp_processes, BgpProcess};
 use crate::interface::{interfaces, Interface};
 use crate::isis::{isis_instances, IsisInstance};
 use crate::ospf::{ospf_processes, OspfProcess};
+use crate::vrf::{vrfs, Vrf};
 use asterust::config::{cisco, Config};
 
 /// A parsed IOS XR running config.
@@ -40,6 +41,10 @@ impl IosXrDevice {
         bgp_processes(&self.config)
     }
 
+    pub fn vrfs(&self) -> Vec<Vrf> {
+        vrfs(&self.config)
+    }
+
     pub fn isis(&self) -> Vec<IsisInstance> {
         isis_instances(&self.config)
     }
@@ -67,12 +72,17 @@ router bgp 65000
   remote-as 65000
  !
 !
+vrf CUSTOMER-A
+ address-family ipv4 unicast
+ !
+!
 ",
         );
         assert_eq!(device.interfaces()[0].name, "Loopback0");
         assert_eq!(device.isis()[0].tag, "CORE");
+        assert_eq!(device.vrfs()[0].name, "CUSTOMER-A");
         assert_eq!(device.ospf()[0].process_id, "1");
         assert_eq!(device.bgp()[0].neighbors[0].address, "10.255.0.2");
-        assert_eq!(device.config().get_block_count(), 4);
+        assert_eq!(device.config().get_block_count(), 5);
     }
 }
