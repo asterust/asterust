@@ -14,7 +14,7 @@ pub use policer::FamilyPolicer;
 pub use rpf_check::RpfCheck;
 pub use sampling::FamilySampling;
 
-use crate::arg_of;
+use crate::{arg_of, args_of, list_values};
 use address::parse_addresses;
 use asterust::config::ConfigLine;
 use filter::parse_filter;
@@ -33,6 +33,10 @@ pub struct UnitFamily {
     pub rpf_check: Option<RpfCheck>,
     pub policer: Option<FamilyPolicer>,
     pub sampling: Option<FamilySampling>,
+    /// `vlan-id` of `family bridge`.
+    pub vlan_id: Option<String>,
+    /// `vlan-id-list` of `family bridge`: IDs and `<from>-<to>` ranges.
+    pub vlan_id_list: Vec<String>,
     pub addresses: Vec<UnitAddress>,
 }
 
@@ -44,6 +48,11 @@ pub(super) fn parse_family(name: &str, family: &ConfigLine) -> UnitFamily {
         rpf_check: parse_rpf_check(family),
         policer: parse_policer(family),
         sampling: parse_sampling(family),
+        vlan_id: arg_of(family, "vlan-id").map(str::to_string),
+        vlan_id_list: args_of(family, "vlan-id-list")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
         addresses: parse_addresses(family),
     }
 }
