@@ -1,6 +1,6 @@
 //! `system { syslog { ... } }`.
 
-use crate::{active_children, arg_of, child_block, named_children, statement_words};
+use crate::{active_children, arg_of, child_block, has_leaf, named_children, statement_words};
 use asterust::config::ConfigLine;
 
 /// A `<facility> <severity>` line selecting which messages go to a syslog destination.
@@ -25,6 +25,19 @@ pub struct SyslogHost {
     pub routing_instance: Option<String>,
     pub facility_override: Option<String>,
     pub log_prefix: Option<String>,
+    pub allow_duplicates: bool,
+    pub explicit_priority: bool,
+    pub exclude_hostname: bool,
+    /// The regular expression from `match`.
+    pub match_regex: Option<String>,
+}
+
+/// A `structured-data` statement on a syslog file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SyslogStructuredData {
+    /// Omit the message text.
+    pub brief: bool,
 }
 
 /// A syslog `archive` statement. `archive-sites`, `start-time` and `transfer-interval` are not extracted.
@@ -48,6 +61,13 @@ pub struct SyslogTarget {
     pub rules: Vec<SyslogRule>,
     /// Only files have an archive.
     pub archive: Option<SyslogArchive>,
+    pub allow_duplicates: bool,
+    /// The regular expression from `match`.
+    pub match_regex: Option<String>,
+    /// Only files have `explicit-priority`.
+    pub explicit_priority: bool,
+    /// Only files have `structured-data`.
+    pub structured_data: Option<SyslogStructuredData>,
 }
 
 /// The `system syslog` configuration.
@@ -63,6 +83,8 @@ pub struct Syslog {
     pub time_format: Option<String>,
     /// The default archive settings that files inherit.
     pub archive: Option<SyslogArchive>,
+    pub allow_duplicates: bool,
+    pub log_rotate_frequency: Option<String>,
 }
 
 pub(super) fn parse_syslog(syslog: &ConfigLine) -> Syslog {
@@ -76,6 +98,10 @@ pub(super) fn parse_syslog(syslog: &ConfigLine) -> Syslog {
                 routing_instance: arg_of(host, "routing-instance").map(str::to_string),
                 facility_override: arg_of(host, "facility-override").map(str::to_string),
                 log_prefix: arg_of(host, "log-prefix").map(str::to_string),
+                allow_duplicates: has_leaf(host, "allow-duplicates"),
+                explicit_priority: has_leaf(host, "explicit-priority"),
+                exclude_hostname: has_leaf(host, "exclude-hostname"),
+                match_regex: arg_of(host, "match").map(str::to_string),
             })
             .collect(),
         files: syslog_targets(syslog, "file"),
@@ -84,6 +110,8 @@ pub(super) fn parse_syslog(syslog: &ConfigLine) -> Syslog {
         source_address: arg_of(syslog, "source-address").map(str::to_string),
         time_format: arg_of(syslog, "time-format").map(str::to_string),
         archive: syslog_archive(syslog),
+        allow_duplicates: has_leaf(syslog, "allow-duplicates"),
+        log_rotate_frequency: arg_of(syslog, "log-rotate-frequency").map(str::to_string),
     }
 }
 
@@ -93,6 +121,12 @@ fn syslog_targets(syslog: &ConfigLine, keyword: &str) -> Vec<SyslogTarget> {
             name: name.to_string(),
             rules: syslog_rules(target),
             archive: syslog_archive(target),
+            allow_duplicates: has_leaf(target, "allow-duplicates"),
+            match_regex: arg_of(target, "match").map(str::to_string),
+            explicit_priority: has_leaf(target, "explicit-priority"),
+            structured_data: child_block(target, "structured-data").map(|data| SyslogStructuredData {
+                brief: has_leaf(data, "brief"),
+            }),
         })
         .collect()
 }
@@ -259,6 +293,82 @@ system {
         assert_eq!(messages.world_readable, Some(false));
 
         assert_eq!(syslog.files[1].archive, None);
+    }
+
+    #[test]
+    fn extracts_syslog_destination_options() {
+        let syslog = system(&juniper::parse_braces(
+            r#"
+system {
+    syslog {
+        allow-duplicates;
+        log-rotate-frequency 5;
+        host 192.0.2.5 {
+            any notice;
+            allow-duplicates;
+            explicit-priority;
+            exclude-hostname;
+            match "UI_COMMIT";
+        }
+        file messages {
+            any notice;
+            allow-duplicates;
+            explicit-priority;
+            match "!(ssh)";
+            structured-data {
+                brief;
+            }
+        }
+        file plain {
+            any info;
+            structured-data;
+        }
+        user admin {
+            any alert;
+            match "commit";
+        }
+    }
+}
+"#,
+        ))
+        .unwrap()
+        .syslog
+        .unwrap();
+        assert!(syslog.allow_duplicates);
+        assert_eq!(syslog.log_rotate_frequency.as_deref(), Some("5"));
+
+        let host = &syslog.hosts[0];
+        assert!(host.allow_duplicates);
+        assert!(host.explicit_priority);
+        assert!(host.exclude_hostname);
+        assert_eq!(host.match_regex.as_deref(), Some("UI_COMMIT"));
+
+        let messages = &syslog.files[0];
+        assert!(messages.allow_duplicates);
+        assert!(messages.explicit_priority);
+        assert_eq!(messages.match_regex.as_deref(), Some("!(ssh)"));
+        assert!(messages.structured_data.as_ref().unwrap().brief);
+
+        let plain = &syslog.files[1];
+        assert!(!plain.structured_data.as_ref().unwrap().brief);
+        assert!(!plain.allow_duplicates);
+        assert_eq!(plain.match_regex, None);
+
+        assert_eq!(syslog.users[0].match_regex.as_deref(), Some("commit"));
+    }
+
+    #[test]
+    fn syslog_destination_options_default_to_off() {
+        let syslog = system(&juniper::parse_braces(
+            "system {\n    syslog {\n        host 192.0.2.5 {\n            any notice;\n        }\n    }\n}\n",
+        ))
+        .unwrap()
+        .syslog
+        .unwrap();
+        assert!(!syslog.allow_duplicates);
+        assert_eq!(syslog.log_rotate_frequency, None);
+        assert!(!syslog.hosts[0].explicit_priority);
+        assert_eq!(syslog.hosts[0].match_regex, None);
     }
 
     #[test]
