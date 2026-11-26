@@ -10,6 +10,7 @@
 //! - [nonstop-routing](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/nonstop-routing-edit-routing-options.html)
 //! - [nsr-phantom-holdtime](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/nsr-phantom-holdtime-edit-routing-options.html)
 //! - [options (Routing Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/options-edit-routing-options.html)
+//! - [static (Routing Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/static-edit-routing-options.html)
 
 mod autonomous_system;
 mod confederation;
@@ -18,6 +19,8 @@ mod graceful_restart;
 mod interface_routes;
 mod maximum_paths;
 mod resolution;
+mod route_attributes;
+mod static_routes;
 
 pub use autonomous_system::AutonomousSystemOptions;
 pub use confederation::Confederation;
@@ -26,6 +29,8 @@ pub use graceful_restart::GracefulRestart;
 pub use interface_routes::{InterfaceRoutes, InterfaceRoutesFamily};
 pub use maximum_paths::MaximumPaths;
 pub use resolution::{Resolution, ResolutionRib};
+pub use route_attributes::RouteAttributes;
+pub use static_routes::{QualifiedNextHop, StaticRoute, StaticRoutes};
 
 use crate::{arg_of, child_block, first_word, has_leaf, statement_words, top_level};
 use asterust::config::Config;
@@ -36,6 +41,7 @@ use graceful_restart::parse_graceful_restart;
 use interface_routes::parse_interface_routes;
 use maximum_paths::parse_maximum_paths;
 use resolution::parse_resolution;
+use static_routes::parse_static_routes;
 
 /// Global routing options.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -56,6 +62,7 @@ pub struct RoutingOptions {
     pub forwarding_table: Option<ForwardingTable>,
     pub interface_routes: Option<InterfaceRoutes>,
     pub resolution: Option<Resolution>,
+    pub static_routes: Option<StaticRoutes>,
     /// The `syslog` setting of `options`, as written, e.g. `"level info"` or `"upto notice"`.
     pub options_syslog: Option<String>,
 }
@@ -90,6 +97,7 @@ pub fn routing_options(config: &Config) -> Option<RoutingOptions> {
         forwarding_table: child_block(root, "forwarding-table").map(parse_forwarding_table),
         interface_routes: child_block(root, "interface-routes").map(parse_interface_routes),
         resolution: child_block(root, "resolution").map(parse_resolution),
+        static_routes: child_block(root, "static").map(parse_static_routes),
         options_syslog: statement_words(root, "options").and_then(|words| {
             let start = words.iter().position(|word| *word == "syslog")?;
             Some(words[start + 1..].join(" "))
