@@ -5,6 +5,9 @@ use asterust_junos::JunosDevice;
 const CONFIG: &str = r#"
 system {
     host-name pe1;
+    name-server {
+        192.0.2.53;
+    }
 }
 interfaces {
     ge-0/0/0 {
@@ -97,6 +100,7 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(policies.communities[0].members, ["65000:100"]);
     assert_eq!(device.firewall().unwrap().filters[0].name, "PROTECT-RE");
     assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
+    assert_eq!(device.system().unwrap().name_servers[0].address, "192.0.2.53");
 }
 
 #[test]
