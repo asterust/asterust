@@ -1,6 +1,6 @@
 [package]
 name = "asterust-iosxr"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "Typed Cisco IOS XR config blocks (interface, OSPF, BGP, IS-IS) extracted from an asterust config tree."
 license = "MIT OR Apache-2.0"
