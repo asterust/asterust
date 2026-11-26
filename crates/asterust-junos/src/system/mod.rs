@@ -3,6 +3,7 @@
 mod addressing;
 mod auth;
 mod device;
+mod internet;
 mod login;
 mod ntp;
 mod services;
@@ -11,6 +12,7 @@ mod syslog;
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
 pub use device::{Location, Ports, SerialPort};
+pub use internet::{IcmpRateLimit, InternetOptions};
 pub use login::{Login, LoginClass, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
 pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
@@ -21,6 +23,7 @@ use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use asterust::config::Config;
 use auth::{radius_servers, root_authentication, tacplus_servers};
 use device::{parse_location, ports};
+use internet::parse_internet_options;
 use login::parse_login;
 use ntp::parse_ntp;
 use services::parse_services;
@@ -47,6 +50,9 @@ pub struct System {
     pub max_configurations_on_flash: Option<String>,
     pub max_configuration_rollbacks: Option<String>,
     pub no_redirects: bool,
+    /// `default-address-selection`: use the loopback as the source of locally generated packets.
+    pub default_address_selection: bool,
+    pub internet_options: Option<InternetOptions>,
     pub root_authentication: Option<RootAuthentication>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
@@ -80,6 +86,8 @@ pub fn system(config: &Config) -> Option<System> {
         max_configurations_on_flash: arg_of(system, "max-configurations-on-flash").map(str::to_string),
         max_configuration_rollbacks: arg_of(system, "max-configuration-rollbacks").map(str::to_string),
         no_redirects: has_leaf(system, "no-redirects"),
+        default_address_selection: has_leaf(system, "default-address-selection"),
+        internet_options: child_block(system, "internet-options").map(parse_internet_options),
         root_authentication: root_authentication(system),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),

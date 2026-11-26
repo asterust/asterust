@@ -122,6 +122,19 @@ pub(crate) fn statements<'a>(line: &'a ConfigLine, keyword: &str) -> Vec<&'a str
     found
 }
 
+/// Words of the first active `<keyword> ...` statement: those on its own line, then those of each child statement.
+pub(crate) fn statement_words<'a>(parent: &'a ConfigLine, keyword: &str) -> Option<Vec<&'a str>> {
+    let statement = active_children(parent).find(|c| c.text == keyword || c.arg(keyword).is_some())?;
+    Some(
+        statement
+            .text
+            .split_whitespace()
+            .skip(1)
+            .chain(active_children(statement).flat_map(|c| c.text.split_whitespace()))
+            .collect(),
+    )
+}
+
 /// First whitespace-separated word of `arg`.
 pub(crate) fn first_word(arg: &str) -> Option<&str> {
     arg.split_whitespace().next()

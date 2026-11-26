@@ -1,6 +1,6 @@
 //! `system { syslog { ... } }`.
 
-use crate::{active_children, arg_of, child_block, named_children};
+use crate::{active_children, arg_of, child_block, named_children, statement_words};
 use asterust::config::ConfigLine;
 
 /// A `<facility> <severity>` line selecting which messages go to a syslog destination.
@@ -99,13 +99,7 @@ fn syslog_targets(syslog: &ConfigLine, keyword: &str) -> Vec<SyslogTarget> {
 
 /// An `archive` written as a block or on one line (`archive size 1m files 5 world-readable;`).
 fn syslog_archive(parent: &ConfigLine) -> Option<SyslogArchive> {
-    let archive = active_children(parent).find(|c| c.text == "archive" || c.arg("archive").is_some())?;
-    // Both forms reduce to one stream of words: the options on the line itself, then one statement per child.
-    let mut words = archive
-        .text
-        .split_whitespace()
-        .skip(1)
-        .chain(active_children(archive).flat_map(|c| c.text.split_whitespace()));
+    let mut words = statement_words(parent, "archive")?.into_iter();
     let mut settings = SyslogArchive::default();
     while let Some(word) = words.next() {
         match word {
