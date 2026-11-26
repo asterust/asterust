@@ -135,6 +135,35 @@ pub struct Login {
     pub users: Vec<LoginUser>,
 }
 
+/// The `system services ssh` settings; every field is `None` or empty when only `ssh;` is written.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SshService {
+    /// `allow`, `deny` or `deny-password`.
+    pub root_login: Option<String>,
+    pub protocol_versions: Vec<String>,
+    pub port: Option<String>,
+    pub connection_limit: Option<String>,
+    pub rate_limit: Option<String>,
+    pub ciphers: Vec<String>,
+    pub sftp_server: bool,
+}
+
+/// The `system services` configuration. Services other than those listed are not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct Services {
+    pub ssh: Option<SshService>,
+    pub telnet: bool,
+    pub ftp: bool,
+    /// `netconf { ssh; }`.
+    pub netconf_ssh: bool,
+    /// `web-management { http; }`.
+    pub http: bool,
+    /// `web-management { https; }`.
+    pub https: bool,
+}
+
 /// The top-level `system` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -144,6 +173,7 @@ pub struct System {
     pub ntp: Option<Ntp>,
     pub syslog: Option<Syslog>,
     pub login: Option<Login>,
+    pub services: Option<Services>,
 }
 
 /// The top-level `system` block, or `None` if there is none.
@@ -155,7 +185,34 @@ pub fn system(config: &Config) -> Option<System> {
         ntp: child_block(system, "ntp").map(parse_ntp),
         syslog: child_block(system, "syslog").map(parse_syslog),
         login: child_block(system, "login").map(parse_login),
+        services: child_block(system, "services").map(parse_services),
     })
+}
+
+fn parse_services(services: &ConfigLine) -> Services {
+    let web = child_block(services, "web-management");
+    let netconf = child_block(services, "netconf");
+    Services {
+        ssh: child_block(services, "ssh").map(parse_ssh),
+        telnet: child_block(services, "telnet").is_some(),
+        ftp: child_block(services, "ftp").is_some(),
+        netconf_ssh: netconf.is_some_and(|n| child_block(n, "ssh").is_some()),
+        http: web.is_some_and(|w| child_block(w, "http").is_some()),
+        https: web.is_some_and(|w| child_block(w, "https").is_some()),
+    }
+}
+
+fn parse_ssh(ssh: &ConfigLine) -> SshService {
+    let list = |keyword: &str| args_of(ssh, keyword).into_iter().flat_map(list_values).collect();
+    SshService {
+        root_login: arg_of(ssh, "root-login").map(str::to_string),
+        protocol_versions: list("protocol-version"),
+        port: arg_of(ssh, "port").map(str::to_string),
+        connection_limit: arg_of(ssh, "connection-limit").map(str::to_string),
+        rate_limit: arg_of(ssh, "rate-limit").map(str::to_string),
+        ciphers: list("ciphers"),
+        sftp_server: has_leaf(ssh, "sftp-server"),
+    }
 }
 
 fn parse_login(login: &ConfigLine) -> Login {
@@ -613,6 +670,88 @@ system {
         assert!(system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n"))
             .unwrap()
             .login
+            .is_none());
+    }
+
+    const SERVICES: &str = r#"
+system {
+    services {
+        ssh {
+            root-login deny;
+            protocol-version v2;
+            port 2222;
+            connection-limit 10;
+            rate-limit 5;
+            ciphers [ aes256-ctr aes128-ctr ];
+            sftp-server;
+        }
+        netconf {
+            ssh;
+        }
+        web-management {
+            https {
+                system-generated-certificate;
+            }
+        }
+        telnet;
+    }
+}
+"#;
+
+    #[test]
+    fn extracts_ssh_service_settings() {
+        let services = system(&juniper::parse_braces(SERVICES)).unwrap().services.unwrap();
+        let ssh = services.ssh.unwrap();
+        assert_eq!(ssh.root_login.as_deref(), Some("deny"));
+        assert_eq!(ssh.protocol_versions, ["v2"]);
+        assert_eq!(ssh.port.as_deref(), Some("2222"));
+        assert_eq!(ssh.connection_limit.as_deref(), Some("10"));
+        assert_eq!(ssh.rate_limit.as_deref(), Some("5"));
+        assert_eq!(ssh.ciphers, ["aes256-ctr", "aes128-ctr"]);
+        assert!(ssh.sftp_server);
+    }
+
+    #[test]
+    fn extracts_enabled_services() {
+        let services = system(&juniper::parse_braces(SERVICES)).unwrap().services.unwrap();
+        assert!(services.telnet);
+        assert!(services.netconf_ssh);
+        assert!(services.https);
+        assert!(!services.http);
+        assert!(!services.ftp);
+    }
+
+    #[test]
+    fn bare_service_statements_enable_with_defaults() {
+        let services = system(&juniper::parse_braces(
+            "system {\n    services {\n        ssh;\n        ftp;\n        web-management {\n            http;\n        }\n    }\n}\n",
+        ))
+        .unwrap()
+        .services
+        .unwrap();
+        assert_eq!(services.ssh, Some(SshService::default()));
+        assert!(services.ftp);
+        assert!(services.http);
+        assert!(!services.telnet);
+        assert!(!services.netconf_ssh);
+    }
+
+    #[test]
+    fn disabled_service_is_not_reported() {
+        let services = system(&juniper::parse_braces(
+            "system {\n    services {\n        inactive: telnet;\n        ssh;\n    }\n}\n",
+        ))
+        .unwrap()
+        .services
+        .unwrap();
+        assert!(!services.telnet);
+    }
+
+    #[test]
+    fn no_services_is_none() {
+        assert!(system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n"))
+            .unwrap()
+            .services
             .is_none());
     }
 
