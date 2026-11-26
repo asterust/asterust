@@ -5,7 +5,7 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 
 | Module | Block | Extracted |
 | --- | --- | --- |
-| `interfaces` | `interfaces` | description, disable, units (description, vlan-id, families, inet/inet6/iso addresses) |
+| `interfaces` | `interfaces` | description, disable, mtu, speed, encapsulation, vlan-tagging, flexible-vlan-tagging, native-vlan-id, per-unit-scheduler, no-gratuitous-arp-request, hold-time, units (description, vlan-id, families, inet/inet6/iso addresses) |
 | `protocols::ospf` | `protocols ospf` | areas and their interfaces (passive, metric) |
 | `protocols::bgp` | `protocols bgp` | groups (type, peer-as, local-as, local-address, cluster, families, import/export policies) and neighbors |
 | `protocols::isis` | `protocols isis` | interfaces (passive, point-to-point) |
