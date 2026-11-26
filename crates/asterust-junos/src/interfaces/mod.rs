@@ -1,11 +1,14 @@
 //! `interfaces { ... }`: physical interfaces and their logical units.
 
+mod hold_time;
 mod unit;
 
+pub use hold_time::HoldTime;
 pub use unit::InterfaceUnit;
 
 use crate::{active_children, arg_of, has_leaf, named_children, top_level};
 use asterust::config::{Config, ConfigLine};
+use hold_time::parse_hold_time;
 use unit::parse_unit;
 
 /// A physical or loopback interface such as `ge-0/0/0` or `lo0`.
@@ -16,6 +19,17 @@ pub struct Interface {
     pub description: Option<String>,
     /// Set by the `disable` statement.
     pub disabled: bool,
+    pub mtu: Option<String>,
+    /// e.g. `"1g"` or `"auto"`.
+    pub speed: Option<String>,
+    /// Physical encapsulation, e.g. `"flexible-ethernet-services"`.
+    pub encapsulation: Option<String>,
+    pub vlan_tagging: bool,
+    pub flexible_vlan_tagging: bool,
+    pub native_vlan_id: Option<String>,
+    pub per_unit_scheduler: bool,
+    pub no_gratuitous_arp_request: bool,
+    pub hold_time: Option<HoldTime>,
     pub units: Vec<InterfaceUnit>,
 }
 
@@ -36,6 +50,15 @@ fn parse_interface(line: &ConfigLine) -> Interface {
         name: line.text.clone(),
         description: arg_of(line, "description").map(str::to_string),
         disabled: has_leaf(line, "disable"),
+        mtu: arg_of(line, "mtu").map(str::to_string),
+        speed: arg_of(line, "speed").map(str::to_string),
+        encapsulation: arg_of(line, "encapsulation").map(str::to_string),
+        vlan_tagging: has_leaf(line, "vlan-tagging"),
+        flexible_vlan_tagging: has_leaf(line, "flexible-vlan-tagging"),
+        native_vlan_id: arg_of(line, "native-vlan-id").map(str::to_string),
+        per_unit_scheduler: has_leaf(line, "per-unit-scheduler"),
+        no_gratuitous_arp_request: has_leaf(line, "no-gratuitous-arp-request"),
+        hold_time: parse_hold_time(line),
         units: named_children(line, "unit")
             .map(|(number, unit)| parse_unit(number, unit))
             .collect(),
@@ -124,6 +147,62 @@ interfaces {
     #[test]
     fn missing_interfaces_block_is_empty() {
         assert!(interfaces(&juniper::parse_braces("system {\n host-name r1;\n}\n")).is_empty());
+    }
+
+    // Not from documentation: written from the CLI Reference syntax pages. See the README "Sources".
+    #[test]
+    fn extracts_physical_interface_settings() {
+        let ifaces = interfaces(&juniper::parse_braces(
+            r#"
+interfaces {
+    xe-0/0/0 {
+        mtu 9192;
+        speed 10g;
+        encapsulation flexible-ethernet-services;
+        vlan-tagging;
+        flexible-vlan-tagging;
+        native-vlan-id 10;
+        per-unit-scheduler;
+        no-gratuitous-arp-request;
+    }
+    inactive: xe-0/0/1 {
+        mtu 1500;
+    }
+    xe-0/0/2 {
+        inactive: mtu 1500;
+    }
+}
+"#,
+        ));
+        assert_eq!(ifaces.len(), 2);
+
+        let xe0 = &ifaces[0];
+        assert_eq!(xe0.mtu.as_deref(), Some("9192"));
+        assert_eq!(xe0.speed.as_deref(), Some("10g"));
+        assert_eq!(xe0.encapsulation.as_deref(), Some("flexible-ethernet-services"));
+        assert!(xe0.vlan_tagging);
+        assert!(xe0.flexible_vlan_tagging);
+        assert_eq!(xe0.native_vlan_id.as_deref(), Some("10"));
+        assert!(xe0.per_unit_scheduler);
+        assert!(xe0.no_gratuitous_arp_request);
+
+        assert_eq!(ifaces[1].mtu, None);
+    }
+
+    #[test]
+    fn physical_interface_settings_default_to_off() {
+        let ifaces = interfaces(&juniper::parse_braces(
+            "interfaces {\n    ge-0/0/0 {\n        disable;\n    }\n}\n",
+        ));
+        let ge = &ifaces[0];
+        assert_eq!(ge.mtu, None);
+        assert_eq!(ge.speed, None);
+        assert_eq!(ge.encapsulation, None);
+        assert!(!ge.vlan_tagging);
+        assert!(!ge.flexible_vlan_tagging);
+        assert_eq!(ge.native_vlan_id, None);
+        assert!(!ge.per_unit_scheduler);
+        assert!(!ge.no_gratuitous_arp_request);
     }
 
     // The DOC_* fixtures are adapted from Juniper's BGP User Guide, "BGP Peering Sessions"; see the README "Sources".
