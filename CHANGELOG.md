@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/asterust/asterust/compare/asterust-v0.2.4...asterust-v0.2.5) - 2026-11-26
+
+### Other
+
+- fill in and modernize rustdoc for the core asterust crate
+
 ## [0.2.4](https://github.com/asterust/asterust/compare/asterust-v0.2.3...asterust-v0.2.4) - 2026-11-26
 
 ### Added
