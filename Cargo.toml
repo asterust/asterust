@@ -13,4 +13,4 @@ name = "asterust"
 regex = "1"
 
 [workspace]
-members = [".", "crates/asterust-iosxr"]
+members = [".", "crates/asterust-iosxr", "crates/asterust-py"]

@@ -1,4 +1,4 @@
-.PHONY: help build test fmt lint check clean doc
+.PHONY: help build test py-test fmt lint check clean doc
 .DEFAULT_GOAL := help
 
 GREEN := \033[32m
@@ -16,6 +16,10 @@ build: ## Build every crate in the workspace
 test: ## Run unit and integration tests
 	@echo "$(YELLOW)Running tests...$(RESET)"
 	cargo test --workspace --all-targets
+
+py-test: ## Build the Python bindings into a local venv and run pytest
+	@echo "$(YELLOW)Running Python tests...$(RESET)"
+	cd crates/asterust-py && { [ -d .venv ] || uv venv -q; } && . .venv/bin/activate && uv pip install -q maturin pytest && maturin develop -q && python -m pytest
 
 fmt: ## Format code with rustfmt
 	@echo "$(YELLOW)Formatting...$(RESET)"

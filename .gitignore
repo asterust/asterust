@@ -47,3 +47,9 @@ rustc-ice-*.txt
 
 # Cargo mutants testing data (if you use cargo-mutants)
 **/mutants.out/
+
+# Python bindings
+.venv/
+__pycache__/
+*.so
+.pytest_cache/

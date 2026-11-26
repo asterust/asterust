@@ -1,0 +1,19 @@
+[package]
+name = "asterust-py"
+version = "0.1.0"
+edition = "2021"
+description = "Python bindings for asterust and its platform crates."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/asterust/asterust"
+publish = false
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+test = false
+doctest = false
+
+[dependencies]
+asterust = { path = "../..", version = "0.2" }
+asterust-iosxr = { path = "../asterust-iosxr", version = "0.1" }
+pyo3 = { version = "0.30", features = ["abi3-py39"] }

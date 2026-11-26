@@ -22,6 +22,7 @@ build typed views on top of it so you only depend on what you use.
 | --- | --- |
 | `asterust` (root) | Generic config tree and the `cisco` / `juniper` parsers |
 | [`asterust-iosxr`](crates/asterust-iosxr) | Typed IOS XR `interface`, OSPF, BGP, and IS-IS blocks |
+| [`asterust-py`](crates/asterust-py) | PyO3 bindings, built as the `asterust` Python package |
 
 ## Modules
 
