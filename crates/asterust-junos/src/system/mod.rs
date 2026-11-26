@@ -2,19 +2,21 @@
 
 mod addressing;
 mod auth;
-mod device;
 mod internet;
+mod location;
 mod login;
 mod ntp;
+mod ports;
 mod services;
 mod syslog;
 
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
-pub use device::{Location, Ports, SerialPort};
 pub use internet::{IcmpRateLimit, InternetOptions};
+pub use location::Location;
 pub use login::{Login, LoginClass, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
+pub use ports::{Auxiliary, Console, Ports};
 pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogTarget};
 
@@ -22,10 +24,11 @@ use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
 use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use asterust::config::Config;
 use auth::{radius_servers, root_authentication, tacplus_servers};
-use device::{parse_location, ports};
 use internet::parse_internet_options;
+use location::parse_location;
 use login::parse_login;
 use ntp::parse_ntp;
+use ports::parse_ports;
 use services::parse_services;
 use syslog::parse_syslog;
 
@@ -82,7 +85,7 @@ pub fn system(config: &Config) -> Option<System> {
         radius_servers: radius_servers(system),
         tacplus_servers: tacplus_servers(system),
         location: child_block(system, "location").map(parse_location),
-        ports: ports(system),
+        ports: child_block(system, "ports").map(parse_ports),
         max_configurations_on_flash: arg_of(system, "max-configurations-on-flash").map(str::to_string),
         max_configuration_rollbacks: arg_of(system, "max-configuration-rollbacks").map(str::to_string),
         no_redirects: has_leaf(system, "no-redirects"),
@@ -146,6 +149,25 @@ mod tests {
     fn time_zone_is_optional() {
         let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
         assert_eq!(system.time_zone, None);
+    }
+
+    #[test]
+    fn extracts_configuration_limits_and_no_redirects() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    max-configurations-on-flash 5;\n    max-configuration-rollbacks 20;\n    no-redirects;\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.max_configurations_on_flash.as_deref(), Some("5"));
+        assert_eq!(system.max_configuration_rollbacks.as_deref(), Some("20"));
+        assert!(system.no_redirects);
+    }
+
+    #[test]
+    fn configuration_limits_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert_eq!(system.max_configurations_on_flash, None);
+        assert_eq!(system.max_configuration_rollbacks, None);
+        assert!(!system.no_redirects);
     }
 
     #[test]
