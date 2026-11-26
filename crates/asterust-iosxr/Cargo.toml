@@ -1,0 +1,14 @@
+[package]
+name = "asterust-iosxr"
+version = "0.1.0"
+edition = "2021"
+description = "Typed Cisco IOS XR config blocks (interface, OSPF, BGP, IS-IS) extracted from an asterust config tree."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/asterust/asterust"
+
+[lib]
+name = "asterust_iosxr"
+
+[dependencies]
+asterust = { path = "../..", version = "0.2" }

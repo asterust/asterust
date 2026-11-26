@@ -13,6 +13,16 @@ Pure Rust, with no PyO3 (or any other binding) dependency, so any Python
 extension module — or non-Python tool — can depend on it directly and add
 its own bindings on top.
 
+## Workspace
+
+This repo is a Cargo workspace. The root crate is the core; platform crates
+build typed views on top of it so you only depend on what you use.
+
+| Crate | Purpose |
+| --- | --- |
+| `asterust` (root) | Generic config tree and the `cisco` / `juniper` parsers |
+| [`asterust-iosxr`](crates/asterust-iosxr) | Typed IOS XR `interface`, OSPF, BGP, and IS-IS blocks |
+
 ## Modules
 
 - **`config`** — the vendor-agnostic tree types, shared by every parsing
