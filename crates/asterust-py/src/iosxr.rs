@@ -1,10 +1,15 @@
 //! Python wrappers for `asterust-iosxr`. The data classes mirror the Rust structs field for field.
+//! BGP peer and address-family settings are flattened onto each class that carries them.
 
 use crate::config::PyConfig;
-use asterust_iosxr::bgp::{BgpNeighbor, BgpProcess};
+use asterust_iosxr::bgp::{
+    BgpAddressFamily, BgpAfGroup, BgpNeighbor, BgpNeighborAddressFamily, BgpNeighborGroup, BgpProcess, BgpSessionGroup,
+    BgpTimers, BgpVrf,
+};
 use asterust_iosxr::interface::Interface;
 use asterust_iosxr::isis::IsisInstance;
 use asterust_iosxr::ospf::{OspfArea, OspfProcess};
+use asterust_iosxr::vrf::{Vrf, VrfAddressFamily};
 use asterust_iosxr::IosXrDevice;
 use pyo3::prelude::*;
 
@@ -66,20 +71,162 @@ impl From<OspfProcess> for PyOspfProcess {
     }
 }
 
-#[pyclass(name = "BgpNeighbor", module = "asterust.iosxr", frozen, get_all, eq)]
+#[pyclass(name = "BgpTimers", module = "asterust.iosxr", frozen, get_all, eq)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PyBgpNeighbor {
-    address: String,
-    remote_as: Option<String>,
-    description: Option<String>,
+pub struct PyBgpTimers {
+    keepalive: u32,
+    hold_time: u32,
 }
 
-impl From<BgpNeighbor> for PyBgpNeighbor {
-    fn from(n: BgpNeighbor) -> Self {
+impl From<BgpTimers> for PyBgpTimers {
+    fn from(t: BgpTimers) -> Self {
         Self {
-            remote_as: n.remote_as.clone(),
-            description: n.description.clone(),
-            address: n.address,
+            keepalive: t.keepalive,
+            hold_time: t.hold_time,
+        }
+    }
+}
+
+/// A Python class made of some identifying string fields plus the shared address-family settings.
+macro_rules! af_settings_class {
+    ($rust:ident, $py:literal, $src:ty, [$($key:ident),+]) => {
+        #[pyclass(name = $py, module = "asterust.iosxr", frozen, get_all, eq)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub struct $rust {
+            $($key: String,)+
+            route_policy_in: Option<String>,
+            route_policy_out: Option<String>,
+            route_reflector_client: bool,
+            next_hop_self: bool,
+            soft_reconfiguration_inbound: bool,
+            send_community_ebgp: bool,
+            send_extended_community_ebgp: bool,
+            default_originate: bool,
+            remove_private_as: bool,
+            as_override: bool,
+            allowas_in: Option<u32>,
+            site_of_origin: Option<String>,
+            maximum_prefix: Option<u32>,
+            weight: Option<u32>,
+            use_af_group: Option<String>,
+        }
+
+        impl From<$src> for $rust {
+            fn from(src: $src) -> Self {
+                let s = src.settings;
+                Self {
+                    $($key: src.$key,)+
+                    route_policy_in: s.route_policy_in,
+                    route_policy_out: s.route_policy_out,
+                    route_reflector_client: s.route_reflector_client,
+                    next_hop_self: s.next_hop_self,
+                    soft_reconfiguration_inbound: s.soft_reconfiguration_inbound,
+                    send_community_ebgp: s.send_community_ebgp,
+                    send_extended_community_ebgp: s.send_extended_community_ebgp,
+                    default_originate: s.default_originate,
+                    remove_private_as: s.remove_private_as,
+                    as_override: s.as_override,
+                    allowas_in: s.allowas_in,
+                    site_of_origin: s.site_of_origin,
+                    maximum_prefix: s.maximum_prefix,
+                    weight: s.weight,
+                    use_af_group: s.use_af_group,
+                }
+            }
+        }
+    };
+}
+
+af_settings_class!(
+    PyBgpNeighborAddressFamily,
+    "BgpNeighborAddressFamily",
+    BgpNeighborAddressFamily,
+    [name]
+);
+af_settings_class!(PyBgpAfGroup, "BgpAfGroup", BgpAfGroup, [name, address_family]);
+
+/// A Python class made of one identifying string field plus the shared peer settings.
+macro_rules! peer_settings_class {
+    ($rust:ident, $py:literal, $src:ty, $key:ident) => {
+        #[pyclass(name = $py, module = "asterust.iosxr", frozen, get_all, eq)]
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub struct $rust {
+            $key: String,
+            remote_as: Option<String>,
+            description: Option<String>,
+            update_source: Option<String>,
+            ebgp_multihop: Option<u32>,
+            advertisement_interval: Option<u32>,
+            timers: Option<PyBgpTimers>,
+            shutdown: bool,
+            use_neighbor_group: Option<String>,
+            use_session_group: Option<String>,
+            address_families: Vec<PyBgpNeighborAddressFamily>,
+        }
+
+        impl From<$src> for $rust {
+            fn from(src: $src) -> Self {
+                let s = src.settings;
+                Self {
+                    $key: src.$key,
+                    remote_as: s.remote_as,
+                    description: s.description,
+                    update_source: s.update_source,
+                    ebgp_multihop: s.ebgp_multihop,
+                    advertisement_interval: s.advertisement_interval,
+                    timers: s.timers.map(Into::into),
+                    shutdown: s.shutdown,
+                    use_neighbor_group: s.use_neighbor_group,
+                    use_session_group: s.use_session_group,
+                    address_families: s.address_families.into_iter().map(Into::into).collect(),
+                }
+            }
+        }
+    };
+}
+
+peer_settings_class!(PyBgpNeighbor, "BgpNeighbor", BgpNeighbor, address);
+peer_settings_class!(PyBgpNeighborGroup, "BgpNeighborGroup", BgpNeighborGroup, name);
+peer_settings_class!(PyBgpSessionGroup, "BgpSessionGroup", BgpSessionGroup, name);
+
+#[pyclass(name = "BgpAddressFamily", module = "asterust.iosxr", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyBgpAddressFamily {
+    name: String,
+    networks: Vec<String>,
+    aggregate_addresses: Vec<String>,
+    redistributions: Vec<String>,
+}
+
+impl From<BgpAddressFamily> for PyBgpAddressFamily {
+    fn from(a: BgpAddressFamily) -> Self {
+        Self {
+            name: a.name,
+            networks: a.networks,
+            aggregate_addresses: a.aggregate_addresses,
+            redistributions: a.redistributions,
+        }
+    }
+}
+
+#[pyclass(name = "BgpVrf", module = "asterust.iosxr", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyBgpVrf {
+    name: String,
+    rd: Option<String>,
+    router_id: Option<String>,
+    address_families: Vec<PyBgpAddressFamily>,
+    neighbors: Vec<PyBgpNeighbor>,
+}
+
+impl From<BgpVrf> for PyBgpVrf {
+    fn from(v: BgpVrf) -> Self {
+        Self {
+            name: v.name,
+            rd: v.rd,
+            router_id: v.router_id,
+            address_families: v.address_families.into_iter().map(Into::into).collect(),
+            neighbors: v.neighbors.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -89,8 +236,18 @@ impl From<BgpNeighbor> for PyBgpNeighbor {
 pub struct PyBgpProcess {
     asn: String,
     router_id: Option<String>,
-    address_families: Vec<String>,
+    timers: Option<PyBgpTimers>,
+    default_local_preference: Option<u32>,
+    cluster_id: Option<String>,
+    confederation_identifier: Option<String>,
+    confederation_peers: Vec<String>,
+    nsr: bool,
+    address_families: Vec<PyBgpAddressFamily>,
     neighbors: Vec<PyBgpNeighbor>,
+    neighbor_groups: Vec<PyBgpNeighborGroup>,
+    session_groups: Vec<PyBgpSessionGroup>,
+    af_groups: Vec<PyBgpAfGroup>,
+    vrfs: Vec<PyBgpVrf>,
 }
 
 impl From<BgpProcess> for PyBgpProcess {
@@ -98,8 +255,18 @@ impl From<BgpProcess> for PyBgpProcess {
         Self {
             asn: p.asn,
             router_id: p.router_id,
-            address_families: p.address_families.into_iter().map(|af| af.name).collect(),
+            timers: p.timers.map(Into::into),
+            default_local_preference: p.default_local_preference,
+            cluster_id: p.cluster_id,
+            confederation_identifier: p.confederation_identifier,
+            confederation_peers: p.confederation_peers,
+            nsr: p.nsr,
+            address_families: p.address_families.into_iter().map(Into::into).collect(),
             neighbors: p.neighbors.into_iter().map(Into::into).collect(),
+            neighbor_groups: p.neighbor_groups.into_iter().map(Into::into).collect(),
+            session_groups: p.session_groups.into_iter().map(Into::into).collect(),
+            af_groups: p.af_groups.into_iter().map(Into::into).collect(),
+            vrfs: p.vrfs.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -122,16 +289,67 @@ impl From<IsisInstance> for PyIsisInstance {
     }
 }
 
+#[pyclass(name = "VrfAddressFamily", module = "asterust.iosxr", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyVrfAddressFamily {
+    name: String,
+    maximum_prefix: Option<u32>,
+    import_route_policy: Option<String>,
+    export_route_policy: Option<String>,
+    import_route_targets: Vec<String>,
+    export_route_targets: Vec<String>,
+}
+
+impl From<VrfAddressFamily> for PyVrfAddressFamily {
+    fn from(a: VrfAddressFamily) -> Self {
+        Self {
+            name: a.name,
+            maximum_prefix: a.maximum_prefix,
+            import_route_policy: a.import_route_policy,
+            export_route_policy: a.export_route_policy,
+            import_route_targets: a.import_route_targets,
+            export_route_targets: a.export_route_targets,
+        }
+    }
+}
+
+#[pyclass(name = "Vrf", module = "asterust.iosxr", frozen, get_all, eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PyVrf {
+    name: String,
+    description: Option<String>,
+    address_families: Vec<PyVrfAddressFamily>,
+}
+
+impl From<Vrf> for PyVrf {
+    fn from(v: Vrf) -> Self {
+        Self {
+            name: v.name,
+            description: v.description,
+            address_families: v.address_families.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
 impl_repr!(
     PyInterface,
     PyOspfArea,
     PyOspfProcess,
+    PyBgpTimers,
+    PyBgpNeighborAddressFamily,
+    PyBgpAfGroup,
     PyBgpNeighbor,
+    PyBgpNeighborGroup,
+    PyBgpSessionGroup,
+    PyBgpAddressFamily,
+    PyBgpVrf,
     PyBgpProcess,
-    PyIsisInstance
+    PyIsisInstance,
+    PyVrfAddressFamily,
+    PyVrf
 );
 
-/// A parsed IOS XR running config. `interfaces`, `ospf`, `bgp` and `isis` extract typed blocks.
+/// A parsed IOS XR running config. `interfaces`, `ospf`, `bgp`, `isis` and `vrfs` extract typed blocks.
 #[pyclass(name = "IosXrDevice", module = "asterust.iosxr", frozen)]
 pub struct PyIosXrDevice {
     inner: IosXrDevice,
@@ -179,5 +397,10 @@ impl PyIosXrDevice {
     #[getter]
     fn isis(&self) -> Vec<PyIsisInstance> {
         self.inner.isis().into_iter().map(Into::into).collect()
+    }
+
+    #[getter]
+    fn vrfs(&self) -> Vec<PyVrf> {
+        self.inner.vrfs().into_iter().map(Into::into).collect()
     }
 }

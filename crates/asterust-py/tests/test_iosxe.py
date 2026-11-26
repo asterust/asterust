@@ -90,3 +90,37 @@ def test_repr_uses_python_class_name():
     interface = IosXeDevice(RUNNING_CONFIG).interfaces[0]
     assert repr(interface).startswith("IosXeInterface")
     assert "Loopback0" in repr(interface)
+
+
+# Written from the IOS XE command syntax; not checked against a Cisco guide or a device (see the asterust-iosxe README).
+VRF_CONFIG = """
+vrf definition CUSTOMER-A
+ description Customer A
+ rd 65000:1
+ !
+ address-family ipv4
+  route-target export 65000:1
+  route-target both 65000:100
+  import map FROM-CORE
+ exit-address-family
+!
+ip vrf LEGACY
+ rd 65000:9
+ route-target import 65000:9
+!
+"""
+
+
+def test_vrfs():
+    new_style, legacy = IosXeDevice(VRF_CONFIG).vrfs
+
+    assert (new_style.name, new_style.rd, new_style.legacy) == ("CUSTOMER-A", "65000:1", False)
+    assert new_style.description == "Customer A"
+    af = new_style.address_families[0]
+    assert af.name == "ipv4"
+    assert af.export_route_targets == ["65000:1", "65000:100"]
+    assert af.import_route_targets == ["65000:100"]
+    assert af.import_map == "FROM-CORE"
+
+    assert legacy.legacy is True
+    assert legacy.address_families[0].import_route_targets == ["65000:9"]
