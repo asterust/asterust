@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.0...asterust-junos-v0.2.1) - 2026-11-26
+
+### Added
+
+- *(junos)* add more system login, syslog and ssh options
+
+### Other
+
+- Merge pull request #58 from asterust/feat/junos-system-login-syslog-ssh-options
+
 ## [0.2.0](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.5...asterust-junos-v0.2.0) - 2026-11-26
 
 ### Added
