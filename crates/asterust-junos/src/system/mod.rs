@@ -27,7 +27,10 @@ pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
 pub use ports::{Auxiliary, Console, Ports};
 pub use processes::Process;
 pub use scripts::Scripts;
-pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
+pub use services::{
+    Netconf, NetconfSsh, OutboundSshClient, OutboundSshServer, Services, SshService, WebManagement, WebManagementHttp,
+    WebManagementHttps, XnmClearText, XnmSsl,
+};
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogStructuredData, SyslogTarget};
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
