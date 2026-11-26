@@ -12,6 +12,7 @@ tree parsed by [asterust](https://github.com/asterust/asterust).
 | `ospf` | `router ospf <id>` | router-id, areas and their interfaces |
 | `bgp` | `router bgp <asn>` | router-id, timers, confederation, route-reflector cluster-id, address-families (networks, aggregates, redistribution), neighbors, neighbor/session/af-group templates, VRFs |
 | `isis` | `router isis <tag>` | net, interfaces |
+| `vrf` | `vrf <name>` | description, address-families (maximum prefix, import/export route-policy and route-targets) |
 
 ```rust
 use asterust_iosxr::IosXrDevice;
@@ -37,6 +38,7 @@ The BGP model and its test fixtures follow Cisco's
 | `TEMPLATES` | BGP Configuration: "Viewing Inherited Configurations" sample configuration |
 | `ROUTE_REFLECTOR` | "Configuring a Route Reflector for BGP" and "Adjusting BGP Timers" |
 | `PE_CE` | "Configuring BGP as a PE-CE Protocol" |
+| `GUIDE_VRF` (`src/vrf.rs`) | "Defining the Virtual Routing and Forwarding Tables in Provider Edge Routers" (the guide's `123;234` route-target is a typo and is written `123:234`) |
 
 The fixtures are adapted, not copied verbatim: the guide mostly shows interactive CLI sessions, so
 they are reindented into running-config form and shortened. Release 4.1 is old; the neighbor,
