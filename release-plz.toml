@@ -1,0 +1,9 @@
+[workspace]
+git_tag_name = "{{ package }}-v{{ version }}"
+
+# Not on crates.io: versions come from git tags, and the tag triggers the PyPI upload (see release-plz.yml).
+[[package]]
+name = "asterust-py"
+git_only = true
+git_tag_name = "py-v{{ version }}"
+semver_check = false
