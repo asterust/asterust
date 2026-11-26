@@ -1,5 +1,9 @@
 //! `system { services { ... } }`.
 
+use super::subscriber::{
+    parse_dhcp_local_server, parse_local_policy_decision_function, parse_static_subscribers,
+    parse_subscriber_management, DhcpLocalServer, LocalPolicyDecisionFunction, StaticSubscribers, SubscriberManagement,
+};
 use crate::{
     active_children, arg_of, args_of, child_block, has_leaf, list_values, named_children, statement_words, value_after,
 };
@@ -145,6 +149,10 @@ pub struct Services {
     pub netconf: Option<Netconf>,
     pub xnm_clear_text: Option<XnmClearText>,
     pub xnm_ssl: Option<XnmSsl>,
+    pub subscriber_management: Option<SubscriberManagement>,
+    pub static_subscribers: Option<StaticSubscribers>,
+    pub dhcp_local_server: Option<DhcpLocalServer>,
+    pub local_policy_decision_function: Option<LocalPolicyDecisionFunction>,
 }
 
 pub(super) fn parse_services(services: &ConfigLine) -> Services {
@@ -183,6 +191,11 @@ pub(super) fn parse_services(services: &ConfigLine) -> Services {
             rate_limit: arg_of(xnm, "rate-limit").map(str::to_string),
             local_certificate: arg_of(xnm, "local-certificate").map(str::to_string),
         }),
+        subscriber_management: child_block(services, "subscriber-management").map(parse_subscriber_management),
+        static_subscribers: child_block(services, "static-subscribers").map(parse_static_subscribers),
+        dhcp_local_server: child_block(services, "dhcp-local-server").map(parse_dhcp_local_server),
+        local_policy_decision_function: child_block(services, "local-policy-decision-function")
+            .map(parse_local_policy_decision_function),
     }
 }
 
