@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.7](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.6...asterust-junos-v0.3.7) - 2026-11-26
+
+### Other
+
+- *(junos)* open module docs with the statement name and config path
+- Merge origin/main into docs/junos-cli-reference-links
+- *(junos)* link each module to its CLI Reference pages and follow rustdoc conventions
+
 ## [0.3.6](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.5...asterust-junos-v0.3.6) - 2026-11-26
 
 ### Added
