@@ -6,45 +6,32 @@
 //! - [bgp](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/bgp-edit-protocols.html)
 //! - [group (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/group-edit-protocols-bgp.html)
 //! - [neighbor (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/neighbor-edit-protocols-bgp.html)
+//! - [disable (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/disable-edit-protocols-bgp.html)
+//! - [precision-timers](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/precision-timers-edit-protocols-bgp.html)
 
-use crate::{arg_of, args_of, child_block, first_word, list_values, named_children, top_level};
-use asterust::config::{Config, ConfigLine};
+mod group;
+mod neighbor;
+mod peer_options;
 
-/// A `neighbor <address>` in a BGP group. Settings inherited from the group are not resolved.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct BgpNeighbor {
-    pub address: String,
-    pub description: Option<String>,
-    pub peer_as: Option<String>,
-    pub local_address: Option<String>,
-}
+pub use group::BgpGroup;
+pub use neighbor::BgpNeighbor;
+pub use peer_options::{BgpPeerOptions, LocalAs, Multihop, RemovePrivate};
 
-/// A `group <name>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct BgpGroup {
-    pub name: String,
-    /// `internal` or `external`.
-    pub group_type: Option<String>,
-    pub description: Option<String>,
-    pub peer_as: Option<String>,
-    pub local_as: Option<String>,
-    pub local_address: Option<String>,
-    /// Route-reflector `cluster` id.
-    pub cluster: Option<String>,
-    /// Address families, e.g. `"inet"`, `"inet-vpn"`.
-    pub families: Vec<String>,
-    pub import_policies: Vec<String>,
-    pub export_policies: Vec<String>,
-    pub neighbors: Vec<BgpNeighbor>,
-}
+use crate::{child_block, has_leaf, named_children, top_level};
+use asterust::config::Config;
+use group::parse_group;
+use peer_options::parse_peer_options;
 
 /// The `protocols bgp` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Bgp {
     pub groups: Vec<BgpGroup>,
+    /// Peer options written directly under `bgp`, which every group inherits unless it overrides them.
+    pub options: BgpPeerOptions,
+    /// BGP is disabled on the system.
+    pub disable: bool,
+    pub precision_timers: bool,
 }
 
 /// Returns the `protocols bgp` block, or `None` if BGP is not configured.
@@ -66,32 +53,10 @@ pub fn bgp(config: &Config) -> Option<Bgp> {
         groups: named_children(bgp, "group")
             .map(|(name, group)| parse_group(name, group))
             .collect(),
+        options: parse_peer_options(bgp),
+        disable: has_leaf(bgp, "disable"),
+        precision_timers: has_leaf(bgp, "precision-timers"),
     })
-}
-
-fn parse_group(name: &str, group: &ConfigLine) -> BgpGroup {
-    let policies =
-        |keyword: &str| -> Vec<String> { args_of(group, keyword).into_iter().flat_map(list_values).collect() };
-    BgpGroup {
-        name: name.to_string(),
-        group_type: arg_of(group, "type").map(str::to_string),
-        description: arg_of(group, "description").map(str::to_string),
-        peer_as: arg_of(group, "peer-as").and_then(first_word).map(str::to_string),
-        local_as: arg_of(group, "local-as").and_then(first_word).map(str::to_string),
-        local_address: arg_of(group, "local-address").map(str::to_string),
-        cluster: arg_of(group, "cluster").map(str::to_string),
-        families: named_children(group, "family").map(|(f, _)| f.to_string()).collect(),
-        import_policies: policies("import"),
-        export_policies: policies("export"),
-        neighbors: named_children(group, "neighbor")
-            .map(|(address, n)| BgpNeighbor {
-                address: address.to_string(),
-                description: arg_of(n, "description").map(str::to_string),
-                peer_as: arg_of(n, "peer-as").and_then(first_word).map(str::to_string),
-                local_address: arg_of(n, "local-address").map(str::to_string),
-            })
-            .collect(),
-    }
 }
 
 #[cfg(test)]
