@@ -14,7 +14,19 @@
 //! - [tag (Routing Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/tag-edit-routing-options.html)
 //! - [community (Routing Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/community-edit-routing-options.html)
 
-use crate::{list_values, split_keyword, unquote};
+use crate::{active_children, list_values, split_keyword, unquote};
+use asterust::config::ConfigLine;
+
+/// Returns the statements of a route written as `route <prefix> <statement>;` or as a block: the inline one
+/// first, then each child.
+pub(super) fn route_statements<'a>(inline: &'a str, line: &'a ConfigLine) -> Vec<&'a str> {
+    let mut statements = Vec::new();
+    if !inline.is_empty() {
+        statements.push(inline);
+    }
+    statements.extend(active_children(line).map(|child| child.text.as_str()));
+    statements
+}
 
 /// The attributes a route can carry, from the route itself or from the `defaults` of its block. `as-path`,
 /// `bfd-liveness-detection` and the LSP next-hop statements are not extracted.
