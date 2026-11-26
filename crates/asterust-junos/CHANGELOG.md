@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.6](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.5...asterust-junos-v0.3.6) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces optics-options, otn-options and link-degrade-monitor
+
+### Fixed
+
+- *(junos)* remove unused import in interfaces optics-options
+
+### Other
+
+- Merge pull request #80 from asterust/feat/junos-interfaces-optics-diagnostics
+- Merge origin/main into feat/junos-interfaces-optics-diagnostics
+
 ## [0.3.5](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.4...asterust-junos-v0.3.5) - 2026-11-26
 
 ### Added
