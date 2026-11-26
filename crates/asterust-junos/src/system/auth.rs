@@ -49,8 +49,9 @@ fn servers<'a>(system: &'a ConfigLine, keyword: &str) -> Vec<(&'a str, &'a Confi
     found
 }
 
-pub(super) fn radius_servers(system: &ConfigLine) -> Vec<RadiusServer> {
-    servers(system, "radius-server")
+/// The servers under `parent` written as `<keyword> ...`: `radius-server` in `system`, `server` in accounting.
+pub(super) fn radius_servers(parent: &ConfigLine, keyword: &str) -> Vec<RadiusServer> {
+    servers(parent, keyword)
         .into_iter()
         .map(|(address, server)| RadiusServer {
             address: address.to_string(),
@@ -64,8 +65,8 @@ pub(super) fn radius_servers(system: &ConfigLine) -> Vec<RadiusServer> {
         .collect()
 }
 
-pub(super) fn tacplus_servers(system: &ConfigLine) -> Vec<TacplusServer> {
-    servers(system, "tacplus-server")
+pub(super) fn tacplus_servers(parent: &ConfigLine, keyword: &str) -> Vec<TacplusServer> {
+    servers(parent, keyword)
         .into_iter()
         .map(|(address, server)| TacplusServer {
             address: address.to_string(),
