@@ -96,10 +96,13 @@ micro-optimization.
   not just *what* changed — the diff already shows the *what*).
 - Never commit commented-out code, debug `println!`/`dbg!` calls, or
   credentials.
-- Bump `Cargo.toml`'s `version` whenever a branch adds a new feature
-  (new module, new public API, new vendor/syntax support) — minor bump
-  for features, patch for pure bugfixes. Don't bump for docs/tooling/
-  test-only changes.
+- Use conventional commit prefixes (`feat:`, `fix:`, `feat!:` or a
+  `BREAKING CHANGE:` footer, plus `docs:`/`ci:`/`test:`/`chore:`).
+  release-plz reads them to pick each crate's next version and write
+  its changelog, so the prefix must match the change.
+- Don't bump `version` in `Cargo.toml` by hand. release-plz opens a
+  release PR on `main`; merging it tags, publishes to crates.io, and
+  (for `asterust-py`) dispatches the PyPI upload.
 
 ## Before Committing
 
@@ -108,7 +111,7 @@ micro-optimization.
 - [ ] `cargo fmt --all -- --check` passes
 - [ ] New public items have doc comments
 - [ ] No commented-out code, debug prints, or credentials
-- [ ] `Cargo.toml` version bumped if this change is a new feature
+- [ ] Commit messages use a conventional prefix matching the change
 
 These are exactly the checks `.github/workflows/ci.yml` runs — if all
 four pass locally, CI will pass.
