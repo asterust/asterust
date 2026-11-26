@@ -4,6 +4,7 @@ use crate::bgp::{bgp, Bgp};
 use crate::interface::{interfaces, Interface};
 use crate::isis::{isis, Isis};
 use crate::ospf::{ospf, Ospf};
+use crate::policy_options::{policy_options, PolicyOptions};
 use crate::routing_instance::{routing_instances, RoutingInstance};
 use crate::routing_options::{routing_options, RoutingOptions};
 use asterust::config::{juniper, Config};
@@ -52,6 +53,10 @@ impl JunosDevice {
 
     pub fn routing_options(&self) -> Option<RoutingOptions> {
         routing_options(&self.config)
+    }
+
+    pub fn policy_options(&self) -> Option<PolicyOptions> {
+        policy_options(&self.config)
     }
 }
 
