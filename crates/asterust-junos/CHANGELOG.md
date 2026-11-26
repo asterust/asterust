@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.0...asterust-junos-v0.1.1) - 2026-11-26
+
+### Added
+
+- *(junos)* add system syslog
+- *(junos)* add system ntp
+- *(junos)* add system name-servers
+- *(junos)* add system view with host-name
+
 ## [0.1.0](https://github.com/asterust/asterust/releases/tag/asterust-junos-v0.1.0) - 2026-11-26
 
 ### Added
