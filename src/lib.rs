@@ -4,3 +4,4 @@
 //! non-Python tool) can depend on it directly and add its own bindings.
 
 pub mod config;
+pub mod device;

@@ -75,6 +75,23 @@ impl ConfigLine {
     pub fn match_int_group(&self, pattern: &str) -> Option<i64> {
         self.match_str_group(pattern)?.parse().ok()
     }
+
+    /// Text after `keyword` on this line (`"router-id 1.1.1.1"` with keyword
+    /// `"router-id"` gives `"1.1.1.1"`), or `None` unless the line starts with
+    /// the whole keyword followed by a space.
+    pub fn arg(&self, keyword: &str) -> Option<&str> {
+        self.text.strip_prefix(keyword)?.strip_prefix(' ').map(str::trim)
+    }
+
+    /// [`arg`](Self::arg) of the first direct child that matches `keyword`.
+    pub fn child_arg(&self, keyword: &str) -> Option<&str> {
+        self.children.iter().find_map(|c| c.arg(keyword))
+    }
+
+    /// [`arg`](Self::arg) of every direct child that matches `keyword`, in order.
+    pub fn child_args(&self, keyword: &str) -> Vec<&str> {
+        self.children.iter().filter_map(|c| c.arg(keyword)).collect()
+    }
 }
 
 /// A top-level configuration block (e.g. "router ospf 1", "interfaces")
@@ -209,6 +226,29 @@ mod tests {
         assert_eq!(parent.children.len(), 2);
         assert_eq!(parent.children[0].text, "router-id 10.0.0.1");
         assert_eq!(parent.children[1].text, "area 0");
+    }
+
+    #[test]
+    fn arg_requires_whole_keyword_and_space() {
+        let line = ConfigLine::new("router-id 10.0.0.1  ", 1, 0);
+        assert_eq!(line.arg("router-id"), Some("10.0.0.1"));
+        assert_eq!(line.arg("router"), None);
+        assert_eq!(ConfigLine::new("shutdown", 1, 0).arg("shutdown"), None);
+    }
+
+    #[test]
+    fn child_arg_and_child_args() {
+        let mut parent = ConfigLine::new("interface Gi0", 0, 0);
+        parent.add_child(ConfigLine::new("description uplink", 1, 1));
+        parent.add_child(ConfigLine::new("ip address 10.0.0.1 255.255.255.0", 1, 2));
+        parent.add_child(ConfigLine::new("ip address 10.0.1.1 255.255.255.0 secondary", 1, 3));
+
+        assert_eq!(parent.child_arg("description"), Some("uplink"));
+        assert_eq!(parent.child_arg("vrf"), None);
+        assert_eq!(
+            parent.child_args("ip address"),
+            ["10.0.0.1 255.255.255.0", "10.0.1.1 255.255.255.0 secondary"]
+        );
     }
 
     #[test]
