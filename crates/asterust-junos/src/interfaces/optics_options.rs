@@ -1,6 +1,6 @@
 //! `interfaces { <name> { optics-options { ... } } }`.
 
-use crate::{arg_of, child_block, has_leaf, named_children, toggle};
+use crate::{arg_of, has_leaf, named_children, toggle};
 use asterust::config::ConfigLine;
 
 /// The actions of a `low-light-alarm` or `low-light-warning` statement.
