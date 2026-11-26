@@ -1,6 +1,8 @@
 //! `system { services { ... } }`.
 
-use crate::{active_children, arg_of, args_of, child_block, has_leaf, list_values, named_children};
+use crate::{
+    active_children, arg_of, args_of, child_block, has_leaf, list_values, named_children, statement_words, value_after,
+};
 use asterust::config::ConfigLine;
 
 /// The `system services ssh` settings; every field is `None` or empty when only `ssh;` is written.
@@ -55,6 +57,74 @@ pub struct OutboundSshClient {
     pub routing_instance: Option<String>,
 }
 
+/// The `web-management http` block.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct WebManagementHttp {
+    pub interfaces: Vec<String>,
+    pub port: Option<String>,
+}
+
+/// The `web-management https` block.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct WebManagementHttps {
+    pub interfaces: Vec<String>,
+    pub port: Option<String>,
+    pub local_certificate: Option<String>,
+    pub pki_local_certificate: Option<String>,
+    pub system_generated_certificate: bool,
+}
+
+/// The `system services web-management` settings.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct WebManagement {
+    /// From `control max-threads`.
+    pub control_max_threads: Option<String>,
+    pub http: Option<WebManagementHttp>,
+    pub https: Option<WebManagementHttps>,
+    pub management_url: Option<String>,
+    /// Minutes, from `session idle-timeout`.
+    pub session_idle_timeout: Option<String>,
+    pub session_limit: Option<String>,
+}
+
+/// The `netconf ssh` block.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct NetconfSsh {
+    pub port: Option<String>,
+    pub connection_limit: Option<String>,
+    pub rate_limit: Option<String>,
+}
+
+/// The `system services netconf` settings.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct Netconf {
+    pub ssh: Option<NetconfSsh>,
+    pub rfc_compliant: bool,
+}
+
+/// The `xnm-clear-text` block.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct XnmClearText {
+    pub connection_limit: Option<String>,
+    pub rate_limit: Option<String>,
+}
+
+/// The `xnm-ssl` block.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct XnmSsl {
+    pub port: Option<String>,
+    pub connection_limit: Option<String>,
+    pub rate_limit: Option<String>,
+    pub local_certificate: Option<String>,
+}
+
 /// The `system services` configuration. Services other than those listed are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -69,6 +139,12 @@ pub struct Services {
     /// `web-management { https; }`.
     pub https: bool,
     pub outbound_ssh: Vec<OutboundSshClient>,
+    /// The details behind `http` and `https`.
+    pub web_management: Option<WebManagement>,
+    /// The details behind `netconf_ssh`.
+    pub netconf: Option<Netconf>,
+    pub xnm_clear_text: Option<XnmClearText>,
+    pub xnm_ssl: Option<XnmSsl>,
 }
 
 pub(super) fn parse_services(services: &ConfigLine) -> Services {
@@ -88,6 +164,48 @@ pub(super) fn parse_services(services: &ConfigLine) -> Services {
                     .collect()
             })
             .unwrap_or_default(),
+        web_management: web.map(parse_web_management),
+        netconf: netconf.map(|netconf| Netconf {
+            ssh: child_block(netconf, "ssh").map(|ssh| NetconfSsh {
+                port: arg_of(ssh, "port").map(str::to_string),
+                connection_limit: arg_of(ssh, "connection-limit").map(str::to_string),
+                rate_limit: arg_of(ssh, "rate-limit").map(str::to_string),
+            }),
+            rfc_compliant: has_leaf(netconf, "rfc-compliant"),
+        }),
+        xnm_clear_text: child_block(services, "xnm-clear-text").map(|xnm| XnmClearText {
+            connection_limit: arg_of(xnm, "connection-limit").map(str::to_string),
+            rate_limit: arg_of(xnm, "rate-limit").map(str::to_string),
+        }),
+        xnm_ssl: child_block(services, "xnm-ssl").map(|xnm| XnmSsl {
+            port: arg_of(xnm, "port").map(str::to_string),
+            connection_limit: arg_of(xnm, "connection-limit").map(str::to_string),
+            rate_limit: arg_of(xnm, "rate-limit").map(str::to_string),
+            local_certificate: arg_of(xnm, "local-certificate").map(str::to_string),
+        }),
+    }
+}
+
+fn parse_web_management(web: &ConfigLine) -> WebManagement {
+    let interfaces =
+        |block: &ConfigLine| -> Vec<String> { args_of(block, "interface").into_iter().flat_map(list_values).collect() };
+    let session = child_block(web, "session");
+    WebManagement {
+        control_max_threads: statement_words(web, "control").and_then(|words| value_after(&words, "max-threads")),
+        http: child_block(web, "http").map(|http| WebManagementHttp {
+            interfaces: interfaces(http),
+            port: arg_of(http, "port").map(str::to_string),
+        }),
+        https: child_block(web, "https").map(|https| WebManagementHttps {
+            interfaces: interfaces(https),
+            port: arg_of(https, "port").map(str::to_string),
+            local_certificate: arg_of(https, "local-certificate").map(str::to_string),
+            pki_local_certificate: arg_of(https, "pki-local-certificate").map(str::to_string),
+            system_generated_certificate: has_leaf(https, "system-generated-certificate"),
+        }),
+        management_url: arg_of(web, "management-url").map(str::to_string),
+        session_idle_timeout: session.and_then(|s| arg_of(s, "idle-timeout")).map(str::to_string),
+        session_limit: session.and_then(|s| arg_of(s, "session-limit")).map(str::to_string),
     }
 }
 
@@ -324,6 +442,134 @@ system {
         assert!(ssh.no_password_authentication);
         assert!(ssh.no_public_keys);
         assert!(!ssh.no_passwords);
+    }
+
+    #[test]
+    fn extracts_web_management_details() {
+        let web = system(&juniper::parse_braces(
+            r#"
+system {
+    services {
+        web-management {
+            control {
+                max-threads 8;
+            }
+            management-url /manage;
+            http {
+                interface [ fxp0.0 ge-0/0/1.0 ];
+                port 8080;
+            }
+            https {
+                interface fxp0.0;
+                port 8443;
+                pki-local-certificate J-WEB;
+            }
+            session {
+                idle-timeout 20;
+                session-limit 4;
+            }
+        }
+    }
+}
+"#,
+        ))
+        .unwrap()
+        .services
+        .unwrap()
+        .web_management
+        .unwrap();
+        assert_eq!(web.control_max_threads.as_deref(), Some("8"));
+        assert_eq!(web.management_url.as_deref(), Some("/manage"));
+        assert_eq!(web.session_idle_timeout.as_deref(), Some("20"));
+        assert_eq!(web.session_limit.as_deref(), Some("4"));
+
+        let http = web.http.unwrap();
+        assert_eq!(http.interfaces, ["fxp0.0", "ge-0/0/1.0"]);
+        assert_eq!(http.port.as_deref(), Some("8080"));
+
+        let https = web.https.unwrap();
+        assert_eq!(https.interfaces, ["fxp0.0"]);
+        assert_eq!(https.port.as_deref(), Some("8443"));
+        assert_eq!(https.pki_local_certificate.as_deref(), Some("J-WEB"));
+        assert_eq!(https.local_certificate, None);
+        assert!(!https.system_generated_certificate);
+    }
+
+    #[test]
+    fn web_management_with_system_generated_certificate() {
+        let web = system(&juniper::parse_braces(
+            "system {\n    services {\n        web-management {\n            https {\n                system-generated-certificate;\n            }\n        }\n    }\n}\n",
+        ))
+        .unwrap()
+        .services
+        .unwrap()
+        .web_management
+        .unwrap();
+        assert!(web.https.unwrap().system_generated_certificate);
+        assert!(web.http.is_none());
+        assert_eq!(web.control_max_threads, None);
+    }
+
+    #[test]
+    fn extracts_netconf_and_xnm_settings() {
+        let services = system(&juniper::parse_braces(
+            r#"
+system {
+    services {
+        netconf {
+            ssh {
+                port 830;
+                connection-limit 5;
+                rate-limit 10;
+            }
+            rfc-compliant;
+        }
+        xnm-clear-text {
+            connection-limit 3;
+        }
+        xnm-ssl {
+            port 3220;
+            local-certificate XNM;
+            rate-limit 7;
+        }
+    }
+}
+"#,
+        ))
+        .unwrap()
+        .services
+        .unwrap();
+        let netconf = services.netconf.unwrap();
+        assert!(netconf.rfc_compliant);
+        let ssh = netconf.ssh.unwrap();
+        assert_eq!(ssh.port.as_deref(), Some("830"));
+        assert_eq!(ssh.connection_limit.as_deref(), Some("5"));
+        assert_eq!(ssh.rate_limit.as_deref(), Some("10"));
+        assert!(services.netconf_ssh);
+
+        let clear_text = services.xnm_clear_text.unwrap();
+        assert_eq!(clear_text.connection_limit.as_deref(), Some("3"));
+        assert_eq!(clear_text.rate_limit, None);
+
+        let ssl = services.xnm_ssl.unwrap();
+        assert_eq!(ssl.port.as_deref(), Some("3220"));
+        assert_eq!(ssl.local_certificate.as_deref(), Some("XNM"));
+        assert_eq!(ssl.rate_limit.as_deref(), Some("7"));
+    }
+
+    #[test]
+    fn bare_netconf_ssh_has_no_settings() {
+        let netconf = system(&juniper::parse_braces(
+            "system {\n    services {\n        netconf {\n            ssh;\n        }\n    }\n}\n",
+        ))
+        .unwrap()
+        .services
+        .unwrap()
+        .netconf
+        .unwrap();
+        let ssh = netconf.ssh.unwrap();
+        assert_eq!(ssh.port, None);
+        assert!(!netconf.rfc_compliant);
     }
 
     #[test]
