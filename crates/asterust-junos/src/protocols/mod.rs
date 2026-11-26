@@ -9,6 +9,6 @@ pub mod bgp;
 pub mod isis;
 pub mod ospf;
 
-pub use bgp::{Bgp, BgpGroup, BgpNeighbor};
+pub use bgp::{Bgp, BgpGroup, BgpNeighbor, BgpPeerOptions, LocalAs, Multihop, RemovePrivate};
 pub use isis::{Isis, IsisInterface};
 pub use ospf::{Ospf, OspfArea, OspfInterface};
