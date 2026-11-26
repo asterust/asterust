@@ -1,6 +1,6 @@
 [package]
 name = "asterust-junos"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 description = "Typed Juniper JunOS config views (interfaces, OSPF, BGP, IS-IS, routing instances, policy options, firewall filters, system) extracted from an asterust config tree."
 license = "MIT OR Apache-2.0"
