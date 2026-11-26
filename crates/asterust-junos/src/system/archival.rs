@@ -38,7 +38,7 @@ pub(super) fn parse_archival(archival: &ConfigLine) -> Archival {
 }
 
 /// Drops the `:password` from `scheme://user:password@host/path`.
-fn redact_password(url: &str) -> String {
+pub(super) fn redact_password(url: &str) -> String {
     let Some((scheme, rest)) = url.split_once("://") else {
         return url.to_string();
     };
