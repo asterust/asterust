@@ -1,7 +1,12 @@
 //! `interfaces { <name> { unit <n> { family <name> { address <address> { ... } } } } }`.
 
+mod vrrp_group;
+
+pub use vrrp_group::{BandwidthThreshold, TrackedInterface, TrackedRoute, VrrpGroup, VrrpInheritFrom, VrrpTrack};
+
 use crate::{active_children, has_leaf, split_name};
 use asterust::config::ConfigLine;
+use vrrp_group::parse_vrrp_groups;
 
 /// A static `arp` entry of an address.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,7 +20,7 @@ pub struct AddressArp {
     pub publish: bool,
 }
 
-/// An `address <address>` of a family, with its options. VRRP groups are not extracted.
+/// An `address <address>` of a family, with its options.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct UnitAddress {
@@ -28,6 +33,7 @@ pub struct UnitAddress {
     pub destination: Option<String>,
     pub broadcast: Option<String>,
     pub arps: Vec<AddressArp>,
+    pub vrrp_groups: Vec<VrrpGroup>,
 }
 
 pub(super) fn parse_addresses(family: &ConfigLine) -> Vec<UnitAddress> {
@@ -58,6 +64,7 @@ fn parse_address(line: &ConfigLine, arg: &str) -> UnitAddress {
             .filter_map(|c| c.arg("arp"))
             .map(parse_arp)
             .collect(),
+        vrrp_groups: parse_vrrp_groups(line),
     }
 }
 

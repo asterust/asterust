@@ -2,7 +2,10 @@
 
 mod family;
 
-pub use family::{AddressArp, FamilyFilter, FamilyPolicer, FamilySampling, RpfCheck, UnitAddress, UnitFamily};
+pub use family::{
+    AddressArp, BandwidthThreshold, FamilyFilter, FamilyPolicer, FamilySampling, RpfCheck, TrackedInterface,
+    TrackedRoute, UnitAddress, UnitFamily, VrrpGroup, VrrpInheritFrom, VrrpTrack,
+};
 
 use crate::{arg_of, args_of, named_children};
 use asterust::config::ConfigLine;
