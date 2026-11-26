@@ -234,6 +234,31 @@ pub struct BackupRouter {
     pub destinations: Vec<String>,
 }
 
+/// A `radius-server <address>`. The `secret` is not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct RadiusServer {
+    pub address: String,
+    pub port: Option<String>,
+    pub accounting_port: Option<String>,
+    pub retry: Option<String>,
+    pub timeout: Option<String>,
+    pub source_address: Option<String>,
+    pub routing_instance: Option<String>,
+}
+
+/// A `tacplus-server <address>`. The `secret` is not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct TacplusServer {
+    pub address: String,
+    pub port: Option<String>,
+    pub timeout: Option<String>,
+    pub source_address: Option<String>,
+    pub routing_instance: Option<String>,
+    pub single_connection: bool,
+}
+
 /// The top-level `system` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -246,6 +271,10 @@ pub struct System {
     pub static_host_mappings: Vec<StaticHostMapping>,
     pub backup_router: Option<BackupRouter>,
     pub inet6_backup_router: Option<BackupRouter>,
+    /// Methods in the order tried: `password`, `radius`, `tacplus`.
+    pub authentication_order: Vec<String>,
+    pub radius_servers: Vec<RadiusServer>,
+    pub tacplus_servers: Vec<TacplusServer>,
     pub root_authentication: Option<RootAuthentication>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
@@ -270,6 +299,33 @@ pub fn system(config: &Config) -> Option<System> {
             .unwrap_or_default(),
         backup_router: arg_of(system, "backup-router").map(parse_backup_router),
         inet6_backup_router: arg_of(system, "inet6-backup-router").map(parse_backup_router),
+        authentication_order: args_of(system, "authentication-order")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
+        radius_servers: servers(system, "radius-server")
+            .into_iter()
+            .map(|(address, server)| RadiusServer {
+                address: address.to_string(),
+                port: arg_of(server, "port").map(str::to_string),
+                accounting_port: arg_of(server, "accounting-port").map(str::to_string),
+                retry: arg_of(server, "retry").map(str::to_string),
+                timeout: arg_of(server, "timeout").map(str::to_string),
+                source_address: arg_of(server, "source-address").map(str::to_string),
+                routing_instance: arg_of(server, "routing-instance").map(str::to_string),
+            })
+            .collect(),
+        tacplus_servers: servers(system, "tacplus-server")
+            .into_iter()
+            .map(|(address, server)| TacplusServer {
+                address: address.to_string(),
+                port: arg_of(server, "port").map(str::to_string),
+                timeout: arg_of(server, "timeout").map(str::to_string),
+                source_address: arg_of(server, "source-address").map(str::to_string),
+                routing_instance: arg_of(server, "routing-instance").map(str::to_string),
+                single_connection: has_leaf(server, "single-connection"),
+            })
+            .collect(),
         root_authentication: child_block(system, "root-authentication").map(|auth| RootAuthentication {
             methods: authentication_methods(auth),
         }),
@@ -279,6 +335,19 @@ pub fn system(config: &Config) -> Option<System> {
         login: child_block(system, "login").map(parse_login),
         services: child_block(system, "services").map(parse_services),
     })
+}
+
+/// Servers written as `<keyword> <address> { ... }`, or as `<keyword> { <address> { ... } }`, with their option lines.
+fn servers<'a>(system: &'a ConfigLine, keyword: &str) -> Vec<(&'a str, &'a ConfigLine)> {
+    let mut found = Vec::new();
+    for child in active_children(system) {
+        if child.text == keyword {
+            found.extend(active_children(child).map(|server| (unquote(&server.text), server)));
+        } else if let Some(arg) = child.arg(keyword) {
+            found.push((split_name(arg).0, child));
+        }
+    }
+    found
 }
 
 fn parse_static_host_mapping(mapping: &ConfigLine) -> StaticHostMapping {
@@ -1164,6 +1233,98 @@ system {
         assert!(system.static_host_mappings.is_empty());
         assert!(system.backup_router.is_none());
         assert!(system.inet6_backup_router.is_none());
+    }
+
+    #[test]
+    fn extracts_authentication_order() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    authentication-order [ tacplus radius password ];\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.authentication_order, ["tacplus", "radius", "password"]);
+    }
+
+    #[test]
+    fn extracts_radius_servers_without_secrets() {
+        let system = system(&juniper::parse_braces(
+            r#"
+system {
+    radius-server 192.0.2.10 {
+        secret "$9$secret"; ## SECRET-DATA
+        port 1812;
+        accounting-port 1813;
+        retry 5;
+        timeout 10;
+        source-address 192.0.2.1;
+        routing-instance mgmt_junos;
+    }
+    radius-server 192.0.2.11 {
+        secret "$9$other"; ## SECRET-DATA
+    }
+}
+"#,
+        ))
+        .unwrap();
+        assert_eq!(system.radius_servers.len(), 2);
+
+        let first = &system.radius_servers[0];
+        assert_eq!(first.address, "192.0.2.10");
+        assert_eq!(first.port.as_deref(), Some("1812"));
+        assert_eq!(first.accounting_port.as_deref(), Some("1813"));
+        assert_eq!(first.retry.as_deref(), Some("5"));
+        assert_eq!(first.timeout.as_deref(), Some("10"));
+        assert_eq!(first.source_address.as_deref(), Some("192.0.2.1"));
+        assert_eq!(first.routing_instance.as_deref(), Some("mgmt_junos"));
+
+        assert_eq!(system.radius_servers[1].address, "192.0.2.11");
+        assert_eq!(system.radius_servers[1].port, None);
+    }
+
+    #[test]
+    fn extracts_radius_servers_in_nested_block_form() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    radius-server {\n        192.0.2.10 {\n            port 1645;\n        }\n    }\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.radius_servers[0].address, "192.0.2.10");
+        assert_eq!(system.radius_servers[0].port.as_deref(), Some("1645"));
+    }
+
+    #[test]
+    fn extracts_tacplus_servers_without_secrets() {
+        let system = system(&juniper::parse_braces(
+            r#"
+system {
+    tacplus-server 192.0.2.20 {
+        port 49;
+        secret "$9$secret"; ## SECRET-DATA
+        single-connection;
+        source-address 192.0.2.1;
+        timeout 5;
+    }
+    inactive: tacplus-server 192.0.2.21 {
+        secret "$9$other"; ## SECRET-DATA
+    }
+}
+"#,
+        ))
+        .unwrap();
+        assert_eq!(system.tacplus_servers.len(), 1);
+        let server = &system.tacplus_servers[0];
+        assert_eq!(server.address, "192.0.2.20");
+        assert_eq!(server.port.as_deref(), Some("49"));
+        assert_eq!(server.timeout.as_deref(), Some("5"));
+        assert_eq!(server.source_address.as_deref(), Some("192.0.2.1"));
+        assert!(server.single_connection);
+        assert_eq!(server.routing_instance, None);
+    }
+
+    #[test]
+    fn authentication_settings_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.authentication_order.is_empty());
+        assert!(system.radius_servers.is_empty());
+        assert!(system.tacplus_servers.is_empty());
     }
 
     #[test]
