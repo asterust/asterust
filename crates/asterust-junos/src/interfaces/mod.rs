@@ -8,7 +8,9 @@ mod unit;
 pub use aggregated_ether_options::{AggregatedEtherOptions, Lacp};
 pub use ether_options::{EtherOptions, Ieee8023ad};
 pub use hold_time::HoldTime;
-pub use unit::InterfaceUnit;
+pub use unit::{
+    AddressArp, FamilyFilter, FamilyPolicer, FamilySampling, InterfaceUnit, RpfCheck, UnitAddress, UnitFamily,
+};
 
 use crate::{active_children, arg_of, child_block, has_leaf, named_children, top_level};
 use aggregated_ether_options::parse_aggregated_ether_options;
