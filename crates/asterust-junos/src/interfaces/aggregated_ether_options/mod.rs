@@ -1,11 +1,14 @@
 //! `interfaces { ae<n> { aggregated-ether-options { ... } } }`.
 
+mod bfd_liveness_detection;
 mod lacp;
 
+pub use bfd_liveness_detection::BfdLivenessDetection;
 pub use lacp::Lacp;
 
 use crate::{arg_of, child_block, toggle};
 use asterust::config::ConfigLine;
+use bfd_liveness_detection::parse_bfd_liveness_detection;
 use lacp::parse_lacp;
 
 /// The `aggregated-ether-options` of an aggregated Ethernet interface.
@@ -13,6 +16,7 @@ use lacp::parse_lacp;
 #[non_exhaustive]
 pub struct AggregatedEtherOptions {
     pub lacp: Option<Lacp>,
+    pub bfd_liveness_detection: Option<BfdLivenessDetection>,
     /// e.g. `"10g"` or `"mixed"`.
     pub link_speed: Option<String>,
     pub minimum_links: Option<String>,
@@ -27,6 +31,7 @@ pub struct AggregatedEtherOptions {
 pub(super) fn parse_aggregated_ether_options(options: &ConfigLine) -> AggregatedEtherOptions {
     AggregatedEtherOptions {
         lacp: child_block(options, "lacp").map(parse_lacp),
+        bfd_liveness_detection: child_block(options, "bfd-liveness-detection").map(parse_bfd_liveness_detection),
         link_speed: arg_of(options, "link-speed").map(str::to_string),
         minimum_links: arg_of(options, "minimum-links").map(str::to_string),
         flow_control: toggle(options, "flow-control"),

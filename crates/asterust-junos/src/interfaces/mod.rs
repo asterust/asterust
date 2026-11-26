@@ -5,11 +5,12 @@ mod ether_options;
 mod hold_time;
 mod unit;
 
-pub use aggregated_ether_options::{AggregatedEtherOptions, Lacp};
+pub use aggregated_ether_options::{AggregatedEtherOptions, BfdLivenessDetection, Lacp};
 pub use ether_options::{EtherOptions, Ieee8023ad};
 pub use hold_time::HoldTime;
 pub use unit::{
-    AddressArp, FamilyFilter, FamilyPolicer, FamilySampling, InterfaceUnit, RpfCheck, UnitAddress, UnitFamily,
+    AddressArp, BandwidthThreshold, FamilyFilter, FamilyPolicer, FamilySampling, InterfaceUnit, RpfCheck,
+    TrackedInterface, TrackedRoute, UnitAddress, UnitFamily, VrrpGroup, VrrpInheritFrom, VrrpTrack,
 };
 
 use crate::{active_children, arg_of, child_block, has_leaf, named_children, top_level};

@@ -6,7 +6,9 @@ mod policer;
 mod rpf_check;
 mod sampling;
 
-pub use address::{AddressArp, UnitAddress};
+pub use address::{
+    AddressArp, BandwidthThreshold, TrackedInterface, TrackedRoute, UnitAddress, VrrpGroup, VrrpInheritFrom, VrrpTrack,
+};
 pub use filter::FamilyFilter;
 pub use policer::FamilyPolicer;
 pub use rpf_check::RpfCheck;
