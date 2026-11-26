@@ -7,19 +7,26 @@
 //! - [group (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/group-edit-protocols-bgp.html)
 //! - [neighbor (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/neighbor-edit-protocols-bgp.html)
 //! - [disable (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/disable-edit-protocols-bgp.html)
+//! - [path-selection](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/path-selection-edit-protocols-bgp.html)
+//! - [multipath-build-priority](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/multipath-build-priority-edit-protocols-bgp.html)
 //! - [precision-timers](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/precision-timers-edit-protocols-bgp.html)
 
+mod dynamic_neighbor;
 mod group;
 mod neighbor;
+mod path_selection;
 mod peer_options;
 
+pub use dynamic_neighbor::DynamicNeighbor;
 pub use group::BgpGroup;
 pub use neighbor::BgpNeighbor;
-pub use peer_options::{BgpPeerOptions, LocalAs, Multihop, RemovePrivate};
+pub use path_selection::PathSelection;
+pub use peer_options::{BgpBfd, BgpGracefulRestart, BgpMultipath, BgpPeerOptions, LocalAs, Multihop, RemovePrivate};
 
-use crate::{child_block, has_leaf, named_children, top_level};
+use crate::{child_block, has_leaf, named_children, statement_words, top_level};
 use asterust::config::Config;
 use group::parse_group;
+use path_selection::parse_path_selection;
 use peer_options::parse_peer_options;
 
 /// The `protocols bgp` configuration.
@@ -32,6 +39,9 @@ pub struct Bgp {
     /// BGP is disabled on the system.
     pub disable: bool,
     pub precision_timers: bool,
+    pub path_selection: Option<PathSelection>,
+    /// `low` or `medium`, from `multipath-build-priority`.
+    pub multipath_build_priority: Option<String>,
 }
 
 /// Returns the `protocols bgp` block, or `None` if BGP is not configured.
@@ -56,6 +66,9 @@ pub fn bgp(config: &Config) -> Option<Bgp> {
         options: parse_peer_options(bgp),
         disable: has_leaf(bgp, "disable"),
         precision_timers: has_leaf(bgp, "precision-timers"),
+        path_selection: parse_path_selection(bgp),
+        multipath_build_priority: statement_words(bgp, "multipath-build-priority")
+            .and_then(|words| words.first().map(|word| word.to_string())),
     })
 }
 
