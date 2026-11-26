@@ -18,11 +18,11 @@ pub use archival::{Archival, ArchivalConfiguration};
 pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
 pub use internet::{IcmpRateLimit, InternetOptions};
 pub use location::Location;
-pub use login::{Login, LoginClass, LoginUser};
+pub use login::{Login, LoginClass, LoginPassword, LoginRetryOptions, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
 pub use ports::{Auxiliary, Console, Ports};
 pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
-pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogTarget};
+pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogStructuredData, SyslogTarget};
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
 use accounting::parse_accounting;
