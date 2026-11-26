@@ -38,6 +38,18 @@ micro-optimization.
   here need only 1-3 lines, not full `# Arguments`/`# Returns` sections.
 - Keep doc comments up to date with the code; stale docs are worse
   than no docs.
+- Follow the rustdoc conventions (RFC 1574, Rust API Guidelines): `//!`
+  for modules, `///` for items, one space after the sigil, prose wrapped
+  at 100 columns, third-person summary for functions ("Returns ...").
+  Use intra-doc links (`[`Config`]`) for crate items; `# Examples`
+  doctests belong on public entry points, not on every item.
+- `asterust-junos` modules record where they come from. Each module doc
+  opens with the statement name(s) in backticks, then its configuration
+  path (`policy-options { prefix-list <name> { ... } }`), then a
+  `# See also` list linking the Junos CLI Reference page for every
+  statement the file models (the `[edit ...]` hierarchy page for
+  top-level blocks). Use the page title as the link text and check that
+  each link returns 200. New statements add their link in the same PR.
 
 ## Error Handling
 
@@ -106,12 +118,15 @@ micro-optimization.
 
 ## Before Committing
 
-- [ ] `cargo test` passes
-- [ ] `cargo clippy --all-targets -- -D warnings` passes
+- [ ] `cargo test --workspace --all-targets` passes
+- [ ] `cargo clippy --workspace --all-targets -- -D warnings` passes
 - [ ] `cargo fmt --all -- --check` passes
-- [ ] New public items have doc comments
+- [ ] `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` passes
+  (not run by CI)
+- [ ] New public items have doc comments, and new `asterust-junos`
+  modules have the name, path and `# See also` header
 - [ ] No commented-out code, debug prints, or credentials
 - [ ] Commit messages use a conventional prefix matching the change
 
-These are exactly the checks `.github/workflows/ci.yml` runs — if all
-four pass locally, CI will pass.
+The first three are exactly the checks `.github/workflows/ci.yml` runs
+(plain `cargo clippy` only checks the root crate, so keep `--workspace`).
