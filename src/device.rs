@@ -13,10 +13,10 @@ use crate::config::{Config, ConfigBlock};
 
 /// A typed view of one top-level config block.
 pub trait BlockView: Sized {
-    /// Build from a top-level block, or `None` if the block isn't this kind.
+    /// Builds the view from a top-level block, or returns `None` if the block isn't this kind.
     fn from_block(block: &ConfigBlock) -> Option<Self>;
 
-    /// Every block in `config` that is this kind, in config order.
+    /// Returns every block in `config` that is this kind, in config order.
     fn find_all(config: &Config) -> Vec<Self> {
         config.blocks.iter().filter_map(Self::from_block).collect()
     }
@@ -24,20 +24,22 @@ pub trait BlockView: Sized {
 
 /// A parsed config for one platform.
 pub trait Device: Sized {
-    /// Parse raw `show running-config` text using the platform's syntax.
+    /// Parses raw `show running-config` text using the platform's syntax.
     fn parse(config_text: &str) -> Self;
 
-    /// Wrap an already-parsed [`Config`].
+    /// Wraps an already-parsed [`Config`].
     fn from_config(config: Config) -> Self;
 
-    /// The underlying generic config tree.
+    /// Returns the underlying generic config tree.
     fn config(&self) -> &Config;
 }
 
 /// A device whose config has `interface` blocks.
 pub trait HasInterfaces: Device {
+    /// The platform's typed interface view.
     type Interface: BlockView;
 
+    /// Returns every `interface` block as [`Self::Interface`](HasInterfaces::Interface).
     fn interfaces(&self) -> Vec<Self::Interface> {
         Self::Interface::find_all(self.config())
     }
@@ -45,8 +47,10 @@ pub trait HasInterfaces: Device {
 
 /// A device whose config has OSPF processes.
 pub trait HasOspf: Device {
+    /// The platform's typed OSPF view.
     type Ospf: BlockView;
 
+    /// Returns every OSPF process as [`Self::Ospf`](HasOspf::Ospf).
     fn ospf(&self) -> Vec<Self::Ospf> {
         Self::Ospf::find_all(self.config())
     }
@@ -54,8 +58,10 @@ pub trait HasOspf: Device {
 
 /// A device whose config has BGP processes.
 pub trait HasBgp: Device {
+    /// The platform's typed BGP view.
     type Bgp: BlockView;
 
+    /// Returns every BGP process as [`Self::Bgp`](HasBgp::Bgp).
     fn bgp(&self) -> Vec<Self::Bgp> {
         Self::Bgp::find_all(self.config())
     }
@@ -63,8 +69,10 @@ pub trait HasBgp: Device {
 
 /// A device whose config has IS-IS instances.
 pub trait HasIsis: Device {
+    /// The platform's typed IS-IS view.
     type Isis: BlockView;
 
+    /// Returns every IS-IS instance as [`Self::Isis`](HasIsis::Isis).
     fn isis(&self) -> Vec<Self::Isis> {
         Self::Isis::find_all(self.config())
     }

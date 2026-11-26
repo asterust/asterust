@@ -7,7 +7,18 @@
 
 use super::{add_child_at, line_at, Config, ConfigLine};
 
-/// Parse raw `show running-config`-style text into a [`Config`].
+/// Parses raw `show running-config`-style text into a [`Config`].
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::cisco;
+///
+/// let config = cisco::parse("interface Gi0\n description uplink\n!\n");
+/// let interface = config.blocks[0].get_root_line();
+/// assert_eq!(interface.text, "interface Gi0");
+/// assert_eq!(interface.child_arg("description"), Some("uplink"));
+/// ```
 pub fn parse(config_text: &str) -> Config {
     Config::from_root_lines(parse_lines_to_hierarchy(config_text.trim()))
 }

@@ -4,18 +4,28 @@
 //! Covers JunOS `show configuration` output, and other brace-based CLIs
 //! that follow the same convention (e.g. VyOS/Vyatta's brace mode).
 //!
-//! Does not (yet) handle JunOS's flat `| display set` output, which has no
-//! real nesting and doesn't fit this tree model well — see the module docs
-//! for why that would need its own representation.
+//! Does not (yet) handle JunOS's flat `| display set` output: it has no real nesting, so it
+//! doesn't fit this tree model and would need its own representation.
 
 use super::{add_child_at, Config, ConfigLine};
 
-/// Parse raw `show configuration`-style brace text into a [`Config`].
+/// Parses raw `show configuration`-style brace text into a [`Config`].
 ///
 /// Comment lines (starting with `#`) are skipped. Malformed input (e.g. an
 /// unmatched closing brace, or a statement with neither `{` nor `;`) is
 /// handled permissively rather than rejected: unmatched `}` is ignored,
 /// and a bare statement is treated as a leaf at the current depth.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+///
+/// let config = juniper::parse_braces("system {\n    host-name pe1;\n}\n");
+/// let system = config.blocks[0].get_root_line();
+/// assert_eq!(system.text, "system");
+/// assert_eq!(system.child_arg("host-name"), Some("pe1"));
+/// ```
 pub fn parse_braces(config_text: &str) -> Config {
     Config::from_root_lines(parse_lines_to_hierarchy(config_text.trim()))
 }
