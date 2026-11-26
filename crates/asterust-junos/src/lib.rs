@@ -2,7 +2,7 @@
 //! [`asterust::config::juniper`] (brace-delimited `show configuration` output).
 //!
 //! JunOS nests everything under a few top-level blocks (`interfaces`, `protocols`, `routing-options`,
-//! `routing-instances`, `policy-options`), so each module exposes a free function that reads the relevant block from a
+//! `routing-instances`, `policy-options`, `firewall`), so each module exposes a free function that reads the relevant block from a
 //! [`asterust::config::Config`] rather than a per-block constructor. [`JunosDevice`] bundles a parsed
 //! config with all of them as getters.
 //!
@@ -10,6 +10,7 @@
 
 pub mod bgp;
 pub mod device;
+pub mod firewall;
 pub mod interface;
 pub mod isis;
 pub mod ospf;
@@ -89,6 +90,35 @@ pub(crate) fn list_values(arg: &str) -> Vec<String> {
         values.push(current);
     }
     values
+}
+
+/// Split `<name> <rest>`, where the name may be quoted.
+pub(crate) fn split_name(arg: &str) -> (&str, &str) {
+    if let Some((name, rest)) = arg.strip_prefix('"').and_then(|quoted| quoted.split_once('"')) {
+        return (name, rest.trim());
+    }
+    arg.split_once(char::is_whitespace)
+        .map_or((arg, ""), |(name, rest)| (name, rest.trim()))
+}
+
+/// Split `<keyword> <argument>` into its two parts; the argument is empty for a bare keyword.
+pub(crate) fn split_keyword(statement: &str) -> (&str, &str) {
+    statement
+        .split_once(char::is_whitespace)
+        .map_or((statement, ""), |(keyword, arg)| (keyword, arg.trim()))
+}
+
+/// Statements under `line`'s `keyword` entries, whether written `then x;` or `then { x; y; }`.
+pub(crate) fn statements<'a>(line: &'a ConfigLine, keyword: &str) -> Vec<&'a str> {
+    let mut found = Vec::new();
+    for child in active_children(line) {
+        if child.text == keyword {
+            found.extend(active_children(child).map(|s| s.text.as_str()));
+        } else if let Some(arg) = child.arg(keyword) {
+            found.push(arg);
+        }
+    }
+    found
 }
 
 /// First whitespace-separated word of `arg`.

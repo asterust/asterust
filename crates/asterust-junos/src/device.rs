@@ -1,6 +1,7 @@
 //! [`JunosDevice`]: one parsed JunOS config with every supported view as a getter.
 
 use crate::bgp::{bgp, Bgp};
+use crate::firewall::{firewall, Firewall};
 use crate::interface::{interfaces, Interface};
 use crate::isis::{isis, Isis};
 use crate::ospf::{ospf, Ospf};
@@ -57,6 +58,10 @@ impl JunosDevice {
 
     pub fn policy_options(&self) -> Option<PolicyOptions> {
         policy_options(&self.config)
+    }
+
+    pub fn firewall(&self) -> Option<Firewall> {
+        firewall(&self.config)
     }
 }
 
