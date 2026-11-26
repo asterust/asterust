@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.0...asterust-junos-v0.3.1) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces mtu, speed, encapsulation, vlan-tagging and other physical settings
+
+### Other
+
+- Merge pull request #70 from asterust/feat/junos-interfaces-physical-basics
+
 ## [0.3.0](https://github.com/asterust/asterust/compare/asterust-junos-v0.2.4...asterust-junos-v0.3.0) - 2026-11-26
 
 ### Other
