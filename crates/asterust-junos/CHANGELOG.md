@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.2...asterust-junos-v0.1.3) - 2026-11-26
+
+### Added
+
+- *(junos)* add system services outbound-ssh
+- *(junos)* add system syslog archive
+- *(junos)* add system root-authentication
+- *(junos)* add system time-zone
+- *(junos)* add system domain-name
+
+### Other
+
+- Merge pull request #47 from asterust/feat/junos-system-outbound-ssh
+- Merge pull request #46 from asterust/feat/junos-system-syslog-archive
+- Merge pull request #44 from asterust/feat/junos-system-root-authentication
+- Merge pull request #43 from asterust/feat/junos-system-time-zone
+- Merge pull request #42 from asterust/feat/junos-system-domain-name
+
 ## [0.1.2](https://github.com/asterust/asterust/compare/asterust-junos-v0.1.1...asterust-junos-v0.1.2) - 2026-11-26
 
 ### Added
