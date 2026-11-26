@@ -1,6 +1,8 @@
 //! `system { ... }`.
 
+mod accounting;
 mod addressing;
+mod archival;
 mod auth;
 mod internet;
 mod location;
@@ -10,7 +12,9 @@ mod ports;
 mod services;
 mod syslog;
 
+pub use accounting::{Accounting, AccountingDestination};
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
+pub use archival::{Archival, ArchivalConfiguration};
 pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
 pub use internet::{IcmpRateLimit, InternetOptions};
 pub use location::Location;
@@ -21,7 +25,9 @@ pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogTarget};
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
+use accounting::parse_accounting;
 use addressing::{name_servers, parse_backup_router, static_host_mappings};
+use archival::parse_archival;
 use asterust::config::Config;
 use auth::{radius_servers, root_authentication, tacplus_servers};
 use internet::parse_internet_options;
@@ -56,6 +62,8 @@ pub struct System {
     /// `default-address-selection`: use the loopback as the source of locally generated packets.
     pub default_address_selection: bool,
     pub internet_options: Option<InternetOptions>,
+    pub archival: Option<Archival>,
+    pub accounting: Option<Accounting>,
     pub root_authentication: Option<RootAuthentication>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
@@ -82,8 +90,8 @@ pub fn system(config: &Config) -> Option<System> {
             .into_iter()
             .flat_map(list_values)
             .collect(),
-        radius_servers: radius_servers(system),
-        tacplus_servers: tacplus_servers(system),
+        radius_servers: radius_servers(system, "radius-server"),
+        tacplus_servers: tacplus_servers(system, "tacplus-server"),
         location: child_block(system, "location").map(parse_location),
         ports: child_block(system, "ports").map(parse_ports),
         max_configurations_on_flash: arg_of(system, "max-configurations-on-flash").map(str::to_string),
@@ -91,6 +99,8 @@ pub fn system(config: &Config) -> Option<System> {
         no_redirects: has_leaf(system, "no-redirects"),
         default_address_selection: has_leaf(system, "default-address-selection"),
         internet_options: child_block(system, "internet-options").map(parse_internet_options),
+        archival: child_block(system, "archival").map(parse_archival),
+        accounting: child_block(system, "accounting").map(parse_accounting),
         root_authentication: root_authentication(system),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),
