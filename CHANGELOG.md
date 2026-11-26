@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/asterust/asterust/compare/asterust-v0.2.1...asterust-v0.2.2) - 2026-11-26
+
+### Other
+
+- use the default asterust-py-v tag and release names for the Python package
+- name the asterust-py GitHub Release after its py-v tag
+
 ## [0.2.1](https://github.com/asterust/asterust/compare/asterust-v0.2.0...asterust-v0.2.1) - 2026-11-26
 
 ### Added
