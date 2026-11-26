@@ -1,9 +1,17 @@
-//! `system { syslog { archive ... } }`, also found under `file`.
+//! Extracts the `archive` settings of `system syslog`, also found under `file`.
+//!
+//! Configuration path: `system { syslog { archive ... } }`.
+//!
+//! # See also
+//!
+//! - [archive (All System Log Files)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/archive-edit-system-syslog.html)
+//! - [archive (Individual System Log File)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/archive-edit-system-syslog-file.html)
 
 use crate::statement_words;
 use asterust::config::ConfigLine;
 
-/// A syslog `archive` statement. `archive-sites`, `start-time` and `transfer-interval` are not extracted.
+/// A syslog `archive` statement. `archive-sites`, `start-time` and `transfer-interval` are not
+/// extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct SyslogArchive {

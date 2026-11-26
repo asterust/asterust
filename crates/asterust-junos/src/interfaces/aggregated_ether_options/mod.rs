@@ -1,4 +1,12 @@
-//! `interfaces { ae<n> { aggregated-ether-options { ... } } }`.
+//! Extracts the `aggregated-ether-options` of an aggregated Ethernet interface.
+//!
+//! Configuration path: `interfaces { ae<n> { aggregated-ether-options { ... } } }`.
+//!
+//! # See also
+//!
+//! - [aggregated-ether-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/aggregated-ether-options-edit-interfaces.html)
+//! - [link-speed (Aggregated Ethernet)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/link-speed-edit-interfaces-ae.html)
+//! - [minimum-links](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/minimum-links-edit-interfaces.html)
 
 mod bfd_liveness_detection;
 mod lacp;

@@ -1,4 +1,11 @@
-//! `protocols { isis { ... } }`.
+//! Extracts the `isis` settings of `protocols`.
+//!
+//! Configuration path: `protocols { isis { ... } }`.
+//!
+//! # See also
+//!
+//! - [isis](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/isis-edit-protocols.html)
+//! - [interface (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interface-edit-protocols-isis.html)
 
 use crate::{child_block, has_leaf, named_children, top_level};
 use asterust::config::Config;
@@ -20,7 +27,19 @@ pub struct Isis {
     pub interfaces: Vec<IsisInterface>,
 }
 
-/// The `protocols isis` block, or `None` if IS-IS is not configured.
+/// Returns the `protocols isis` block, or `None` if IS-IS is not configured.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::protocols::isis::isis;
+///
+/// let config = juniper::parse_braces("protocols {\n    isis {\n        interface ge-0/0/0.0 {\n            point-to-point;\n        }\n    }\n}\n");
+/// let isis = isis(&config).unwrap();
+/// assert_eq!(isis.interfaces[0].name, "ge-0/0/0.0");
+/// assert!(isis.interfaces[0].point_to_point);
+/// ```
 pub fn isis(config: &Config) -> Option<Isis> {
     let isis = child_block(top_level(config, "protocols")?, "isis")?;
     Some(Isis {

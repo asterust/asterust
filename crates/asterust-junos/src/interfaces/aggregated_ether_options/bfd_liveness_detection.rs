@@ -1,4 +1,10 @@
-//! `interfaces { ae<n> { aggregated-ether-options { bfd-liveness-detection { ... } } } }`.
+//! Extracts the `bfd-liveness-detection` session of an aggregated Ethernet bundle.
+//!
+//! Configuration path: `interfaces { ae<n> { aggregated-ether-options { bfd-liveness-detection { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [bfd-liveness-detection (LAG)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/bfd-liveness-detection-edit-interfaces-aex-aggregated-ether-options.html)
 
 use crate::{arg_of, child_block, has_leaf};
 use asterust::config::ConfigLine;

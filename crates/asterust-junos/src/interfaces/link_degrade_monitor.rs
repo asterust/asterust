@@ -1,4 +1,11 @@
-//! `interfaces { <name> { link-degrade-monitor { ... } } }`.
+//! Extracts the `link-degrade-monitor` settings of an interface.
+//!
+//! Configuration path: `interfaces { <name> { link-degrade-monitor { ... } } }`.
+//!
+//! # See also
+//!
+//! - [thresholds](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interfaces-link-degrade-monitor-thresholds.html)
+//! - [recovery](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interfaces-link-degrade-monitor-recovery.html)
 
 use crate::{arg_of, child_block, has_leaf};
 use asterust::config::ConfigLine;

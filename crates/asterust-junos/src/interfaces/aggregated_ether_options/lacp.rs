@@ -1,4 +1,10 @@
-//! `interfaces { <name> { aggregated-ether-options { lacp { ... } } } }`.
+//! Extracts the `lacp` settings of an aggregated Ethernet bundle.
+//!
+//! Configuration path: `interfaces { <name> { aggregated-ether-options { lacp { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [lacp (Aggregated Ethernet)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/lacp-edit-interfaces-aggregated-ethernet-qfx-series.html)
 
 use crate::{arg_of, has_leaf};
 use asterust::config::ConfigLine;

@@ -1,4 +1,10 @@
-//! `system { services { dhcp-local-server { ... } } }`.
+//! Extracts the `dhcp-local-server` settings of `system services`.
+//!
+//! Configuration path: `system { services { dhcp-local-server { ... } } }`.
+//!
+//! # See also
+//!
+//! - [dhcp-local-server](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/dhcp-local-server-edit-system-services.html)
 
 use crate::{args_of, child_block, named_children};
 use asterust::config::ConfigLine;

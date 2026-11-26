@@ -1,9 +1,16 @@
-//! `system { location { ... } }`.
+//! Extracts the `location` settings of `system`.
+//!
+//! Configuration path: `system { location { ... } }`.
+//!
+//! # See also
+//!
+//! - [location (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/location-edit-system.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;
 
-/// The `system location` block. The Bellcore coordinates (`hcoord`, `vcoord`, `lata`, `npa-nxx`) are not extracted.
+/// The `system location` block. The Bellcore coordinates (`hcoord`, `vcoord`, `lata`, `npa-nxx`)
+/// are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Location {

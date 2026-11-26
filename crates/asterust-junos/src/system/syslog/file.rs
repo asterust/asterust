@@ -1,4 +1,12 @@
-//! `system { syslog { file <name> { ... } } }`. [`SyslogTarget`] is shared with `user`.
+//! Extracts the `file` destinations of `system syslog`.
+//!
+//! Configuration path: `system { syslog { file <name> { ... } } }`.
+//!
+//! [`SyslogTarget`](crate::system::SyslogTarget) is shared with the `user` destinations.
+//!
+//! # See also
+//!
+//! - [file (System Logging)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/file-edit-system-syslog.html)
 
 use super::archive::{parse_archive, SyslogArchive};
 use super::{syslog_rules, SyslogRule};

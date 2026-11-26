@@ -1,4 +1,10 @@
-//! `system { accounting { ... } }`.
+//! Extracts the `accounting` settings of `system`.
+//!
+//! Configuration path: `system { accounting { ... } }`.
+//!
+//! # See also
+//!
+//! - [accounting (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/accounting-edit-system.html)
 
 use super::radius_server::radius_servers;
 use super::tacplus_server::tacplus_servers;

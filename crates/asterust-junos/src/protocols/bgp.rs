@@ -1,4 +1,12 @@
-//! `protocols { bgp { ... } }`.
+//! Extracts the `bgp` settings of `protocols`.
+//!
+//! Configuration path: `protocols { bgp { ... } }`.
+//!
+//! # See also
+//!
+//! - [bgp](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/bgp-edit-protocols.html)
+//! - [group (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/group-edit-protocols-bgp.html)
+//! - [neighbor (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/neighbor-edit-protocols-bgp.html)
 
 use crate::{arg_of, args_of, child_block, first_word, list_values, named_children, top_level};
 use asterust::config::{Config, ConfigLine};
@@ -40,7 +48,19 @@ pub struct Bgp {
     pub groups: Vec<BgpGroup>,
 }
 
-/// The `protocols bgp` block, or `None` if BGP is not configured.
+/// Returns the `protocols bgp` block, or `None` if BGP is not configured.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::protocols::bgp::bgp;
+///
+/// let config = juniper::parse_braces("protocols {\n    bgp {\n        group IBGP {\n            type internal;\n        }\n    }\n}\n");
+/// let bgp = bgp(&config).unwrap();
+/// assert_eq!(bgp.groups[0].name, "IBGP");
+/// assert_eq!(bgp.groups[0].group_type.as_deref(), Some("internal"));
+/// ```
 pub fn bgp(config: &Config) -> Option<Bgp> {
     let bgp = child_block(top_level(config, "protocols")?, "bgp")?;
     Some(Bgp {

@@ -1,4 +1,10 @@
-//! `system { login { class <name> { ... } } }`.
+//! Extracts the `class` entries of `system login`.
+//!
+//! Configuration path: `system { login { class <name> { ... } } }`.
+//!
+//! # See also
+//!
+//! - [class (Defining Login Classes)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/class-edit-system-login.html)
 
 use super::list;
 use crate::{arg_of, args_of, list_values};

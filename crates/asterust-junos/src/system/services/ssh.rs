@@ -1,4 +1,10 @@
-//! `system { services { ssh { ... } } }`.
+//! Extracts the `ssh` service settings of `system services`.
+//!
+//! Configuration path: `system { services { ssh { ... } } }`.
+//!
+//! # See also
+//!
+//! - [ssh (System Services)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ssh-edit-system.html)
 
 use crate::{arg_of, args_of, has_leaf, list_values};
 use asterust::config::ConfigLine;

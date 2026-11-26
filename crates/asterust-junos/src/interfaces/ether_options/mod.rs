@@ -1,4 +1,22 @@
-//! `interfaces { <name> { ether-options { ... } } }`, also written `gigether-options` or `fastether-options`.
+//! Extracts the Ethernet options of an interface.
+//!
+//! Configuration path: `interfaces { <name> { ether-options { ... } } }`.
+//!
+//! The options are written under `ether-options`, `gigether-options` or `fastether-options`,
+//! depending on the platform.
+//!
+//! # See also
+//!
+//! - [gigether-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/gigether-options-edit-interfaces.html)
+//! - [fastether-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/fastether-options-edit-interfaces.html)
+//! - [ether-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ether-options-interfaces-qfx-series.html)
+//! - [auto-negotiation](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/auto-negotiation-edit-interfaces.html)
+//! - [flow-control (ACX Series)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/flow-control-edit-interfaces.html)
+//! - [loopback (Aggregated Ethernet, Fast Ethernet, and Gigabit Ethernet)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/loopback-edit-interfaces-ethernet.html)
+//! - [source-filtering](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/source-filtering-edit-interfaces.html)
+//! - [speed (MX Series DPC)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/speed-edit-interfaces-gigether-options.html)
+//! - [link-mode](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/link-mode-edit-interfaces-qfx-series.html)
+//! - [fec (ether)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interfaces-ether-options-fec.html)
 
 mod ieee_802_3ad;
 

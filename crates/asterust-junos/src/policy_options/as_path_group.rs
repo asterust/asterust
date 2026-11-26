@@ -1,4 +1,10 @@
-//! `policy-options { as-path-group <name> { ... } }`.
+//! Extracts the `as-path-group` entries of `policy-options`.
+//!
+//! Configuration path: `policy-options { as-path-group <name> { ... } }`.
+//!
+//! # See also
+//!
+//! - [as-path-group](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/as-path-group-edit-policy-options.html)
 
 use super::as_path::{parse_as_path, AsPath};
 use crate::active_children;

@@ -1,4 +1,10 @@
-//! `system { services { xnm-ssl { ... } } }`.
+//! Extracts the `xnm-ssl` settings of `system services`.
+//!
+//! Configuration path: `system { services { xnm-ssl { ... } } }`.
+//!
+//! # See also
+//!
+//! - [xnm-ssl](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/xnm-ssl-edit-system.html)
 
 use crate::arg_of;
 use asterust::config::ConfigLine;

@@ -1,4 +1,10 @@
-//! `system { schema { ... } }`.
+//! Extracts the `schema` settings of `system`.
+//!
+//! Configuration path: `system { schema { ... } }`.
+//!
+//! # See also
+//!
+//! - [schema](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/schema-edit-system.html)
 
 use crate::{child_block, has_leaf};
 use asterust::config::ConfigLine;

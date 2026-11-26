@@ -1,4 +1,10 @@
-//! `firewall { ... }`: stateless filters and policers.
+//! Models the top-level `firewall` block: stateless filters and policers.
+//!
+//! Configuration path: `firewall { ... }`.
+//!
+//! # See also
+//!
+//! - [`[edit firewall]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-firewall.html)
 
 mod family;
 mod policer;
@@ -11,7 +17,8 @@ use asterust::config::Config;
 use family::filters;
 use policer::parse_policer;
 
-/// The top-level `firewall` configuration. `simple-filter`, `service-filter` and `prefix-action` are not extracted.
+/// The top-level `firewall` configuration. `simple-filter`, `service-filter` and `prefix-action`
+/// are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Firewall {
@@ -19,7 +26,19 @@ pub struct Firewall {
     pub policers: Vec<Policer>,
 }
 
-/// The top-level `firewall` block, or `None` if there is none.
+/// Returns the top-level `firewall` block, or `None` if there is none.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::firewall::firewall;
+///
+/// let config = juniper::parse_braces("firewall {\n    policer LIMIT {\n        if-exceeding {\n            bandwidth-limit 1m;\n        }\n    }\n}\n");
+/// let firewall = firewall(&config).unwrap();
+/// assert_eq!(firewall.policers[0].name, "LIMIT");
+/// assert_eq!(firewall.policers[0].bandwidth_limit.as_deref(), Some("1m"));
+/// ```
 pub fn firewall(config: &Config) -> Option<Firewall> {
     let root = top_level(config, "firewall")?;
     Some(Firewall {

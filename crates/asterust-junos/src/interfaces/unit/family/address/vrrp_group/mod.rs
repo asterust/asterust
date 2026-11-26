@@ -1,4 +1,16 @@
-//! `... address <address> { vrrp-group <id> { ... } }` and `vrrp-inet6-group <id> { ... }`.
+//! Extracts the `vrrp-group` and `vrrp-inet6-group` entries of an address.
+//!
+//! Configuration paths: `... address <address> { vrrp-group <id> { ... } }` and `vrrp-inet6-group <id> { ... }`.
+//!
+//! # See also
+//!
+//! - [vrrp-group](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/security-interfaces-unit-family-inet-address-vrrp-group.html)
+//! - [vrrp-inet6-group](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrrp-inet6-group-edit-interfaces.html)
+//! - [priority (Protocols VRRP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/priority-edit-interfaces-vrrp.html)
+//! - [preempt (VRRP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/preempt-edit-interfaces-vrrp.html)
+//! - [accept-data](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/accept-data-edit-interfaces.html)
+//! - [virtual-address](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/virtual-address-edit-interfaces.html)
+//! - [vrrp-inherit-from](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrrp-inherit-from-edit-interfaces.html)
 
 mod track;
 
@@ -16,8 +28,8 @@ pub struct VrrpInheritFrom {
     pub active_interface: Option<String>,
 }
 
-/// A `vrrp-group` (under `family inet`) or `vrrp-inet6-group` (under `family inet6`). The `authentication-key` is not
-/// extracted.
+/// A `vrrp-group` (under `family inet`) or `vrrp-inet6-group` (under `family inet6`). The
+/// `authentication-key` is not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct VrrpGroup {

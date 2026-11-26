@@ -1,4 +1,10 @@
-//! `policy-options { ... }`: policy statements, communities, prefix lists and AS paths.
+//! Models the top-level `policy-options` block.
+//!
+//! Configuration path: `policy-options { ... }`.
+//!
+//! # See also
+//!
+//! - [`[edit policy-options]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-policy-options.html)
 
 mod as_path;
 mod as_path_group;
@@ -34,7 +40,19 @@ pub struct PolicyOptions {
     pub as_path_groups: Vec<AsPathGroup>,
 }
 
-/// The top-level `policy-options` block, or `None` if there is none.
+/// Returns the top-level `policy-options` block, or `None` if there is none.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::policy_options::policy_options;
+///
+/// let config = juniper::parse_braces("policy-options {\n    prefix-list CUSTOMERS {\n        192.0.2.0/24;\n    }\n}\n");
+/// let options = policy_options(&config).unwrap();
+/// assert_eq!(options.prefix_lists[0].name, "CUSTOMERS");
+/// assert_eq!(options.prefix_lists[0].prefixes, ["192.0.2.0/24"]);
+/// ```
 pub fn policy_options(config: &Config) -> Option<PolicyOptions> {
     let root = top_level(config, "policy-options")?;
     Some(PolicyOptions {

@@ -1,4 +1,10 @@
-//! `system { dynamic-profile-options { ... } }`.
+//! Extracts the `dynamic-profile-options` settings of `system`.
+//!
+//! Configuration path: `system { dynamic-profile-options { ... } }`.
+//!
+//! # See also
+//!
+//! - [dynamic-profile-options](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/dynamic-profile-options-edit-system.html)
 
 use crate::has_leaf;
 use asterust::config::ConfigLine;

@@ -1,4 +1,18 @@
-//! `interfaces { ... }`: physical interfaces and their logical units.
+//! Models the top-level `interfaces` block: physical interfaces and their logical units.
+//!
+//! Configuration path: `interfaces { ... }`.
+//!
+//! # See also
+//!
+//! - [`[edit interfaces]` hierarchy](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/topic-map/hierarchy-edit-interfaces.html)
+//! - [mtu (interfaces)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/mtu-edit-interfaces-ni.html)
+//! - [speed (Ethernet)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/speed-edit-interfaces-ethernet.html)
+//! - [encapsulation (interfaces)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/encapsulation-edit-interfaces-physical.html)
+//! - [vlan-tagging](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vlan-tagging-edit-interfaces.html)
+//! - [flexible-vlan-tagging](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/flexible-vlan-tagging-edit-interfaces.html)
+//! - [native-vlan-id](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/native-vlan-id-edit-interfaces-qfx-series.html)
+//! - [per-unit-scheduler](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/per-unit-scheduler-edit-interfaces.html)
+//! - [no-gratuitous-arp-request](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-gratuitous-arp-request-edit-interfaces-port-security.html)
 
 mod aggregated_ether_options;
 mod auto_configure;
@@ -60,7 +74,19 @@ pub struct Interface {
     pub units: Vec<InterfaceUnit>,
 }
 
-/// Every interface under the top-level `interfaces` block.
+/// Returns every interface under the top-level `interfaces` block.
+///
+/// # Examples
+///
+/// ```
+/// use asterust::config::juniper;
+/// use asterust_junos::interfaces::interfaces;
+///
+/// let config = juniper::parse_braces("interfaces {\n    ge-0/0/0 {\n        mtu 9192;\n    }\n}\n");
+/// let found = interfaces(&config);
+/// assert_eq!(found[0].name, "ge-0/0/0");
+/// assert_eq!(found[0].mtu.as_deref(), Some("9192"));
+/// ```
 pub fn interfaces(config: &Config) -> Vec<Interface> {
     let Some(root) = top_level(config, "interfaces") else {
         return Vec::new();

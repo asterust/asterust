@@ -1,4 +1,10 @@
-//! `system { services { service-deployment { ... } } }`.
+//! Extracts the `service-deployment` settings of `system services`.
+//!
+//! Configuration path: `system { services { service-deployment { ... } } }`.
+//!
+//! # See also
+//!
+//! - [service-deployment](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/service-deployment-edit-system.html)
 
 use crate::{arg_of, named_children};
 use asterust::config::ConfigLine;

@@ -1,4 +1,10 @@
-//! `system { radius-server <address> { ... } }`.
+//! Extracts the `radius-server` entries of `system`.
+//!
+//! Configuration path: `system { radius-server <address> { ... } }`.
+//!
+//! # See also
+//!
+//! - [radius-server (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/radius-server-edit-system.html)
 
 use super::servers;
 use crate::arg_of;
@@ -17,7 +23,8 @@ pub struct RadiusServer {
     pub routing_instance: Option<String>,
 }
 
-/// The servers under `parent` written as `<keyword> ...`: `radius-server` in `system`, `server` in accounting.
+/// The servers under `parent` written as `<keyword> ...`: `radius-server` in `system`, `server` in
+/// accounting.
 pub(super) fn radius_servers(parent: &ConfigLine, keyword: &str) -> Vec<RadiusServer> {
     servers(parent, keyword)
         .into_iter()

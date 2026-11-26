@@ -1,4 +1,10 @@
-//! `system { tacplus-server <address> { ... } }`.
+//! Extracts the `tacplus-server` entries of `system`.
+//!
+//! Configuration path: `system { tacplus-server <address> { ... } }`.
+//!
+//! # See also
+//!
+//! - [tacplus-server](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/tacplus-server-edit-system.html)
 
 use super::servers;
 use crate::{arg_of, has_leaf};

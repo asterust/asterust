@@ -1,4 +1,10 @@
-//! `interfaces { <name> { unit <n> { family <name> { sampling { ... } } } } }`.
+//! Extracts the `sampling` settings of a family.
+//!
+//! Configuration path: `interfaces { <name> { unit <n> { family <name> { sampling { ... } } } } }`.
+//!
+//! # See also
+//!
+//! - [sampling (Interfaces)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/sampling-edit-interfaces-ni.html)
 
 use crate::statement_words;
 use asterust::config::ConfigLine;

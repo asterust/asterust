@@ -1,4 +1,10 @@
-//! `firewall { policer <name> { ... } }`.
+//! Extracts the `policer` entries of `firewall`.
+//!
+//! Configuration path: `firewall { policer <name> { ... } }`.
+//!
+//! # See also
+//!
+//! - [policer (Configuring)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/policer-edit-firewall.html)
 
 use crate::{arg_of, child_block, split_keyword, statements, unquote};
 use asterust::config::ConfigLine;

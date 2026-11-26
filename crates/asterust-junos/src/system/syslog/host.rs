@@ -1,4 +1,10 @@
-//! `system { syslog { host <address> { ... } } }`.
+//! Extracts the `host` destinations of `system syslog`.
+//!
+//! Configuration path: `system { syslog { host <address> { ... } } }`.
+//!
+//! # See also
+//!
+//! - [host (System)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/host-edit-system.html)
 
 use super::{syslog_rules, SyslogRule};
 use crate::{arg_of, has_leaf};

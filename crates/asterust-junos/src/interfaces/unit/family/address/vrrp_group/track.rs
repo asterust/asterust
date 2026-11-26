@@ -1,9 +1,19 @@
-//! `... address <address> { vrrp-group <id> { track { ... } } }`.
+//! Extracts the `track` block of a VRRP group.
+//!
+//! Configuration path: `... address <address> { vrrp-group <id> { track { ... } } }`.
+//!
+//! # See also
+//!
+//! - [track (VRRP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/track-edit-interfaces-vrrp.html)
+//! - [priority-cost (VRRP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/priority-cost-edit-interfaces.html)
+//! - [priority-hold-time](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/priority-hold-time-edit-interfaces.html)
+//! - [bandwidth-threshold](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/bandwidth-threshold-edit-interfaces.html)
 
 use crate::{active_children, arg_of, args_of, named_children, value_after};
 use asterust::config::ConfigLine;
 
-/// A `bandwidth-threshold` of a tracked interface: the priority cost applied below `bandwidth` bits per second.
+/// A `bandwidth-threshold` of a tracked interface: the priority cost applied below `bandwidth` bits
+/// per second.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct BandwidthThreshold {

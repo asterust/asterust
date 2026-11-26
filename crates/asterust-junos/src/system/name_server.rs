@@ -1,4 +1,10 @@
-//! `system { name-server ... }`.
+//! Extracts the `name-server` entries of `system`.
+//!
+//! Configuration path: `system { name-server ... }`.
+//!
+//! # See also
+//!
+//! - [name-server (System Services)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/name-server-edit-system.html)
 
 use crate::{active_children, arg_of, unquote};
 use asterust::config::ConfigLine;
@@ -12,7 +18,8 @@ pub struct NameServer {
     pub routing_instance: Option<String>,
 }
 
-/// Servers written as a `name-server { <address>; ... }` block, or one per `name-server <address>` line.
+/// Servers written as a `name-server { <address>; ... }` block, or one per `name-server <address>`
+/// line.
 pub(super) fn name_servers(system: &ConfigLine) -> Vec<NameServer> {
     let mut found = Vec::new();
     for child in active_children(system) {

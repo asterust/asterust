@@ -1,4 +1,10 @@
-//! `interfaces { <name> { otn-options { rate { ... } } } }`.
+//! Extracts the `rate` of an OTN interface.
+//!
+//! Configuration path: `interfaces { <name> { otn-options { rate { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [rate](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rate-edit-interfaces-otn-options.html)
 
 use crate::{has_leaf, toggle};
 use asterust::config::ConfigLine;

@@ -1,4 +1,10 @@
-//! `system { services { web-management { ... } } }`.
+//! Extracts the `web-management` settings of `system services`.
+//!
+//! Configuration path: `system { services { web-management { ... } } }`.
+//!
+//! # See also
+//!
+//! - [web-management (System Services)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/web-management-edit-system.html)
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, statement_words, value_after};
 use asterust::config::ConfigLine;

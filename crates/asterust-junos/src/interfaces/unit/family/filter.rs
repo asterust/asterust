@@ -1,4 +1,10 @@
-//! `interfaces { <name> { unit <n> { family <name> { filter { ... } } } } }`.
+//! Extracts the firewall `filter` applied to a family.
+//!
+//! Configuration path: `interfaces { <name> { unit <n> { family <name> { filter { ... } } } } }`.
+//!
+//! # See also
+//!
+//! - [filter (Applying to a Logical Interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/filter-edit-interfaces-unit-family.html)
 
 use crate::{arg_of, args_of, child_block, list_values};
 use asterust::config::ConfigLine;

@@ -1,10 +1,17 @@
-//! `system { login { user <name> { ... } } }`.
+//! Extracts the `user` entries of `system login`.
+//!
+//! Configuration path: `system { login { user <name> { ... } } }`.
+//!
+//! # See also
+//!
+//! - [user (Access)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/user-edit-system-login.html)
 
 use crate::system::authentication_methods;
 use crate::{arg_of, child_block};
 use asterust::config::ConfigLine;
 
-/// A login `user`. Passwords and keys are not extracted, only which authentication methods are present.
+/// A login `user`. Passwords and keys are not extracted, only which authentication methods are
+/// present.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct LoginUser {

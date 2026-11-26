@@ -1,9 +1,16 @@
-//! `system { services { subscriber-management { ... } } }`.
+//! Extracts the `subscriber-management` settings of `system services`.
+//!
+//! Configuration path: `system { services { subscriber-management { ... } } }`.
+//!
+//! # See also
+//!
+//! - [subscriber-management](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/subscriber-management-edit-system-services.html)
 
 use crate::{active_children, arg_of, child_block, has_leaf, named_children};
 use asterust::config::ConfigLine;
 
-/// An `interface <name>` of a subscriber-management `redundancy` block. The `shared-key` is not extracted.
+/// An `interface <name>` of a subscriber-management `redundancy` block. The `shared-key` is not
+/// extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct RedundancyInterface {
@@ -24,7 +31,8 @@ pub struct SubscriberRedundancy {
     pub protocols: Vec<String>,
 }
 
-/// The `system services subscriber-management` settings. `overrides` and `traceoptions` are not extracted.
+/// The `system services subscriber-management` settings. `overrides` and `traceoptions` are not
+/// extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct SubscriberManagement {

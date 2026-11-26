@@ -1,4 +1,11 @@
-//! `interfaces { <name> { ether-options { 802.3ad { ... } } } }`.
+//! Extracts the `802.3ad` bundle membership of an Ethernet interface.
+//!
+//! Configuration path: `interfaces { <name> { ether-options { 802.3ad { ... } } } }`.
+//!
+//! # See also
+//!
+//! - [802.3ad](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/802.3ad-edit-interfaces.html)
+//! - [lacp (IEEE 802.1AX) (MX Series)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/lacp-edit-interfaces-802.3ad.html)
 
 use crate::{active_children, arg_of, child_block, statement_words, value_after};
 use asterust::config::ConfigLine;
@@ -17,7 +24,8 @@ pub struct Ieee8023ad {
     pub lacp_port_priority: Option<String>,
 }
 
-/// The `802.3ad` statement of `options`, written `802.3ad ae0;`, `802.3ad ae0 { ... }` or `802.3ad { ae0; ... }`.
+/// The `802.3ad` statement of `options`, written `802.3ad ae0;`, `802.3ad ae0 { ... }` or `802.3ad
+/// { ae0; ... }`.
 pub(super) fn parse_ieee_802_3ad(options: &ConfigLine) -> Option<Ieee8023ad> {
     let statement = active_children(options).find(|c| c.text == "802.3ad" || c.arg("802.3ad").is_some())?;
     let words = statement_words(options, "802.3ad")?;

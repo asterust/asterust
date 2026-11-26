@@ -1,4 +1,10 @@
-//! `firewall { family <family> { ... } }`: the filters of each address family.
+//! Extracts the filters of each `family` of `firewall`.
+//!
+//! Configuration path: `firewall { family <family> { ... } }`.
+//!
+//! # See also
+//!
+//! - [family (Firewall)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/family-edit-firewall.html)
 
 mod filter;
 
