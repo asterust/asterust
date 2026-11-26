@@ -1,6 +1,5 @@
-//! Extracts the `ssh` service settings of `system services`.
-//!
-//! Configuration path: `system { services { ssh { ... } } }`.
+//! `ssh`
+//! `system { services { ssh { ... } } }`.
 //!
 //! # See also
 //!

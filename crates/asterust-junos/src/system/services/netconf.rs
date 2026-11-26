@@ -1,6 +1,5 @@
-//! Extracts the `netconf` service settings of `system services`.
-//!
-//! Configuration path: `system { services { netconf { ... } } }`.
+//! `netconf`
+//! `system { services { netconf { ... } } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Models the top-level `firewall` block: stateless filters and policers.
-//!
-//! Configuration path: `firewall { ... }`.
+//! `firewall`
+//! `firewall { ... }`.
 //!
 //! # See also
 //!

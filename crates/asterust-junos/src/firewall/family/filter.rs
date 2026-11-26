@@ -1,6 +1,5 @@
-//! Extracts the `filter` entries of a firewall `family`, with their terms.
-//!
-//! Configuration path: `firewall { family <family> { filter <name> { term <name> { from { ... } then { ... } } } } }`.
+//! `filter`
+//! `firewall { family <family> { filter <name> { term <name> { from { ... } then { ... } } } } }`.
 //!
 //! # See also
 //!

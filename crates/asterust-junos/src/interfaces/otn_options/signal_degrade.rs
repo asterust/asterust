@@ -1,6 +1,5 @@
-//! Extracts the `signal-degrade` thresholds of an OTN interface.
-//!
-//! Configuration path: `interfaces { <name> { otn-options { signal-degrade { ... } } } }`.
+//! `signal-degrade`
+//! `interfaces { <name> { otn-options { signal-degrade { ... } } } }`.
 //!
 //! # See also
 //!

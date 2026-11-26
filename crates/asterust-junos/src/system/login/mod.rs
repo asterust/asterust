@@ -1,6 +1,5 @@
-//! Extracts the `login` settings of `system`.
-//!
-//! Configuration path: `system { login { ... } }`.
+//! `login`
+//! `system { login { ... } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `web-management` settings of `system services`.
-//!
-//! Configuration path: `system { services { web-management { ... } } }`.
+//! `web-management`
+//! `system { services { web-management { ... } } }`.
 //!
 //! # See also
 //!

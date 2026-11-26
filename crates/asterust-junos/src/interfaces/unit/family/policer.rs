@@ -1,6 +1,5 @@
-//! Extracts the `policer` settings of a family.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { policer { ... } } } } }`.
+//! `policer`
+//! `interfaces { <name> { unit <n> { family <name> { policer { ... } } } } }`.
 //!
 //! # See also
 //!

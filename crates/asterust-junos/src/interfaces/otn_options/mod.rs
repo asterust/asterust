@@ -1,6 +1,5 @@
-//! Extracts the `otn-options` of an interface.
-//!
-//! Configuration path: `interfaces { <name> { otn-options { ... } } }`.
+//! `otn-options`
+//! `interfaces { <name> { otn-options { ... } } }`.
 //!
 //! # See also
 //!

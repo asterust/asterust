@@ -1,6 +1,5 @@
-//! Extracts the `schema` settings of `system`.
-//!
-//! Configuration path: `system { schema { ... } }`.
+//! `schema`
+//! `system { schema { ... } }`.
 //!
 //! # See also
 //!

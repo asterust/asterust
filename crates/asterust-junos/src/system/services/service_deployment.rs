@@ -1,6 +1,5 @@
-//! Extracts the `service-deployment` settings of `system services`.
-//!
-//! Configuration path: `system { services { service-deployment { ... } } }`.
+//! `service-deployment`
+//! `system { services { service-deployment { ... } } }`.
 //!
 //! # See also
 //!

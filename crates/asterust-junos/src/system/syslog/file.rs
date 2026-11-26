@@ -1,6 +1,5 @@
-//! Extracts the `file` destinations of `system syslog`.
-//!
-//! Configuration path: `system { syslog { file <name> { ... } } }`.
+//! `file`
+//! `system { syslog { file <name> { ... } } }`.
 //!
 //! [`SyslogTarget`](crate::system::SyslogTarget) is shared with the `user` destinations.
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `backup-router` and `inet6-backup-router` statements of `system`.
-//!
-//! Configuration paths: `system { backup-router ... }` and `system { inet6-backup-router ... }`.
+//! `backup-router` and `inet6-backup-router`
+//! `system { backup-router ... }` and `system { inet6-backup-router ... }`.
 //!
 //! # See also
 //!

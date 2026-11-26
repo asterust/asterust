@@ -1,6 +1,5 @@
-//! Extracts the `dhcp-local-server` settings of `system services`.
-//!
-//! Configuration path: `system { services { dhcp-local-server { ... } } }`.
+//! `dhcp-local-server`
+//! `system { services { dhcp-local-server { ... } } }`.
 //!
 //! # See also
 //!

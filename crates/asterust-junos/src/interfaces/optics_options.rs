@@ -1,6 +1,5 @@
-//! Extracts the `optics-options` of an interface.
-//!
-//! Configuration path: `interfaces { <name> { optics-options { ... } } }`.
+//! `optics-options`
+//! `interfaces { <name> { optics-options { ... } } }`.
 //!
 //! # See also
 //!

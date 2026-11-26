@@ -1,6 +1,5 @@
-//! Extracts the `bgp` settings of `protocols`.
-//!
-//! Configuration path: `protocols { bgp { ... } }`.
+//! `bgp`
+//! `protocols { bgp { ... } }`.
 //!
 //! # See also
 //!

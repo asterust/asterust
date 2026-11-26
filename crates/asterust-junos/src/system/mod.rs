@@ -1,6 +1,5 @@
-//! Models the top-level `system` block of a Junos configuration.
-//!
-//! Configuration path: `system { ... }`.
+//! `system`
+//! `system { ... }`.
 //!
 //! Each statement with children of its own lives in a submodule named after it.
 //!

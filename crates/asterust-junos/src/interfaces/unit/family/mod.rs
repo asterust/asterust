@@ -1,6 +1,5 @@
-//! Extracts the `family` settings of a logical unit.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { ... } } } }`.
+//! `family`
+//! `interfaces { <name> { unit <n> { family <name> { ... } } } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `password` policy of `system login`.
-//!
-//! Configuration path: `system { login { password { ... } } }`.
+//! `password`
+//! `system { login { password { ... } } }`.
 //!
 //! # See also
 //!

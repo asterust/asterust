@@ -1,6 +1,5 @@
-//! Extracts the `services` settings of `system`.
-//!
-//! Configuration path: `system { services { ... } }`.
+//! `services`
+//! `system { services { ... } }`.
 //!
 //! # See also
 //!

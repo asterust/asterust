@@ -1,6 +1,5 @@
-//! Extracts the `802.3ad` bundle membership of an Ethernet interface.
-//!
-//! Configuration path: `interfaces { <name> { ether-options { 802.3ad { ... } } } }`.
+//! `802.3ad`
+//! `interfaces { <name> { ether-options { 802.3ad { ... } } } }`.
 //!
 //! # See also
 //!

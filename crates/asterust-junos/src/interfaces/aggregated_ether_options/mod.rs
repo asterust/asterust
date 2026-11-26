@@ -1,6 +1,5 @@
-//! Extracts the `aggregated-ether-options` of an aggregated Ethernet interface.
-//!
-//! Configuration path: `interfaces { ae<n> { aggregated-ether-options { ... } } }`.
+//! `aggregated-ether-options`
+//! `interfaces { ae<n> { aggregated-ether-options { ... } } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `retry-options` of `system login`.
-//!
-//! Configuration path: `system { login { retry-options { ... } } }`.
+//! `retry-options`
+//! `system { login { retry-options { ... } } }`.
 //!
 //! # See also
 //!

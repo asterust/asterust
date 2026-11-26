@@ -1,6 +1,5 @@
-//! Extracts the `commit` settings of `system`.
-//!
-//! Configuration path: `system { commit { ... } }`.
+//! `commit`
+//! `system { commit { ... } }`.
 //!
 //! # See also
 //!

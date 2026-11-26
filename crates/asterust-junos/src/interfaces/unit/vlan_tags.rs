@@ -1,6 +1,5 @@
-//! Extracts the `vlan-tags` of a logical unit.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { vlan-tags ...; } } }`.
+//! `vlan-tags`
+//! `interfaces { <name> { unit <n> { vlan-tags ...; } } }`.
 //!
 //! # See also
 //!

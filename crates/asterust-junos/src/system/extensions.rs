@@ -1,6 +1,5 @@
-//! Extracts the `extensions` settings of `system`.
-//!
-//! Configuration path: `system { extensions { ... } }`.
+//! `extensions`
+//! `system { extensions { ... } }`.
 //!
 //! # See also
 //!

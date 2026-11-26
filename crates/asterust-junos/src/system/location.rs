@@ -1,6 +1,5 @@
-//! Extracts the `location` settings of `system`.
-//!
-//! Configuration path: `system { location { ... } }`.
+//! `location`
+//! `system { location { ... } }`.
 //!
 //! # See also
 //!

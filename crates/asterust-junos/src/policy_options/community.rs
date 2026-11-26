@@ -1,6 +1,5 @@
-//! Extracts the `community` entries of `policy-options`.
-//!
-//! Configuration path: `policy-options { community <name> members ...; }`.
+//! `community`
+//! `policy-options { community <name> members ...; }`.
 //!
 //! # See also
 //!

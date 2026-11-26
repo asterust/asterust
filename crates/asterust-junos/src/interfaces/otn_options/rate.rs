@@ -1,6 +1,5 @@
-//! Extracts the `rate` of an OTN interface.
-//!
-//! Configuration path: `interfaces { <name> { otn-options { rate { ... } } } }`.
+//! `rate`
+//! `interfaces { <name> { otn-options { rate { ... } } } }`.
 //!
 //! # See also
 //!

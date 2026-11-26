@@ -1,6 +1,5 @@
-//! Extracts the `flow-tap-dtcp` settings of `system services`.
-//!
-//! Configuration path: `system { services { flow-tap-dtcp { ... } } }`.
+//! `flow-tap-dtcp`
+//! `system { services { flow-tap-dtcp { ... } } }`.
 //!
 //! # See also
 //!

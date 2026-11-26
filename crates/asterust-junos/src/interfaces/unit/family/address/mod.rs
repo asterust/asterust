@@ -1,6 +1,5 @@
-//! Extracts the `address` entries of a family.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { address <address> { ... } } } } }`.
+//! `address`
+//! `interfaces { <name> { unit <n> { family <name> { address <address> { ... } } } } }`.
 //!
 //! # See also
 //!

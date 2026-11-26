@@ -1,6 +1,5 @@
-//! Extracts the `master-password` settings of `system`.
-//!
-//! Configuration path: `system { master-password { ... } }`.
+//! `master-password`
+//! `system { master-password { ... } }`.
 //!
 //! # See also
 //!

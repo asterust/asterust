@@ -1,6 +1,5 @@
-//! Extracts the `as-path` entries of `policy-options`.
-//!
-//! Configuration path: `policy-options { as-path <name> <regular-expression>; }`.
+//! `as-path`
+//! `policy-options { as-path <name> <regular-expression>; }`.
 //!
 //! # See also
 //!

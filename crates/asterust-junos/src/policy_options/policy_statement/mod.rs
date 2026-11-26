@@ -1,6 +1,5 @@
-//! Extracts the `policy-statement` entries of `policy-options`.
-//!
-//! Configuration path: `policy-options { policy-statement <name> { ... } }`.
+//! `policy-statement`
+//! `policy-options { policy-statement <name> { ... } }`.
 //!
 //! # See also
 //!

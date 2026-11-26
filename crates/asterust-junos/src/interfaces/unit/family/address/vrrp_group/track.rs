@@ -1,6 +1,5 @@
-//! Extracts the `track` block of a VRRP group.
-//!
-//! Configuration path: `... address <address> { vrrp-group <id> { track { ... } } }`.
+//! `track`
+//! `... address <address> { vrrp-group <id> { track { ... } } }`.
 //!
 //! # See also
 //!

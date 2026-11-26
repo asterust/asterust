@@ -1,6 +1,5 @@
-//! Extracts the `hold-time` damping timers of an interface.
-//!
-//! Configuration path: `interfaces { <name> { hold-time up <ms> down <ms>; } }`.
+//! `hold-time`
+//! `interfaces { <name> { hold-time up <ms> down <ms>; } }`.
 //!
 //! # See also
 //!

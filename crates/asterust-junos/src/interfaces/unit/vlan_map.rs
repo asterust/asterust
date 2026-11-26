@@ -1,6 +1,5 @@
-//! Extracts the `input-vlan-map` and `output-vlan-map` of a logical unit.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { input-vlan-map { ... } } } }`.
+//! `input-vlan-map` and `output-vlan-map`
+//! `interfaces { <name> { unit <n> { input-vlan-map { ... } } } }`.
 //!
 //! # See also
 //!

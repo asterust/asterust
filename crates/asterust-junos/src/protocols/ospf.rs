@@ -1,6 +1,5 @@
-//! Extracts the `ospf` settings of `protocols`.
-//!
-//! Configuration path: `protocols { ospf { ... } }`.
+//! `ospf`
+//! `protocols { ospf { ... } }`.
 //!
 //! # See also
 //!

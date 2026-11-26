@@ -1,6 +1,5 @@
-//! Extracts the `pixel-tracing` settings of `system`.
-//!
-//! Configuration path: `system { pixel-tracing { ... } }`.
+//! `pixel-tracing`
+//! `system { pixel-tracing { ... } }`.
 //!
 //! # See also
 //!

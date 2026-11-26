@@ -1,6 +1,5 @@
-//! Extracts the `ntp` settings of `system`.
-//!
-//! Configuration path: `system { ntp { ... } }`.
+//! `ntp`
+//! `system { ntp { ... } }`.
 //!
 //! # See also
 //!

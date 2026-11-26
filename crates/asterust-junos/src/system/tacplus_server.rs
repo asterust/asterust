@@ -1,6 +1,5 @@
-//! Extracts the `tacplus-server` entries of `system`.
-//!
-//! Configuration path: `system { tacplus-server <address> { ... } }`.
+//! `tacplus-server`
+//! `system { tacplus-server <address> { ... } }`.
 //!
 //! # See also
 //!

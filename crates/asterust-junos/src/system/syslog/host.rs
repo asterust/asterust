@@ -1,6 +1,5 @@
-//! Extracts the `host` destinations of `system syslog`.
-//!
-//! Configuration path: `system { syslog { host <address> { ... } } }`.
+//! `host`
+//! `system { syslog { host <address> { ... } } }`.
 //!
 //! # See also
 //!

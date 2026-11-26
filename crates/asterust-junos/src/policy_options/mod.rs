@@ -1,6 +1,5 @@
-//! Models the top-level `policy-options` block.
-//!
-//! Configuration path: `policy-options { ... }`.
+//! `policy-options`
+//! `policy-options { ... }`.
 //!
 //! # See also
 //!

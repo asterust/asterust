@@ -1,6 +1,5 @@
-//! Extracts the `archival` settings of `system`.
-//!
-//! Configuration path: `system { archival { ... } }`.
+//! `archival`
+//! `system { archival { ... } }`.
 //!
 //! # See also
 //!

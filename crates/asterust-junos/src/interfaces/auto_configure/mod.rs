@@ -1,6 +1,5 @@
-//! Extracts the `auto-configure` settings that create VLAN interfaces dynamically.
-//!
-//! Configuration path: `interfaces { <name> { auto-configure { ... } } }`.
+//! `auto-configure`
+//! `interfaces { <name> { auto-configure { ... } } }`.
 //!
 //! # See also
 //!

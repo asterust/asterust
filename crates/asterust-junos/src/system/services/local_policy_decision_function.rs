@@ -1,6 +1,5 @@
-//! Extracts the `local-policy-decision-function` settings of `system services`.
-//!
-//! Configuration path: `system { services { local-policy-decision-function { ... } } }`.
+//! `local-policy-decision-function`
+//! `system { services { local-policy-decision-function { ... } } }`.
 //!
 //! # See also
 //!

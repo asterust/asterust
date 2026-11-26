@@ -1,6 +1,5 @@
-//! Extracts the `prefix-list` entries of `policy-options`.
-//!
-//! Configuration path: `policy-options { prefix-list <name> { ... } }`.
+//! `prefix-list`
+//! `policy-options { prefix-list <name> { ... } }`.
 //!
 //! # See also
 //!

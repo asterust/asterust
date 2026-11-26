@@ -1,6 +1,5 @@
-//! Extracts the `outbound-ssh` clients of `system services`.
-//!
-//! Configuration path: `system { services { outbound-ssh { client <id> { ... } } } }`.
+//! `outbound-ssh`
+//! `system { services { outbound-ssh { client <id> { ... } } } }`.
 //!
 //! # See also
 //!

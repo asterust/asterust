@@ -1,6 +1,5 @@
-//! Extracts the `class` entries of `system login`.
-//!
-//! Configuration path: `system { login { class <name> { ... } } }`.
+//! `class`
+//! `system { login { class <name> { ... } } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `term` entries of a `policy-statement`.
-//!
-//! Configuration path: `policy-options { policy-statement <name> { term <name> { from { ... } to { ... } then { ... } } } }`.
+//! `term`
+//! `policy-options { policy-statement <name> { term <name> { from { ... } to { ... } then { ... } } } }`.
 //!
 //! A policy written without `term` statements is a single unnamed term. Each term carries `from`,
 //! `to` and `then` statements.

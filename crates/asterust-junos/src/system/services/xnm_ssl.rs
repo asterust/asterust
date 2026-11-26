@@ -1,6 +1,5 @@
-//! Extracts the `xnm-ssl` settings of `system services`.
-//!
-//! Configuration path: `system { services { xnm-ssl { ... } } }`.
+//! `xnm-ssl`
+//! `system { services { xnm-ssl { ... } } }`.
 //!
 //! # See also
 //!

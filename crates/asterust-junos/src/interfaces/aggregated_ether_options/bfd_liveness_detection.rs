@@ -1,6 +1,5 @@
-//! Extracts the `bfd-liveness-detection` session of an aggregated Ethernet bundle.
-//!
-//! Configuration path: `interfaces { ae<n> { aggregated-ether-options { bfd-liveness-detection { ... } } } }`.
+//! `bfd-liveness-detection`
+//! `interfaces { ae<n> { aggregated-ether-options { bfd-liveness-detection { ... } } } }`.
 //!
 //! # See also
 //!

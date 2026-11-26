@@ -1,6 +1,5 @@
-//! Extracts the `rpf-check` settings of a family.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { rpf-check { ... } } } } }`.
+//! `rpf-check`
+//! `interfaces { <name> { unit <n> { family <name> { rpf-check { ... } } } } }`.
 //!
 //! # See also
 //!

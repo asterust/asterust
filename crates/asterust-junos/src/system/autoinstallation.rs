@@ -1,6 +1,5 @@
-//! Extracts the `autoinstallation` settings of `system`.
-//!
-//! Configuration path: `system { autoinstallation { ... } }`.
+//! `autoinstallation`
+//! `system { autoinstallation { ... } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `user` entries of `system login`.
-//!
-//! Configuration path: `system { login { user <name> { ... } } }`.
+//! `user`
+//! `system { login { user <name> { ... } } }`.
 //!
 //! # See also
 //!

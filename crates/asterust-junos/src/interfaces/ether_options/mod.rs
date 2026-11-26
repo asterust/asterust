@@ -1,6 +1,5 @@
-//! Extracts the Ethernet options of an interface.
-//!
-//! Configuration path: `interfaces { <name> { ether-options { ... } } }`.
+//! `ether-options`, `gigether-options` and `fastether-options`
+//! `interfaces { <name> { ether-options { ... } } }`.
 //!
 //! The options are written under `ether-options`, `gigether-options` or `fastether-options`,
 //! depending on the platform.

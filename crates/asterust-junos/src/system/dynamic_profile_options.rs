@@ -1,6 +1,5 @@
-//! Extracts the `dynamic-profile-options` settings of `system`.
-//!
-//! Configuration path: `system { dynamic-profile-options { ... } }`.
+//! `dynamic-profile-options`
+//! `system { dynamic-profile-options { ... } }`.
 //!
 //! # See also
 //!

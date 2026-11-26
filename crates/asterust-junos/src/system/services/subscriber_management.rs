@@ -1,6 +1,5 @@
-//! Extracts the `subscriber-management` settings of `system services`.
-//!
-//! Configuration path: `system { services { subscriber-management { ... } } }`.
+//! `subscriber-management`
+//! `system { services { subscriber-management { ... } } }`.
 //!
 //! # See also
 //!

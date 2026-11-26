@@ -1,6 +1,5 @@
-//! Extracts the `static-subscribers` settings of `system services`.
-//!
-//! Configuration path: `system { services { static-subscribers { ... } } }`.
+//! `static-subscribers`
+//! `system { services { static-subscribers { ... } } }`.
 //!
 //! # See also
 //!

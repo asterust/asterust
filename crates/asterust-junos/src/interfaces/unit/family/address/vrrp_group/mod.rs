@@ -1,6 +1,5 @@
-//! Extracts the `vrrp-group` and `vrrp-inet6-group` entries of an address.
-//!
-//! Configuration paths: `... address <address> { vrrp-group <id> { ... } }` and `vrrp-inet6-group <id> { ... }`.
+//! `vrrp-group` and `vrrp-inet6-group`
+//! `... address <address> { vrrp-group <id> { ... } }` and `vrrp-inet6-group <id> { ... }`.
 //!
 //! # See also
 //!

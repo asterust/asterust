@@ -1,6 +1,5 @@
-//! Extracts the `sampling` settings of a family.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { sampling { ... } } } } }`.
+//! `sampling`
+//! `interfaces { <name> { unit <n> { family <name> { sampling { ... } } } } }`.
 //!
 //! # See also
 //!

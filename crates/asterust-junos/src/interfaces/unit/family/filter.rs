@@ -1,6 +1,5 @@
-//! Extracts the firewall `filter` applied to a family.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { family <name> { filter { ... } } } } }`.
+//! `filter`
+//! `interfaces { <name> { unit <n> { family <name> { filter { ... } } } } }`.
 //!
 //! # See also
 //!

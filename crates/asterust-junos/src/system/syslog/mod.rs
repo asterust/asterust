@@ -1,6 +1,5 @@
-//! Extracts the `syslog` settings of `system`.
-//!
-//! Configuration path: `system { syslog { ... } }`.
+//! `syslog`
+//! `system { syslog { ... } }`.
 //!
 //! # See also
 //!

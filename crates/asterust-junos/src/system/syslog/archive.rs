@@ -1,6 +1,5 @@
-//! Extracts the `archive` settings of `system syslog`, also found under `file`.
-//!
-//! Configuration path: `system { syslog { archive ... } }`.
+//! `archive`
+//! `system { syslog { archive ... } }`.
 //!
 //! # See also
 //!

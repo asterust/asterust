@@ -1,6 +1,5 @@
-//! Extracts the `policer` entries of `firewall`.
-//!
-//! Configuration path: `firewall { policer <name> { ... } }`.
+//! `policer`
+//! `firewall { policer <name> { ... } }`.
 //!
 //! # See also
 //!

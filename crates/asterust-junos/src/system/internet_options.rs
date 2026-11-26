@@ -1,6 +1,5 @@
-//! Extracts the `internet-options` settings of `system`.
-//!
-//! Configuration path: `system { internet-options { ... } }`.
+//! `internet-options`
+//! `system { internet-options { ... } }`.
 //!
 //! # See also
 //!

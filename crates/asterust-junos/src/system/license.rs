@@ -1,6 +1,5 @@
-//! Extracts the `license` settings of `system`.
-//!
-//! Configuration path: `system { license { ... } }`.
+//! `license`
+//! `system { license { ... } }`.
 //!
 //! # See also
 //!

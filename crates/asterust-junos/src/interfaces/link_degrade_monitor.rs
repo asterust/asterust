@@ -1,6 +1,5 @@
-//! Extracts the `link-degrade-monitor` settings of an interface.
-//!
-//! Configuration path: `interfaces { <name> { link-degrade-monitor { ... } } }`.
+//! `link-degrade-monitor`
+//! `interfaces { <name> { link-degrade-monitor { ... } } }`.
 //!
 //! # See also
 //!

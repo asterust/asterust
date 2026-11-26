@@ -1,6 +1,5 @@
-//! Extracts the `vlan-ranges` and `stacked-vlan-ranges` of `auto-configure`.
-//!
-//! Configuration path: `interfaces { <name> { auto-configure { vlan-ranges { ... } stacked-vlan-ranges { ... } } } }`.
+//! `vlan-ranges` and `stacked-vlan-ranges`
+//! `interfaces { <name> { auto-configure { vlan-ranges { ... } stacked-vlan-ranges { ... } } } }`.
 //!
 //! # See also
 //!

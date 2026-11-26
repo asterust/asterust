@@ -1,6 +1,5 @@
-//! Extracts the filters of each `family` of `firewall`.
-//!
-//! Configuration path: `firewall { family <family> { ... } }`.
+//! `family`
+//! `firewall { family <family> { ... } }`.
 //!
 //! # See also
 //!

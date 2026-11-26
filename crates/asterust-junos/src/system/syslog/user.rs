@@ -1,6 +1,5 @@
-//! Extracts the `user` destinations of `system syslog`.
-//!
-//! Configuration path: `system { syslog { user <name> { ... } } }`.
+//! `user`
+//! `system { syslog { user <name> { ... } } }`.
 //!
 //! # See also
 //!

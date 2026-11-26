@@ -1,6 +1,5 @@
-//! Extracts the `radius-server` entries of `system`.
-//!
-//! Configuration path: `system { radius-server <address> { ... } }`.
+//! `radius-server`
+//! `system { radius-server <address> { ... } }`.
 //!
 //! # See also
 //!

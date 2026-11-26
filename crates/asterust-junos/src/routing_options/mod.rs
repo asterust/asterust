@@ -1,6 +1,5 @@
-//! Models the top-level `routing-options` block.
-//!
-//! Configuration path: `routing-options { ... }`.
+//! `routing-options`
+//! `routing-options { ... }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Models the top-level `interfaces` block: physical interfaces and their logical units.
-//!
-//! Configuration path: `interfaces { ... }`.
+//! `interfaces`
+//! `interfaces { ... }`.
 //!
 //! # See also
 //!

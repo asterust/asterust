@@ -1,6 +1,5 @@
-//! Extracts the `accounting` settings of `system`.
-//!
-//! Configuration path: `system { accounting { ... } }`.
+//! `accounting`
+//! `system { accounting { ... } }`.
 //!
 //! # See also
 //!

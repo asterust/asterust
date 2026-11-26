@@ -1,6 +1,5 @@
-//! Models the top-level `routing-instances` block, including VRFs.
-//!
-//! Configuration path: `routing-instances { ... }`.
+//! `routing-instances`
+//! `routing-instances { ... }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `static-host-mapping` entries of `system`.
-//!
-//! Configuration path: `system { static-host-mapping { <hostname> { ... } } }`.
+//! `static-host-mapping`
+//! `system { static-host-mapping { <hostname> { ... } } }`.
 //!
 //! # See also
 //!

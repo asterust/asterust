@@ -1,6 +1,5 @@
-//! Extracts the logical `unit` entries of an interface.
-//!
-//! Configuration path: `interfaces { <name> { unit <n> { ... } } }`.
+//! `unit`
+//! `interfaces { <name> { unit <n> { ... } } }`.
 //!
 //! # See also
 //!

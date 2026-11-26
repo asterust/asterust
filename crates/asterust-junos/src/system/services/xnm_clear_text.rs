@@ -1,6 +1,5 @@
-//! Extracts the `xnm-clear-text` settings of `system services`.
-//!
-//! Configuration path: `system { services { xnm-clear-text { ... } } }`.
+//! `xnm-clear-text`
+//! `system { services { xnm-clear-text { ... } } }`.
 //!
 //! # See also
 //!

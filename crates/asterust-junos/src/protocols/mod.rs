@@ -1,6 +1,5 @@
-//! Groups the supported `protocols` statements, one module per protocol.
-//!
-//! Configuration path: `protocols { ... }`.
+//! `protocols`
+//! `protocols { ... }`.
 //!
 //! # See also
 //!

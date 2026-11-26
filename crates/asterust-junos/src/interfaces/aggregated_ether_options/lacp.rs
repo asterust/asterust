@@ -1,6 +1,5 @@
-//! Extracts the `lacp` settings of an aggregated Ethernet bundle.
-//!
-//! Configuration path: `interfaces { <name> { aggregated-ether-options { lacp { ... } } } }`.
+//! `lacp`
+//! `interfaces { <name> { aggregated-ether-options { lacp { ... } } } }`.
 //!
 //! # See also
 //!

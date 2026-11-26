@@ -1,6 +1,5 @@
-//! Extracts the `ports` settings of `system`.
-//!
-//! Configuration path: `system { ports { console { ... } auxiliary { ... } } }`.
+//! `ports`
+//! `system { ports { console { ... } auxiliary { ... } } }`.
 //!
 //! # See also
 //!

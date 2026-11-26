@@ -1,6 +1,5 @@
-//! Extracts the `processes` settings of `system`.
-//!
-//! Configuration path: `system { processes { ... } }`.
+//! `processes`
+//! `system { processes { ... } }`.
 //!
 //! # See also
 //!

@@ -1,6 +1,5 @@
-//! Extracts the `root-authentication` methods of `system`.
-//!
-//! Configuration path: `system { root-authentication { ... } }`.
+//! `root-authentication`
+//! `system { root-authentication { ... } }`.
 //!
 //! # See also
 //!

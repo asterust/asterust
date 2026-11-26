@@ -1,6 +1,5 @@
-//! Extracts the `scripts` settings of `system`.
-//!
-//! Configuration path: `system { scripts { ... } }`.
+//! `scripts`
+//! `system { scripts { ... } }`.
 //!
 //! # See also
 //!

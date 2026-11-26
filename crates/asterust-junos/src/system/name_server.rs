@@ -1,6 +1,5 @@
-//! Extracts the `name-server` entries of `system`.
-//!
-//! Configuration path: `system { name-server ... }`.
+//! `name-server`
+//! `system { name-server ... }`.
 //!
 //! # See also
 //!

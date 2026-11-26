@@ -1,6 +1,5 @@
-//! Extracts the `isis` settings of `protocols`.
-//!
-//! Configuration path: `protocols { isis { ... } }`.
+//! `isis`
+//! `protocols { isis { ... } }`.
 //!
 //! # See also
 //!
