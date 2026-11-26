@@ -1,7 +1,8 @@
 //! `system { ... }`.
 
 use crate::{
-    active_children, arg_of, args_of, child_block, first_word, has_leaf, list_values, split_name, top_level, unquote,
+    active_children, arg_of, args_of, child_block, first_word, has_leaf, list_values, named_children, split_name,
+    top_level, unquote,
 };
 use asterust::config::{Config, ConfigLine};
 
@@ -49,6 +50,52 @@ pub struct Ntp {
     pub broadcast_client: bool,
 }
 
+/// A `<facility> <severity>` line selecting which messages go to a syslog destination.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SyslogRule {
+    /// e.g. `"any"`, `"authorization"`, `"interactive-commands"`.
+    pub facility: String,
+    /// e.g. `"info"`, `"notice"`, `"any"`, `"none"`.
+    pub severity: String,
+}
+
+/// A `host <address>` destination.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SyslogHost {
+    /// Address, hostname, or `other-routing-engine`.
+    pub address: String,
+    pub rules: Vec<SyslogRule>,
+    pub port: Option<String>,
+    pub source_address: Option<String>,
+    pub routing_instance: Option<String>,
+    pub facility_override: Option<String>,
+    pub log_prefix: Option<String>,
+}
+
+/// A `file <name>` or `user <name>` destination.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct SyslogTarget {
+    /// File name, or user name (`*` for all users).
+    pub name: String,
+    pub rules: Vec<SyslogRule>,
+}
+
+/// The `system syslog` configuration. Archive settings are not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct Syslog {
+    pub hosts: Vec<SyslogHost>,
+    pub files: Vec<SyslogTarget>,
+    pub users: Vec<SyslogTarget>,
+    pub console: Vec<SyslogRule>,
+    pub source_address: Option<String>,
+    /// e.g. `"year millisecond"`.
+    pub time_format: Option<String>,
+}
+
 /// The top-level `system` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -56,6 +103,7 @@ pub struct System {
     pub host_name: Option<String>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
+    pub syslog: Option<Syslog>,
 }
 
 /// The top-level `system` block, or `None` if there is none.
@@ -65,7 +113,63 @@ pub fn system(config: &Config) -> Option<System> {
         host_name: arg_of(system, "host-name").map(str::to_string),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),
+        syslog: child_block(system, "syslog").map(parse_syslog),
     })
+}
+
+fn parse_syslog(syslog: &ConfigLine) -> Syslog {
+    Syslog {
+        hosts: named_children(syslog, "host")
+            .map(|(address, host)| SyslogHost {
+                address: address.to_string(),
+                rules: syslog_rules(host),
+                port: arg_of(host, "port").map(str::to_string),
+                source_address: arg_of(host, "source-address").map(str::to_string),
+                routing_instance: arg_of(host, "routing-instance").map(str::to_string),
+                facility_override: arg_of(host, "facility-override").map(str::to_string),
+                log_prefix: arg_of(host, "log-prefix").map(str::to_string),
+            })
+            .collect(),
+        files: syslog_targets(syslog, "file"),
+        users: syslog_targets(syslog, "user"),
+        console: child_block(syslog, "console").map(syslog_rules).unwrap_or_default(),
+        source_address: arg_of(syslog, "source-address").map(str::to_string),
+        time_format: arg_of(syslog, "time-format").map(str::to_string),
+    }
+}
+
+fn syslog_targets(syslog: &ConfigLine, keyword: &str) -> Vec<SyslogTarget> {
+    named_children(syslog, keyword)
+        .map(|(name, target)| SyslogTarget {
+            name: name.to_string(),
+            rules: syslog_rules(target),
+        })
+        .collect()
+}
+
+/// Children written `<facility> <severity>`, which tells them apart from options such as `port 514`.
+fn syslog_rules(destination: &ConfigLine) -> Vec<SyslogRule> {
+    const SEVERITIES: [&str; 10] = [
+        "any",
+        "none",
+        "emergency",
+        "alert",
+        "critical",
+        "error",
+        "warning",
+        "notice",
+        "info",
+        "debug",
+    ];
+    active_children(destination)
+        .filter_map(|c| {
+            let (facility, severity) = c.text.split_once(' ')?;
+            SEVERITIES.contains(&severity).then(|| SyslogRule {
+                facility: facility.to_string(),
+                severity: severity.to_string(),
+            })
+        })
+        .collect()
 }
 
 fn parse_ntp(ntp: &ConfigLine) -> Ntp {
@@ -265,6 +369,93 @@ system {
         assert!(system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n"))
             .unwrap()
             .ntp
+            .is_none());
+    }
+
+    const SYSLOG: &str = r#"
+system {
+    syslog {
+        user * {
+            any emergency;
+        }
+        host 192.0.2.5 {
+            any notice;
+            authorization info;
+            port 514;
+            source-address 192.0.2.1;
+            routing-instance mgmt_junos;
+            facility-override local3;
+            log-prefix pe1;
+        }
+        host other-routing-engine {
+            any critical;
+        }
+        file messages {
+            any notice;
+            authorization info;
+            explicit-priority;
+        }
+        file interactive-commands {
+            interactive-commands any;
+        }
+        inactive: file debug {
+            any debug;
+        }
+        console {
+            any critical;
+        }
+        source-address 192.0.2.1;
+        time-format year millisecond;
+    }
+}
+"#;
+
+    #[test]
+    fn extracts_syslog_hosts() {
+        let syslog = system(&juniper::parse_braces(SYSLOG)).unwrap().syslog.unwrap();
+        let addresses: Vec<_> = syslog.hosts.iter().map(|h| h.address.as_str()).collect();
+        assert_eq!(addresses, ["192.0.2.5", "other-routing-engine"]);
+
+        let host = &syslog.hosts[0];
+        assert_eq!(host.rules.len(), 2);
+        assert_eq!(host.rules[1].facility, "authorization");
+        assert_eq!(host.rules[1].severity, "info");
+        assert_eq!(host.port.as_deref(), Some("514"));
+        assert_eq!(host.source_address.as_deref(), Some("192.0.2.1"));
+        assert_eq!(host.routing_instance.as_deref(), Some("mgmt_junos"));
+        assert_eq!(host.facility_override.as_deref(), Some("local3"));
+        assert_eq!(host.log_prefix.as_deref(), Some("pe1"));
+    }
+
+    #[test]
+    fn extracts_syslog_files_users_and_console() {
+        let syslog = system(&juniper::parse_braces(SYSLOG)).unwrap().syslog.unwrap();
+
+        let files: Vec<_> = syslog.files.iter().map(|f| f.name.as_str()).collect();
+        assert_eq!(files, ["messages", "interactive-commands"]);
+        // `explicit-priority` is an option, not a facility/severity rule.
+        assert_eq!(syslog.files[0].rules.len(), 2);
+        assert_eq!(syslog.files[1].rules[0].facility, "interactive-commands");
+        assert_eq!(syslog.files[1].rules[0].severity, "any");
+
+        assert_eq!(syslog.users[0].name, "*");
+        assert_eq!(syslog.users[0].rules[0].severity, "emergency");
+        assert_eq!(syslog.console[0].facility, "any");
+        assert_eq!(syslog.console[0].severity, "critical");
+    }
+
+    #[test]
+    fn extracts_syslog_global_settings() {
+        let syslog = system(&juniper::parse_braces(SYSLOG)).unwrap().syslog.unwrap();
+        assert_eq!(syslog.source_address.as_deref(), Some("192.0.2.1"));
+        assert_eq!(syslog.time_format.as_deref(), Some("year millisecond"));
+    }
+
+    #[test]
+    fn no_syslog_is_none() {
+        assert!(system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n"))
+            .unwrap()
+            .syslog
             .is_none());
     }
 
