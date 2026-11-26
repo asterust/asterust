@@ -10,6 +10,9 @@
 //! The types below don't know or care which parser built the tree; each
 //! vendor module is responsible only for turning raw text into a
 //! `Vec<ConfigLine>` of root lines.
+//!
+//! Methods that take a `pattern` compile it as a [`regex`] expression on every call, and an
+//! invalid pattern never matches.
 
 pub mod cisco;
 pub mod juniper;
@@ -17,18 +20,23 @@ pub mod juniper;
 use regex::Regex;
 
 /// A single configuration line, with any nested lines as children.
+///
 /// "Nested" means different things per vendor (indentation depth for
 /// Cisco, brace depth for Juniper); `indent_level` holds whatever depth
 /// measure the parser that built this tree uses.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ConfigLine {
+    /// The trimmed line, without any trailing `;` or opening `{` that the vendor syntax adds.
     pub text: String,
+    /// Indentation depth (Cisco) or brace depth (Juniper).
     pub indent_level: usize,
+    /// Zero-based index of the line in the parsed text, after the whole input is trimmed.
     pub line_number: usize,
     pub children: Vec<ConfigLine>,
 }
 
 impl ConfigLine {
+    /// Creates a line with no children.
     pub fn new(text: impl Into<String>, indent_level: usize, line_number: usize) -> Self {
         Self {
             text: text.into(),
@@ -38,17 +46,18 @@ impl ConfigLine {
         }
     }
 
+    /// Appends `child` after this line's existing children.
     pub fn add_child(&mut self, child: ConfigLine) {
         self.children.push(child);
     }
 
-    /// First direct child whose text matches `pattern`.
+    /// Returns the first direct child whose text matches `pattern`.
     pub fn find_child_with(&self, pattern: &str) -> Option<&ConfigLine> {
         let re = Regex::new(pattern).ok()?;
         self.children.iter().find(|c| re.is_match(&c.text))
     }
 
-    /// All direct children whose text matches `pattern`.
+    /// Returns all direct children whose text matches `pattern`.
     pub fn find_all_children_with(&self, pattern: &str) -> Vec<&ConfigLine> {
         let Ok(re) = Regex::new(pattern) else {
             return Vec::new();
@@ -56,12 +65,12 @@ impl ConfigLine {
         self.children.iter().filter(|c| re.is_match(&c.text)).collect()
     }
 
-    /// Whether any direct child's text matches `pattern`.
+    /// Returns whether any direct child's text matches `pattern`.
     pub fn has_child_with(&self, pattern: &str) -> bool {
         self.find_child_with(pattern).is_some()
     }
 
-    /// Match `pattern` against this line's own text and return capture
+    /// Matches `pattern` against this line's own text and returns capture
     /// group 1 as a string, or `None` if the pattern doesn't match or has
     /// no group 1.
     pub fn match_str_group(&self, pattern: &str) -> Option<String> {
@@ -69,26 +78,26 @@ impl ConfigLine {
         re.captures(&self.text)?.get(1).map(|m| m.as_str().to_string())
     }
 
-    /// Match `pattern` against this line's own text and parse capture
-    /// group 1 as an integer, or `None` if the pattern doesn't match, has
+    /// Matches `pattern` against this line's own text and parses capture
+    /// group 1 as an integer, or returns `None` if the pattern doesn't match, has
     /// no group 1, or the captured text isn't a valid integer.
     pub fn match_int_group(&self, pattern: &str) -> Option<i64> {
         self.match_str_group(pattern)?.parse().ok()
     }
 
-    /// Text after `keyword` on this line (`"router-id 1.1.1.1"` with keyword
+    /// Returns the text after `keyword` on this line (`"router-id 1.1.1.1"` with keyword
     /// `"router-id"` gives `"1.1.1.1"`), or `None` unless the line starts with
     /// the whole keyword followed by a space.
     pub fn arg(&self, keyword: &str) -> Option<&str> {
         self.text.strip_prefix(keyword)?.strip_prefix(' ').map(str::trim)
     }
 
-    /// [`arg`](Self::arg) of the first direct child that matches `keyword`.
+    /// Returns the [`arg`](Self::arg) of the first direct child that matches `keyword`.
     pub fn child_arg(&self, keyword: &str) -> Option<&str> {
         self.children.iter().find_map(|c| c.arg(keyword))
     }
 
-    /// [`arg`](Self::arg) of every direct child that matches `keyword`, in order.
+    /// Returns the [`arg`](Self::arg) of every direct child that matches `keyword`, in order.
     pub fn child_args(&self, keyword: &str) -> Vec<&str> {
         self.children.iter().filter_map(|c| c.arg(keyword)).collect()
     }
@@ -102,19 +111,22 @@ pub struct ConfigBlock {
 }
 
 impl ConfigBlock {
+    /// Wraps `root_line` and everything beneath it as a block.
     pub fn new(root_line: ConfigLine) -> Self {
         Self { root_line }
     }
 
+    /// Returns the block's first line, which names the block.
     pub fn get_root_line(&self) -> &ConfigLine {
         &self.root_line
     }
 
+    /// Returns the direct children of the root line.
     pub fn get_direct_children(&self) -> &[ConfigLine] {
         &self.root_line.children
     }
 
-    /// Every line in the block (root plus all descendants, depth-first),
+    /// Returns every line in the block (root plus all descendants, depth-first),
     /// recomputed on each call.
     pub fn get_all_lines(&self) -> Vec<&ConfigLine> {
         let mut out = Vec::new();
@@ -122,21 +134,25 @@ impl ConfigBlock {
         out
     }
 
+    /// Returns the first direct child of the root line matching `pattern`; see
+    /// [`ConfigLine::find_child_with`].
     pub fn find_child_with(&self, pattern: &str) -> Option<&ConfigLine> {
         self.root_line.find_child_with(pattern)
     }
 
+    /// Returns all direct children of the root line matching `pattern`; see
+    /// [`ConfigLine::find_all_children_with`].
     pub fn find_all_children_with(&self, pattern: &str) -> Vec<&ConfigLine> {
         self.root_line.find_all_children_with(pattern)
     }
 
-    /// First line (at any depth) matching `pattern`.
+    /// Returns the first line (at any depth) matching `pattern`.
     pub fn find_line_with(&self, pattern: &str) -> Option<&ConfigLine> {
         let re = Regex::new(pattern).ok()?;
         self.get_all_lines().into_iter().find(|l| re.is_match(&l.text))
     }
 
-    /// Every line (at any depth) matching `pattern`.
+    /// Returns every line (at any depth) matching `pattern`.
     pub fn re_search_children(&self, pattern: &str) -> Vec<&ConfigLine> {
         let Ok(re) = Regex::new(pattern) else {
             return Vec::new();
@@ -184,7 +200,7 @@ pub struct Config {
 }
 
 impl Config {
-    /// Wrap already-built root lines (e.g. from [`cisco::parse`] or
+    /// Wraps already-built root lines (e.g. from [`cisco::parse`] or
     /// [`juniper::parse_braces`]) into a `Config`.
     pub fn from_root_lines(root_lines: Vec<ConfigLine>) -> Self {
         Self {
@@ -192,11 +208,12 @@ impl Config {
         }
     }
 
+    /// Returns the number of top-level blocks.
     pub fn get_block_count(&self) -> usize {
         self.blocks.len()
     }
 
-    /// All blocks whose root line matches `pattern`.
+    /// Returns all blocks whose root line matches `pattern`.
     pub fn find_blocks_by_pattern(&self, pattern: &str) -> Vec<&ConfigBlock> {
         let Ok(re) = Regex::new(pattern) else {
             return Vec::new();
