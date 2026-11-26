@@ -1,77 +1,21 @@
 //! `system { login { ... } }`.
 
-use super::auth::authentication_methods;
+mod class;
+mod password;
+mod retry_options;
+mod user;
+
+pub use class::LoginClass;
+pub use password::LoginPassword;
+pub use retry_options::LoginRetryOptions;
+pub use user::LoginUser;
+
 use crate::{arg_of, args_of, child_block, list_values, named_children};
 use asterust::config::ConfigLine;
-
-/// A login `class`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct LoginClass {
-    pub name: String,
-    pub permissions: Vec<String>,
-    /// Minutes.
-    pub idle_timeout: Option<String>,
-    /// The regular expressions as written, e.g. `"(show)|(ping)"`.
-    pub allow_commands: Option<String>,
-    pub deny_commands: Option<String>,
-    pub allow_configuration: Option<String>,
-    pub deny_configuration: Option<String>,
-    /// `hh:mm`.
-    pub access_start: Option<String>,
-    pub access_end: Option<String>,
-    pub allowed_days: Vec<String>,
-    pub allow_sources: Vec<String>,
-    pub deny_sources: Vec<String>,
-    pub allow_times: Vec<String>,
-    pub deny_times: Vec<String>,
-}
-
-/// A login `user`. Passwords and keys are not extracted, only which authentication methods are present.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct LoginUser {
-    pub name: String,
-    pub class: Option<String>,
-    pub uid: Option<String>,
-    pub full_name: Option<String>,
-    /// One entry per authentication statement, e.g. `"encrypted-password"`, `"ssh-rsa"`.
-    pub authentication_methods: Vec<String>,
-}
-
-/// The `system login password` policy.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct LoginPassword {
-    /// `character-sets` or `set-transitions`.
-    pub change_type: Option<String>,
-    /// `sha256` or `sha512`.
-    pub format: Option<String>,
-    pub maximum_length: Option<String>,
-    pub minimum_length: Option<String>,
-    pub maximum_lifetime: Option<String>,
-    pub minimum_lifetime: Option<String>,
-    pub minimum_changes: Option<String>,
-    pub minimum_character_changes: Option<String>,
-    pub minimum_lower_cases: Option<String>,
-    pub minimum_upper_cases: Option<String>,
-    pub minimum_numerics: Option<String>,
-    pub minimum_punctuations: Option<String>,
-    pub minimum_reuse: Option<String>,
-}
-
-/// The `system login retry-options` block.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct LoginRetryOptions {
-    pub backoff_factor: Option<String>,
-    pub backoff_threshold: Option<String>,
-    /// Minutes.
-    pub lockout_period: Option<String>,
-    pub maximum_time: Option<String>,
-    pub minimum_time: Option<String>,
-    pub tries_before_disconnect: Option<String>,
-}
+use class::parse_class;
+use password::parse_password;
+use retry_options::parse_retry_options;
+use user::parse_user;
 
 /// The `system login` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -91,6 +35,11 @@ pub struct Login {
     pub users: Vec<LoginUser>,
 }
 
+/// Values of every `<keyword> ...` child, whether written as a bare value or as a `[ list ]`.
+fn list(line: &ConfigLine, keyword: &str) -> Vec<String> {
+    args_of(line, keyword).into_iter().flat_map(list_values).collect()
+}
+
 pub(super) fn parse_login(login: &ConfigLine) -> Login {
     Login {
         message: arg_of(login, "message").map(str::to_string),
@@ -99,73 +48,15 @@ pub(super) fn parse_login(login: &ConfigLine) -> Login {
         deny_sources: child_block(login, "deny-sources")
             .map(|sources| list(sources, "address"))
             .unwrap_or_default(),
-        password: child_block(login, "password").map(|password| {
-            let field = |keyword: &str| arg_of(password, keyword).map(str::to_string);
-            LoginPassword {
-                change_type: field("change-type"),
-                format: field("format"),
-                maximum_length: field("maximum-length"),
-                minimum_length: field("minimum-length"),
-                maximum_lifetime: field("maximum-lifetime"),
-                minimum_lifetime: field("minimum-lifetime"),
-                minimum_changes: field("minimum-changes"),
-                minimum_character_changes: field("minimum-character-changes"),
-                minimum_lower_cases: field("minimum-lower-cases"),
-                minimum_upper_cases: field("minimum-upper-cases"),
-                minimum_numerics: field("minimum-numerics"),
-                minimum_punctuations: field("minimum-punctuations"),
-                minimum_reuse: field("minimum-reuse"),
-            }
-        }),
-        retry_options: child_block(login, "retry-options").map(|retry| {
-            let field = |keyword: &str| arg_of(retry, keyword).map(str::to_string);
-            LoginRetryOptions {
-                backoff_factor: field("backoff-factor"),
-                backoff_threshold: field("backoff-threshold"),
-                lockout_period: field("lockout-period"),
-                maximum_time: field("maximum-time"),
-                minimum_time: field("minimum-time"),
-                tries_before_disconnect: field("tries-before-disconnect"),
-            }
-        }),
+        password: child_block(login, "password").map(parse_password),
+        retry_options: child_block(login, "retry-options").map(parse_retry_options),
         classes: named_children(login, "class")
-            .map(|(name, class)| LoginClass {
-                name: name.to_string(),
-                permissions: args_of(class, "permissions")
-                    .into_iter()
-                    .flat_map(list_values)
-                    .collect(),
-                idle_timeout: arg_of(class, "idle-timeout").map(str::to_string),
-                allow_commands: arg_of(class, "allow-commands").map(str::to_string),
-                deny_commands: arg_of(class, "deny-commands").map(str::to_string),
-                allow_configuration: arg_of(class, "allow-configuration").map(str::to_string),
-                deny_configuration: arg_of(class, "deny-configuration").map(str::to_string),
-                access_start: arg_of(class, "access-start").map(str::to_string),
-                access_end: arg_of(class, "access-end").map(str::to_string),
-                allowed_days: list(class, "allowed-days"),
-                allow_sources: list(class, "allow-sources"),
-                deny_sources: list(class, "deny-sources"),
-                allow_times: list(class, "allow-times"),
-                deny_times: list(class, "deny-times"),
-            })
+            .map(|(name, class)| parse_class(name, class))
             .collect(),
         users: named_children(login, "user")
-            .map(|(name, user)| LoginUser {
-                name: name.to_string(),
-                class: arg_of(user, "class").map(str::to_string),
-                uid: arg_of(user, "uid").map(str::to_string),
-                full_name: arg_of(user, "full-name").map(str::to_string),
-                authentication_methods: child_block(user, "authentication")
-                    .map(authentication_methods)
-                    .unwrap_or_default(),
-            })
+            .map(|(name, user)| parse_user(name, user))
             .collect(),
     }
-}
-
-/// Values of every `<keyword> ...` child, whether written as a bare value or as a `[ list ]`.
-fn list(line: &ConfigLine, keyword: &str) -> Vec<String> {
-    args_of(line, keyword).into_iter().flat_map(list_values).collect()
 }
 
 #[cfg(test)]

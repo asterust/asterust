@@ -1,82 +1,15 @@
 //! `firewall { ... }`: stateless filters and policers.
 
-use crate::{
-    active_children, arg_of, child_block, list_values, named_children, split_keyword, statements, top_level, unquote,
-};
-use asterust::config::{Config, ConfigLine};
+mod family;
+mod policer;
 
-/// One `from` match condition, e.g. `destination-port bgp` or `source-address { 10.0.0.0/8; }`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct MatchCondition {
-    pub name: String,
-    /// Values as written, including any trailing modifier such as `except`; empty for a flag like `first-fragment`.
-    pub values: Vec<String>,
-}
+pub use family::{FilterAction, FilterActions, FilterTerm, FirewallFilter, MatchCondition};
+pub use policer::Policer;
 
-/// The terminating action of a filter term. A term without one accepts matching packets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum FilterAction {
-    Accept,
-    Discard,
-    Reject,
-    NextTerm,
-}
-
-/// The actions of a term's `then` statement. Actions not listed here are ignored.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct FilterActions {
-    pub action: Option<FilterAction>,
-    /// Counter name from `count`.
-    pub count: Option<String>,
-    pub policer: Option<String>,
-    pub forwarding_class: Option<String>,
-    pub loss_priority: Option<String>,
-    pub log: bool,
-    pub syslog: bool,
-}
-
-/// A `term` of a filter.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct FilterTerm {
-    pub name: String,
-    pub from: Vec<MatchCondition>,
-    pub then: FilterActions,
-}
-
-impl FilterTerm {
-    /// The `from` condition called `name`, e.g. `"destination-port"`.
-    pub fn condition(&self, name: &str) -> Option<&MatchCondition> {
-        self.from.iter().find(|c| c.name == name)
-    }
-}
-
-/// A `filter <name>` under `family <family>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct FirewallFilter {
-    /// Address family, e.g. `"inet"`, `"inet6"`, `"bridge"`.
-    pub family: String,
-    pub name: String,
-    pub terms: Vec<FilterTerm>,
-}
-
-/// A `policer <name>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct Policer {
-    pub name: String,
-    pub bandwidth_limit: Option<String>,
-    pub bandwidth_percent: Option<String>,
-    pub burst_size_limit: Option<String>,
-    /// `then discard`.
-    pub discard: bool,
-    pub forwarding_class: Option<String>,
-    pub loss_priority: Option<String>,
-}
+use crate::{named_children, top_level};
+use asterust::config::Config;
+use family::filters;
+use policer::parse_policer;
 
 /// The top-level `firewall` configuration. `simple-filter`, `service-filter` and `prefix-action` are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -89,119 +22,12 @@ pub struct Firewall {
 /// The top-level `firewall` block, or `None` if there is none.
 pub fn firewall(config: &Config) -> Option<Firewall> {
     let root = top_level(config, "firewall")?;
-    let filters = named_children(root, "family")
-        .flat_map(|(family, family_line)| {
-            named_children(family_line, "filter").map(move |(name, filter)| parse_filter(family, name, filter))
-        })
-        .collect();
     Some(Firewall {
-        filters,
+        filters: filters(root),
         policers: named_children(root, "policer")
             .map(|(name, line)| parse_policer(name, line))
             .collect(),
     })
-}
-
-fn parse_filter(family: &str, name: &str, line: &ConfigLine) -> FirewallFilter {
-    FirewallFilter {
-        family: family.to_string(),
-        name: name.to_string(),
-        terms: named_children(line, "term")
-            .map(|(term_name, term)| FilterTerm {
-                name: term_name.to_string(),
-                from: parse_conditions(term),
-                then: parse_actions(term),
-            })
-            .collect(),
-    }
-}
-
-/// Conditions written either as `from x;` or inside a `from { ... }` block.
-fn parse_conditions(term: &ConfigLine) -> Vec<MatchCondition> {
-    let mut found = Vec::new();
-    for child in active_children(term) {
-        if child.text == "from" {
-            found.extend(active_children(child).map(parse_condition));
-        } else if let Some(statement) = child.arg("from") {
-            found.push(condition_from(statement, &[]));
-        }
-    }
-    found
-}
-
-fn parse_condition(line: &ConfigLine) -> MatchCondition {
-    condition_from(&line.text, &line.children)
-}
-
-fn condition_from(statement: &str, children: &[ConfigLine]) -> MatchCondition {
-    let (name, arg) = split_keyword(statement);
-    // A bare value keeps its modifier (`10.0.0.0/8 except`); only a bracketed list is split.
-    let mut values = if arg.is_empty() {
-        Vec::new()
-    } else if arg.starts_with('[') {
-        list_values(arg)
-    } else {
-        vec![unquote(arg).to_string()]
-    };
-    values.extend(
-        children
-            .iter()
-            .filter(|c| !c.text.starts_with("inactive:"))
-            .map(|c| c.text.clone()),
-    );
-    MatchCondition {
-        name: name.to_string(),
-        values,
-    }
-}
-
-fn parse_actions(term: &ConfigLine) -> FilterActions {
-    let mut actions = FilterActions::default();
-    for statement in statements(term, "then") {
-        let (action, arg) = split_keyword(statement);
-        let value = || Some(unquote(arg).to_string());
-        match (action, arg) {
-            ("accept", _) => actions.action = Some(FilterAction::Accept),
-            ("discard", _) => actions.action = Some(FilterAction::Discard),
-            ("reject", _) => actions.action = Some(FilterAction::Reject),
-            ("next", "term") => actions.action = Some(FilterAction::NextTerm),
-            ("count", _) => actions.count = value(),
-            ("policer", _) => actions.policer = value(),
-            ("forwarding-class", _) => actions.forwarding_class = value(),
-            ("loss-priority", _) => actions.loss_priority = value(),
-            ("log", "") => actions.log = true,
-            ("syslog", "") => actions.syslog = true,
-            _ => {}
-        }
-    }
-    actions
-}
-
-fn parse_policer(name: &str, line: &ConfigLine) -> Policer {
-    let limit = |keyword: &str| {
-        child_block(line, "if-exceeding")
-            .and_then(|block| arg_of(block, keyword))
-            .map(str::to_string)
-    };
-    let mut policer = Policer {
-        name: name.to_string(),
-        bandwidth_limit: limit("bandwidth-limit"),
-        bandwidth_percent: limit("bandwidth-percent"),
-        burst_size_limit: limit("burst-size-limit"),
-        discard: false,
-        forwarding_class: None,
-        loss_priority: None,
-    };
-    for statement in statements(line, "then") {
-        let (action, arg) = split_keyword(statement);
-        match action {
-            "discard" => policer.discard = true,
-            "forwarding-class" => policer.forwarding_class = Some(unquote(arg).to_string()),
-            "loss-priority" => policer.loss_priority = Some(unquote(arg).to_string()),
-            _ => {}
-        }
-    }
-    policer
 }
 
 #[cfg(test)]

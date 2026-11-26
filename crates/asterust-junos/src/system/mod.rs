@@ -1,80 +1,90 @@
 //! `system { ... }`.
 
 mod accounting;
-mod addressing;
 mod archival;
-mod auth;
 mod autoinstallation;
+mod backup_router;
 mod commit;
+mod dynamic_profile_options;
 mod extensions;
-mod flow_tap_dtcp;
-mod internet;
+mod internet_options;
 mod license;
 mod location;
 mod login;
+mod master_password;
+mod name_server;
 mod ntp;
 mod pixel_tracing;
 mod ports;
 mod processes;
+mod radius_server;
+mod root_authentication;
 mod schema;
 mod scripts;
-mod service_deployment;
 mod services;
-mod subscriber;
+mod static_host_mapping;
 mod syslog;
+mod tacplus_server;
 
 pub use accounting::{Accounting, AccountingDestination};
-pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use archival::{Archival, ArchivalConfiguration};
-pub use auth::{MasterPassword, RadiusServer, RootAuthentication, TacplusServer};
 pub use autoinstallation::{Autoinstallation, AutoinstallationInterface};
+pub use backup_router::BackupRouter;
 pub use commit::Commit;
+pub use dynamic_profile_options::DynamicProfileOptions;
 pub use extensions::{ExtensionApplication, ExtensionProvider, Extensions, ProviderLicense};
-pub use flow_tap_dtcp::{FlowTapDtcp, FlowTapDtcpSsh};
-pub use internet::{IcmpRateLimit, InternetOptions};
+pub use internet_options::{IcmpRateLimit, InternetOptions};
 pub use license::{License, LicenseAutoupdate, LicenseRenew};
 pub use location::Location;
 pub use login::{Login, LoginClass, LoginPassword, LoginRetryOptions, LoginUser};
+pub use master_password::MasterPassword;
+pub use name_server::NameServer;
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
 pub use pixel_tracing::PixelTracing;
 pub use ports::{Auxiliary, Console, Ports};
 pub use processes::Process;
+pub use radius_server::RadiusServer;
+pub use root_authentication::RootAuthentication;
 pub use schema::Schema;
 pub use scripts::Scripts;
-pub use service_deployment::{ServiceDeployment, ServiceDeploymentServer};
 pub use services::{
-    Netconf, NetconfSsh, OutboundSshClient, OutboundSshServer, Services, SshService, WebManagement, WebManagementHttp,
+    AaclStatisticsProfile, DhcpLocalServer, DhcpLocalServerGroup, FlowTapDtcp, FlowTapDtcpSsh,
+    LocalPolicyDecisionFunction, Netconf, NetconfSsh, OutboundSshClient, OutboundSshServer, RedundancyInterface,
+    ServiceDeployment, ServiceDeploymentServer, Services, SshService, StaticSubscriberGroup, StaticSubscriberProfile,
+    StaticSubscribers, SubscriberManagement, SubscriberRedundancy, WebManagement, WebManagementHttp,
     WebManagementHttps, XnmClearText, XnmSsl,
 };
-pub use subscriber::{
-    AaclStatisticsProfile, DhcpLocalServer, DhcpLocalServerGroup, DynamicProfileOptions, LocalPolicyDecisionFunction,
-    RedundancyInterface, StaticSubscriberGroup, StaticSubscriberProfile, StaticSubscribers, SubscriberManagement,
-    SubscriberRedundancy,
-};
+pub use static_host_mapping::StaticHostMapping;
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogStructuredData, SyslogTarget};
+pub use tacplus_server::TacplusServer;
 
-use crate::{arg_of, args_of, child_block, has_leaf, list_values, top_level};
+use crate::{active_children, arg_of, args_of, child_block, has_leaf, list_values, split_name, top_level, unquote};
 use accounting::parse_accounting;
-use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use archival::parse_archival;
-use asterust::config::Config;
-use auth::{parse_master_password, password_methods, radius_servers, root_authentication, tacplus_servers};
+use asterust::config::{Config, ConfigLine};
 use autoinstallation::parse_autoinstallation;
+use backup_router::parse_backup_router;
 use commit::parse_commit;
+use dynamic_profile_options::parse_dynamic_profile_options;
 use extensions::parse_extensions;
-use internet::parse_internet_options;
+use internet_options::parse_internet_options;
 use license::parse_license;
 use location::parse_location;
 use login::parse_login;
+use master_password::parse_master_password;
+use name_server::name_servers;
 use ntp::parse_ntp;
 use pixel_tracing::parse_pixel_tracing;
 use ports::parse_ports;
 use processes::parse_processes;
+use radius_server::radius_servers;
+use root_authentication::root_authentication;
 use schema::parse_schema;
 use scripts::parse_scripts;
 use services::parse_services;
-use subscriber::parse_dynamic_profile_options;
+use static_host_mapping::static_host_mappings;
 use syslog::parse_syslog;
+use tacplus_server::tacplus_servers;
 
 /// The top-level `system` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -192,9 +202,45 @@ pub fn system(config: &Config) -> Option<System> {
     })
 }
 
+/// Servers written as `<keyword> <address> { ... }`, or as `<keyword> { <address> { ... } }`, with their option lines.
+fn servers<'a>(system: &'a ConfigLine, keyword: &str) -> Vec<(&'a str, &'a ConfigLine)> {
+    let mut found = Vec::new();
+    for child in active_children(system) {
+        if child.text == keyword {
+            found.extend(active_children(child).map(|server| (unquote(&server.text), server)));
+        } else if let Some(arg) = child.arg(keyword) {
+            found.push((split_name(arg).0, child));
+        }
+    }
+    found
+}
+
+/// The method names of a password setting such as `diag-port-authentication`, written either as
+/// `<keyword> encrypted-password "...";` or as a block. The passwords are dropped.
+fn password_methods(system: &ConfigLine, keyword: &str) -> Vec<String> {
+    let mut methods = Vec::new();
+    for child in active_children(system) {
+        if child.text == keyword {
+            methods.extend(authentication_methods(child));
+        } else if let Some(method) = child.arg(keyword).and_then(|arg| arg.split_whitespace().next()) {
+            methods.push(method.to_string());
+        }
+    }
+    methods
+}
+
+/// The name of each statement in an `authentication` block. Secrets can carry a trailing `## SECRET-DATA` marker,
+/// so only the first word is kept.
+fn authentication_methods(auth: &ConfigLine) -> Vec<String> {
+    active_children(auth)
+        .filter_map(|c| c.text.split_whitespace().next())
+        .map(str::to_string)
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::system::system;
     use asterust::config::juniper;
 
     // Not from documentation: written from the CLI Reference syntax pages. See the README "Sources".
@@ -289,5 +335,65 @@ mod tests {
     #[test]
     fn no_system_is_none() {
         assert!(system(&juniper::parse_braces("interfaces {\n    lo0;\n}\n")).is_none());
+    }
+
+    #[test]
+    fn diag_port_and_pic_console_report_only_the_method() {
+        let system = system(&juniper::parse_braces(
+            r#"
+system {
+    diag-port-authentication encrypted-password "$6$salt$hash"; ## SECRET-DATA
+    pic-console-authentication {
+        encrypted-password "$6$salt$other"; ## SECRET-DATA
+    }
+}
+"#,
+        ))
+        .unwrap();
+        assert_eq!(system.diag_port_authentication, ["encrypted-password"]);
+        assert_eq!(system.pic_console_authentication, ["encrypted-password"]);
+    }
+
+    #[test]
+    fn secret_settings_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.master_password.is_none());
+        assert!(system.diag_port_authentication.is_empty());
+        assert!(system.pic_console_authentication.is_empty());
+    }
+
+    #[test]
+    fn extracts_authentication_order() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    authentication-order [ tacplus radius password ];\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.authentication_order, ["tacplus", "radius", "password"]);
+    }
+
+    #[test]
+    fn authentication_settings_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.authentication_order.is_empty());
+        assert!(system.radius_servers.is_empty());
+        assert!(system.tacplus_servers.is_empty());
+    }
+
+    #[test]
+    fn extracts_domain_search_list() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    domain-search [ example.net lab.example.net ];\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(system.domain_search, ["example.net", "lab.example.net"]);
+    }
+
+    #[test]
+    fn addressing_settings_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.domain_search.is_empty());
+        assert!(system.static_host_mappings.is_empty());
+        assert!(system.backup_router.is_none());
+        assert!(system.inet6_backup_router.is_none());
     }
 }

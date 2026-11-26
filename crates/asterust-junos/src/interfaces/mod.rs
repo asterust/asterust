@@ -1,22 +1,12 @@
 //! `interfaces { ... }`: physical interfaces and their logical units.
 
-use crate::{active_children, arg_of, args_of, has_leaf, named_children, top_level};
-use asterust::config::{Config, ConfigLine};
+mod unit;
 
-/// A logical `unit <n>` of an interface. Addresses are the raw `address` values (e.g. `"10.0.0.1/24"`;
-/// IS-IS NETs for `family iso`).
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct InterfaceUnit {
-    pub number: String,
-    pub description: Option<String>,
-    pub vlan_id: Option<u32>,
-    /// Every `family <name>` present, e.g. `"inet"`, `"inet6"`, `"iso"`, `"mpls"`.
-    pub families: Vec<String>,
-    pub inet_addresses: Vec<String>,
-    pub inet6_addresses: Vec<String>,
-    pub iso_addresses: Vec<String>,
-}
+pub use unit::InterfaceUnit;
+
+use crate::{active_children, arg_of, has_leaf, named_children, top_level};
+use asterust::config::{Config, ConfigLine};
+use unit::parse_unit;
 
 /// A physical or loopback interface such as `ge-0/0/0` or `lo0`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -49,27 +39,6 @@ fn parse_interface(line: &ConfigLine) -> Interface {
         units: named_children(line, "unit")
             .map(|(number, unit)| parse_unit(number, unit))
             .collect(),
-    }
-}
-
-fn parse_unit(number: &str, unit: &ConfigLine) -> InterfaceUnit {
-    let families: Vec<_> = named_children(unit, "family").collect();
-    let addresses = |family: &str| -> Vec<String> {
-        families
-            .iter()
-            .filter(|(name, _)| *name == family)
-            .flat_map(|(_, f)| args_of(f, "address"))
-            .map(str::to_string)
-            .collect()
-    };
-    InterfaceUnit {
-        number: number.to_string(),
-        description: arg_of(unit, "description").map(str::to_string),
-        vlan_id: arg_of(unit, "vlan-id").and_then(|v| v.parse().ok()),
-        inet_addresses: addresses("inet"),
-        inet6_addresses: addresses("inet6"),
-        iso_addresses: addresses("iso"),
-        families: families.iter().map(|(name, _)| name.to_string()).collect(),
     }
 }
 

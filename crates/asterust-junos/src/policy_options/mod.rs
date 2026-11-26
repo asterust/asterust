@@ -1,126 +1,27 @@
 //! `policy-options { ... }`: policy statements, communities, prefix lists and AS paths.
 
-use crate::{active_children, list_values, named_children, split_keyword, split_name, statements, top_level, unquote};
-use asterust::config::{Config, ConfigLine};
+mod as_path;
+mod as_path_group;
+mod community;
+mod policy_statement;
+mod prefix_list;
 
-/// A `route-filter <prefix> <match-type>` condition.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct RouteFilter {
-    pub prefix: String,
-    /// Everything after the prefix, e.g. `"exact"`, `"orlonger"`, `"upto /24"`.
-    pub match_type: Option<String>,
-}
+pub use as_path::AsPath;
+pub use as_path_group::AsPathGroup;
+pub use community::Community;
+pub use policy_statement::{
+    CommunityAction, CommunityOperation, PolicyAction, PolicyActions, PolicyConditions, PolicyStatement, PolicyTerm,
+    RouteFilter,
+};
+pub use prefix_list::PrefixList;
 
-/// The match conditions of a term's `from` or `to` statement. Conditions not listed here are ignored.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct PolicyConditions {
-    pub protocols: Vec<String>,
-    pub families: Vec<String>,
-    pub communities: Vec<String>,
-    pub as_paths: Vec<String>,
-    pub prefix_lists: Vec<String>,
-    /// The raw `prefix-list-filter` argument, e.g. `"CUSTOMERS orlonger"`.
-    pub prefix_list_filters: Vec<String>,
-    pub route_filters: Vec<RouteFilter>,
-    pub neighbors: Vec<String>,
-    /// Subroutine policies from `policy`.
-    pub policies: Vec<String>,
-}
-
-/// The flow-control action ending a term.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum PolicyAction {
-    Accept,
-    Reject,
-    NextTerm,
-    NextPolicy,
-}
-
-/// How a `then community` action changes the route's communities.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum CommunityOperation {
-    Add,
-    Set,
-    Delete,
-}
-
-/// A `then community (add | set | delete) <name>` action.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct CommunityAction {
-    pub operation: CommunityOperation,
-    pub community: String,
-}
-
-/// The actions of a term's `then` statement. Actions not listed here are ignored.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct PolicyActions {
-    pub action: Option<PolicyAction>,
-    /// Everything after `metric`, e.g. `"63"` or `"add 10"`.
-    pub metric: Option<String>,
-    pub local_preference: Option<String>,
-    pub next_hop: Option<String>,
-    pub as_path_prepend: Option<String>,
-    pub communities: Vec<CommunityAction>,
-}
-
-/// One term of a policy statement.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct PolicyTerm {
-    /// `None` for the unnamed term, which is the only one in a policy written without `term` statements.
-    pub name: Option<String>,
-    pub from: PolicyConditions,
-    pub to: PolicyConditions,
-    pub then: PolicyActions,
-}
-
-/// A `policy-statement <name>`. An unnamed term is placed last.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct PolicyStatement {
-    pub name: String,
-    pub terms: Vec<PolicyTerm>,
-}
-
-/// A `community <name> members ...`, which may be a standard, extended or large community.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct Community {
-    pub name: String,
-    pub members: Vec<String>,
-    pub invert_match: bool,
-}
-
-/// A `prefix-list <name>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct PrefixList {
-    pub name: String,
-    pub prefixes: Vec<String>,
-    pub apply_path: Option<String>,
-}
-
-/// An `as-path <name> <regular-expression>`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct AsPath {
-    pub name: String,
-    pub regex: String,
-}
-
-/// An `as-path-group <name>` of AS path expressions.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct AsPathGroup {
-    pub name: String,
-    pub as_paths: Vec<AsPath>,
-}
+use crate::{active_children, named_children, top_level};
+use as_path::parse_as_path;
+use as_path_group::parse_as_path_group;
+use asterust::config::Config;
+use community::parse_community;
+use policy_statement::parse_policy;
+use prefix_list::parse_prefix_list;
 
 /// The top-level `policy-options` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -146,149 +47,8 @@ pub fn policy_options(config: &Config) -> Option<PolicyOptions> {
             .collect(),
         as_paths: active_children(root).filter_map(parse_as_path).collect(),
         as_path_groups: named_children(root, "as-path-group")
-            .map(|(name, line)| AsPathGroup {
-                name: name.to_string(),
-                as_paths: active_children(line).filter_map(parse_as_path).collect(),
-            })
+            .map(|(name, line)| parse_as_path_group(name, line))
             .collect(),
-    })
-}
-
-fn parse_policy(name: &str, line: &ConfigLine) -> PolicyStatement {
-    let mut terms: Vec<PolicyTerm> = named_children(line, "term")
-        .map(|(term_name, term)| parse_term(Some(term_name), term))
-        .collect();
-    let has_unnamed_term = active_children(line).any(|c| {
-        ["from", "to", "then"]
-            .iter()
-            .any(|k| c.text == *k || c.arg(k).is_some())
-    });
-    if has_unnamed_term {
-        terms.push(parse_term(None, line));
-    }
-    PolicyStatement {
-        name: name.to_string(),
-        terms,
-    }
-}
-
-fn parse_term(name: Option<&str>, line: &ConfigLine) -> PolicyTerm {
-    PolicyTerm {
-        name: name.map(str::to_string),
-        from: parse_conditions(line, "from"),
-        to: parse_conditions(line, "to"),
-        then: parse_actions(line),
-    }
-}
-
-fn parse_conditions(line: &ConfigLine, keyword: &str) -> PolicyConditions {
-    let mut conditions = PolicyConditions::default();
-    for statement in statements(line, keyword) {
-        let (condition, arg) = split_keyword(statement);
-        match condition {
-            "protocol" => conditions.protocols.extend(list_values(arg)),
-            "family" => conditions.families.push(unquote(arg).to_string()),
-            "community" => conditions.communities.extend(list_values(arg)),
-            "as-path" => conditions.as_paths.extend(list_values(arg)),
-            "prefix-list" => conditions.prefix_lists.extend(list_values(arg)),
-            "prefix-list-filter" => conditions.prefix_list_filters.push(arg.to_string()),
-            "route-filter" => conditions.route_filters.push(parse_route_filter(arg)),
-            "neighbor" => conditions.neighbors.push(unquote(arg).to_string()),
-            "policy" => conditions.policies.push(unquote(arg).to_string()),
-            _ => {}
-        }
-    }
-    conditions
-}
-
-fn parse_route_filter(arg: &str) -> RouteFilter {
-    let (prefix, match_type) = split_keyword(arg);
-    RouteFilter {
-        prefix: prefix.to_string(),
-        match_type: Some(match_type).filter(|m| !m.is_empty()).map(str::to_string),
-    }
-}
-
-fn parse_actions(line: &ConfigLine) -> PolicyActions {
-    let mut actions = PolicyActions::default();
-    for statement in statements(line, "then") {
-        let (action, arg) = split_keyword(statement);
-        let value = || Some(unquote(arg).to_string());
-        match (action, arg) {
-            ("accept", "") => actions.action = Some(PolicyAction::Accept),
-            ("reject", "") => actions.action = Some(PolicyAction::Reject),
-            ("next", "term") => actions.action = Some(PolicyAction::NextTerm),
-            ("next", "policy") => actions.action = Some(PolicyAction::NextPolicy),
-            ("metric", _) => actions.metric = value(),
-            ("local-preference", _) => actions.local_preference = value(),
-            ("next-hop", _) => actions.next_hop = value(),
-            ("as-path-prepend", _) => actions.as_path_prepend = value(),
-            ("community", _) => actions.communities.extend(parse_community_action(arg)),
-            _ => {}
-        }
-    }
-    actions
-}
-
-fn parse_community_action(arg: &str) -> Option<CommunityAction> {
-    let (operation, community) = split_name(arg);
-    let operation = match operation {
-        "add" => CommunityOperation::Add,
-        "set" => CommunityOperation::Set,
-        "delete" => CommunityOperation::Delete,
-        _ => return None,
-    };
-    Some(CommunityAction {
-        operation,
-        community: unquote(community).to_string(),
-    })
-}
-
-/// A `community` statement written either on one line (`community X members 1:1;`) or as a block.
-fn parse_community(line: &ConfigLine) -> Option<Community> {
-    let (name, rest) = split_name(line.arg("community")?);
-    let (keyword, members) = split_keyword(rest);
-    let mut community = Community {
-        name: name.to_string(),
-        members: if keyword == "members" {
-            list_values(members)
-        } else {
-            Vec::new()
-        },
-        invert_match: false,
-    };
-    for child in active_children(line) {
-        if let Some(members) = child.arg("members") {
-            community.members.extend(list_values(members));
-        } else if child.text == "invert-match" {
-            community.invert_match = true;
-        }
-    }
-    Some(community)
-}
-
-fn parse_prefix_list(name: &str, line: &ConfigLine) -> PrefixList {
-    let mut list = PrefixList {
-        name: name.to_string(),
-        prefixes: Vec::new(),
-        apply_path: None,
-    };
-    for child in active_children(line) {
-        if let Some(path) = child.arg("apply-path") {
-            list.apply_path = Some(unquote(path).to_string());
-        } else if !child.text.contains(' ') {
-            // Prefixes are the only statements without arguments; `apply-groups` and the like have a space.
-            list.prefixes.push(child.text.clone());
-        }
-    }
-    list
-}
-
-fn parse_as_path(line: &ConfigLine) -> Option<AsPath> {
-    let (name, regex) = split_name(line.arg("as-path")?);
-    Some(AsPath {
-        name: name.to_string(),
-        regex: unquote(regex).to_string(),
     })
 }
 

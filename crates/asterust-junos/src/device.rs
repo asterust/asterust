@@ -1,12 +1,12 @@
 //! [`JunosDevice`]: one parsed JunOS config with every supported view as a getter.
 
-use crate::bgp::{bgp, Bgp};
 use crate::firewall::{firewall, Firewall};
-use crate::interface::{interfaces, Interface};
-use crate::isis::{isis, Isis};
-use crate::ospf::{ospf, Ospf};
+use crate::interfaces::{interfaces, Interface};
 use crate::policy_options::{policy_options, PolicyOptions};
-use crate::routing_instance::{routing_instances, RoutingInstance};
+use crate::protocols::bgp::{bgp, Bgp};
+use crate::protocols::isis::{isis, Isis};
+use crate::protocols::ospf::{ospf, Ospf};
+use crate::routing_instances::{routing_instances, RoutingInstance};
 use crate::routing_options::{routing_options, RoutingOptions};
 use crate::system::{system, System};
 use asterust::config::{juniper, Config};
