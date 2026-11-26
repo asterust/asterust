@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.4...asterust-junos-v0.3.5) - 2026-11-26
+
+### Added
+
+- *(junos)* add interfaces unit vlan-tags, vlan maps, encapsulation and auto-configure
+
+### Other
+
+- Merge pull request #78 from asterust/feat/junos-interfaces-vlan-units
+- Merge origin/main into feat/junos-interfaces-vlan-units
+
 ## [0.3.4](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.3...asterust-junos-v0.3.4) - 2026-11-26
 
 ### Added
