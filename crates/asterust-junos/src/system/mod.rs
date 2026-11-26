@@ -6,6 +6,7 @@ mod archival;
 mod auth;
 mod commit;
 mod internet;
+mod license;
 mod location;
 mod login;
 mod ntp;
@@ -18,9 +19,10 @@ mod syslog;
 pub use accounting::{Accounting, AccountingDestination};
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use archival::{Archival, ArchivalConfiguration};
-pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
+pub use auth::{MasterPassword, RadiusServer, RootAuthentication, TacplusServer};
 pub use commit::Commit;
 pub use internet::{IcmpRateLimit, InternetOptions};
+pub use license::{License, LicenseAutoupdate, LicenseRenew};
 pub use location::Location;
 pub use login::{Login, LoginClass, LoginPassword, LoginRetryOptions, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
@@ -38,9 +40,10 @@ use accounting::parse_accounting;
 use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use archival::parse_archival;
 use asterust::config::Config;
-use auth::{radius_servers, root_authentication, tacplus_servers};
+use auth::{parse_master_password, password_methods, radius_servers, root_authentication, tacplus_servers};
 use commit::parse_commit;
 use internet::parse_internet_options;
+use license::parse_license;
 use location::parse_location;
 use login::parse_login;
 use ntp::parse_ntp;
@@ -88,6 +91,12 @@ pub struct System {
     pub archival: Option<Archival>,
     pub accounting: Option<Accounting>,
     pub root_authentication: Option<RootAuthentication>,
+    pub master_password: Option<MasterPassword>,
+    /// Method name of `diag-port-authentication`, e.g. `encrypted-password`; the password is not extracted.
+    pub diag_port_authentication: Vec<String>,
+    /// Method names of `pic-console-authentication`; the password is not extracted.
+    pub pic_console_authentication: Vec<String>,
+    pub license: Option<License>,
     pub name_servers: Vec<NameServer>,
     pub ntp: Option<Ntp>,
     pub syslog: Option<Syslog>,
@@ -138,6 +147,10 @@ pub fn system(config: &Config) -> Option<System> {
         archival: child_block(system, "archival").map(parse_archival),
         accounting: child_block(system, "accounting").map(parse_accounting),
         root_authentication: root_authentication(system),
+        master_password: child_block(system, "master-password").map(parse_master_password),
+        diag_port_authentication: password_methods(system, "diag-port-authentication"),
+        pic_console_authentication: password_methods(system, "pic-console-authentication"),
+        license: child_block(system, "license").map(parse_license),
         name_servers: name_servers(system),
         ntp: child_block(system, "ntp").map(parse_ntp),
         syslog: child_block(system, "syslog").map(parse_syslog),

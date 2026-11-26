@@ -3,6 +3,15 @@
 use crate::{active_children, arg_of, child_block, has_leaf, split_name, unquote};
 use asterust::config::ConfigLine;
 
+/// The `system master-password` settings. The password itself is not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct MasterPassword {
+    pub iteration_count: Option<String>,
+    /// `hmac-sha1`, `hmac-sha2-256` or `hmac-sha2-512`.
+    pub pseudorandom_function: Option<String>,
+}
+
 /// The `system root-authentication` methods. Passwords and keys are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
@@ -79,6 +88,27 @@ pub(super) fn tacplus_servers(parent: &ConfigLine, keyword: &str) -> Vec<Tacplus
         .collect()
 }
 
+pub(super) fn parse_master_password(master_password: &ConfigLine) -> MasterPassword {
+    MasterPassword {
+        iteration_count: arg_of(master_password, "iteration-count").map(str::to_string),
+        pseudorandom_function: arg_of(master_password, "pseudorandom-function").map(str::to_string),
+    }
+}
+
+/// The method names of a password setting such as `diag-port-authentication`, written either as
+/// `<keyword> encrypted-password "...";` or as a block. The passwords are dropped.
+pub(super) fn password_methods(system: &ConfigLine, keyword: &str) -> Vec<String> {
+    let mut methods = Vec::new();
+    for child in active_children(system) {
+        if child.text == keyword {
+            methods.extend(authentication_methods(child));
+        } else if let Some(method) = child.arg(keyword).and_then(|arg| arg.split_whitespace().next()) {
+            methods.push(method.to_string());
+        }
+    }
+    methods
+}
+
 pub(super) fn root_authentication(system: &ConfigLine) -> Option<RootAuthentication> {
     child_block(system, "root-authentication").map(|auth| RootAuthentication {
         methods: authentication_methods(auth),
@@ -126,6 +156,43 @@ system {
         ))
         .unwrap();
         assert_eq!(system.root_authentication.unwrap().methods, ["no-public-keys"]);
+    }
+
+    #[test]
+    fn extracts_master_password_settings() {
+        let master = system(&juniper::parse_braces(
+            "system {\n    master-password {\n        iteration-count 500;\n        pseudorandom-function hmac-sha2-256;\n    }\n}\n",
+        ))
+        .unwrap()
+        .master_password
+        .unwrap();
+        assert_eq!(master.iteration_count.as_deref(), Some("500"));
+        assert_eq!(master.pseudorandom_function.as_deref(), Some("hmac-sha2-256"));
+    }
+
+    #[test]
+    fn diag_port_and_pic_console_report_only_the_method() {
+        let system = system(&juniper::parse_braces(
+            r#"
+system {
+    diag-port-authentication encrypted-password "$6$salt$hash"; ## SECRET-DATA
+    pic-console-authentication {
+        encrypted-password "$6$salt$other"; ## SECRET-DATA
+    }
+}
+"#,
+        ))
+        .unwrap();
+        assert_eq!(system.diag_port_authentication, ["encrypted-password"]);
+        assert_eq!(system.pic_console_authentication, ["encrypted-password"]);
+    }
+
+    #[test]
+    fn secret_settings_are_optional() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(system.master_password.is_none());
+        assert!(system.diag_port_authentication.is_empty());
+        assert!(system.pic_console_authentication.is_empty());
     }
 
     #[test]
