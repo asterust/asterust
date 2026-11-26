@@ -8,6 +8,7 @@ use crate::ospf::{ospf, Ospf};
 use crate::policy_options::{policy_options, PolicyOptions};
 use crate::routing_instance::{routing_instances, RoutingInstance};
 use crate::routing_options::{routing_options, RoutingOptions};
+use crate::system::{system, System};
 use asterust::config::{juniper, Config};
 
 /// A parsed JunOS `show configuration` (brace format).
@@ -62,6 +63,10 @@ impl JunosDevice {
 
     pub fn firewall(&self) -> Option<Firewall> {
         firewall(&self.config)
+    }
+
+    pub fn system(&self) -> Option<System> {
+        system(&self.config)
     }
 }
 

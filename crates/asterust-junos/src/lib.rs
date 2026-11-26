@@ -2,7 +2,7 @@
 //! [`asterust::config::juniper`] (brace-delimited `show configuration` output).
 //!
 //! JunOS nests everything under a few top-level blocks (`interfaces`, `protocols`, `routing-options`,
-//! `routing-instances`, `policy-options`, `firewall`), so each module exposes a free function that reads the relevant block from a
+//! `routing-instances`, `policy-options`, `firewall`, `system`), so each module exposes a free function that reads the relevant block from a
 //! [`asterust::config::Config`] rather than a per-block constructor. [`JunosDevice`] bundles a parsed
 //! config with all of them as getters.
 //!
@@ -17,6 +17,7 @@ pub mod ospf;
 pub mod policy_options;
 pub mod routing_instance;
 pub mod routing_options;
+pub mod system;
 
 pub use device::JunosDevice;
 

@@ -96,6 +96,7 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(policies.policy_statements[0].name, "EXPORT-LOOPBACK");
     assert_eq!(policies.communities[0].members, ["65000:100"]);
     assert_eq!(device.firewall().unwrap().filters[0].name, "PROTECT-RE");
+    assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
 }
 
 #[test]

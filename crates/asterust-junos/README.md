@@ -13,6 +13,7 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 | `routing_options` | `routing-options` | router-id, autonomous-system |
 | `policy_options` | `policy-options` | policy statements (terms with `from`/`to` conditions and `then` actions), communities, prefix lists, AS paths and AS path groups |
 | `firewall` | `firewall` | `family` filters (terms with `from` conditions and `then` actions) and policers |
+| `system` | `system` | host-name |
 
 ```rust
 use asterust_junos::JunosDevice;
@@ -62,3 +63,5 @@ the `firewall` policers, flag and list match conditions, and the `count`, `polic
 `forwarding-class` and `loss-priority` actions. Those fixtures are marked "not from documentation" in the code and were
 written from knowledge of the JunOS hierarchy, so treat the corresponding fields as unverified. A Juniper
 IS-IS or Layer 3 VPN example page, or a sanitized `show configuration` snippet, would let these be replaced.
+
+The `system` fixtures (`host-name`) follow the syntax in the Junos CLI Reference pages, not an example configuration.
