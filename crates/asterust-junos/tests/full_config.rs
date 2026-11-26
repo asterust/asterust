@@ -8,6 +8,9 @@ system {
     name-server {
         192.0.2.53;
     }
+    ntp {
+        server 192.0.2.10 prefer;
+    }
 }
 interfaces {
     ge-0/0/0 {
@@ -101,6 +104,7 @@ fn extracts_every_supported_view_from_one_config() {
     assert_eq!(device.firewall().unwrap().filters[0].name, "PROTECT-RE");
     assert_eq!(device.system().unwrap().host_name.as_deref(), Some("pe1"));
     assert_eq!(device.system().unwrap().name_servers[0].address, "192.0.2.53");
+    assert!(device.system().unwrap().ntp.unwrap().servers[0].prefer);
 }
 
 #[test]
