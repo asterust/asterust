@@ -4,11 +4,14 @@ mod accounting;
 mod addressing;
 mod archival;
 mod auth;
+mod commit;
 mod internet;
 mod location;
 mod login;
 mod ntp;
 mod ports;
+mod processes;
+mod scripts;
 mod services;
 mod syslog;
 
@@ -16,11 +19,14 @@ pub use accounting::{Accounting, AccountingDestination};
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use archival::{Archival, ArchivalConfiguration};
 pub use auth::{RadiusServer, RootAuthentication, TacplusServer};
+pub use commit::Commit;
 pub use internet::{IcmpRateLimit, InternetOptions};
 pub use location::Location;
 pub use login::{Login, LoginClass, LoginPassword, LoginRetryOptions, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
 pub use ports::{Auxiliary, Console, Ports};
+pub use processes::Process;
+pub use scripts::Scripts;
 pub use services::{OutboundSshClient, OutboundSshServer, Services, SshService};
 pub use syslog::{Syslog, SyslogArchive, SyslogHost, SyslogRule, SyslogStructuredData, SyslogTarget};
 
@@ -30,11 +36,14 @@ use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use archival::parse_archival;
 use asterust::config::Config;
 use auth::{radius_servers, root_authentication, tacplus_servers};
+use commit::parse_commit;
 use internet::parse_internet_options;
 use location::parse_location;
 use login::parse_login;
 use ntp::parse_ntp;
 use ports::parse_ports;
+use processes::parse_processes;
+use scripts::parse_scripts;
 use services::parse_services;
 use syslog::parse_syslog;
 
@@ -62,6 +71,17 @@ pub struct System {
     /// `default-address-selection`: use the loopback as the source of locally generated packets.
     pub default_address_selection: bool,
     pub internet_options: Option<InternetOptions>,
+    pub commit: Option<Commit>,
+    pub processes: Vec<Process>,
+    pub scripts: Option<Scripts>,
+    pub no_multicast_echo: bool,
+    pub no_ping_record_route: bool,
+    pub no_ping_time_stamp: bool,
+    pub auto_snapshot: bool,
+    pub compress_configuration_files: bool,
+    pub mirror_flash_on_disk: bool,
+    pub switchover_on_routing_crash: bool,
+    pub use_imported_time_zones: bool,
     pub archival: Option<Archival>,
     pub accounting: Option<Accounting>,
     pub root_authentication: Option<RootAuthentication>,
@@ -99,6 +119,19 @@ pub fn system(config: &Config) -> Option<System> {
         no_redirects: has_leaf(system, "no-redirects"),
         default_address_selection: has_leaf(system, "default-address-selection"),
         internet_options: child_block(system, "internet-options").map(parse_internet_options),
+        commit: child_block(system, "commit").map(parse_commit),
+        processes: child_block(system, "processes")
+            .map(parse_processes)
+            .unwrap_or_default(),
+        scripts: child_block(system, "scripts").map(parse_scripts),
+        no_multicast_echo: has_leaf(system, "no-multicast-echo"),
+        no_ping_record_route: has_leaf(system, "no-ping-record-route"),
+        no_ping_time_stamp: has_leaf(system, "no-ping-time-stamp"),
+        auto_snapshot: has_leaf(system, "auto-snapshot"),
+        compress_configuration_files: has_leaf(system, "compress-configuration-files"),
+        mirror_flash_on_disk: has_leaf(system, "mirror-flash-on-disk"),
+        switchover_on_routing_crash: has_leaf(system, "switchover-on-routing-crash"),
+        use_imported_time_zones: has_leaf(system, "use-imported-time-zones"),
         archival: child_block(system, "archival").map(parse_archival),
         accounting: child_block(system, "accounting").map(parse_accounting),
         root_authentication: root_authentication(system),
@@ -178,6 +211,30 @@ mod tests {
         assert_eq!(system.max_configurations_on_flash, None);
         assert_eq!(system.max_configuration_rollbacks, None);
         assert!(!system.no_redirects);
+    }
+
+    #[test]
+    fn extracts_system_flags() {
+        let system = system(&juniper::parse_braces(
+            "system {\n    no-multicast-echo;\n    no-ping-record-route;\n    no-ping-time-stamp;\n    auto-snapshot;\n    compress-configuration-files;\n    mirror-flash-on-disk;\n    switchover-on-routing-crash;\n    use-imported-time-zones;\n}\n",
+        ))
+        .unwrap();
+        assert!(system.no_multicast_echo);
+        assert!(system.no_ping_record_route);
+        assert!(system.no_ping_time_stamp);
+        assert!(system.auto_snapshot);
+        assert!(system.compress_configuration_files);
+        assert!(system.mirror_flash_on_disk);
+        assert!(system.switchover_on_routing_crash);
+        assert!(system.use_imported_time_zones);
+    }
+
+    #[test]
+    fn system_flags_default_to_off() {
+        let system = system(&juniper::parse_braces("system {\n    host-name pe1;\n}\n")).unwrap();
+        assert!(!system.no_multicast_echo);
+        assert!(!system.auto_snapshot);
+        assert!(!system.use_imported_time_zones);
     }
 
     #[test]

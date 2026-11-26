@@ -1,6 +1,6 @@
 //! `system { internet-options { ... } }`.
 
-use crate::{arg_of, has_leaf, statement_words};
+use crate::{arg_of, has_leaf, statement_words, value_after};
 use asterust::config::ConfigLine;
 
 /// An `icmpv4-rate-limit` or `icmpv6-rate-limit`.
@@ -78,11 +78,6 @@ fn rate_limit(options: &ConfigLine, keyword: &str) -> Option<IcmpRateLimit> {
         bucket_size: value_after(&words, "bucket-size"),
         packet_rate: value_after(&words, "packet-rate"),
     })
-}
-
-fn value_after(words: &[&str], name: &str) -> Option<String> {
-    let position = words.iter().position(|w| *w == name)?;
-    words.get(position + 1).map(|w| w.to_string())
 }
 
 #[cfg(test)]

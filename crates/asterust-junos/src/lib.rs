@@ -135,6 +135,12 @@ pub(crate) fn statement_words<'a>(parent: &'a ConfigLine, keyword: &str) -> Opti
     )
 }
 
+/// The word after the first occurrence of `name` in `words`.
+pub(crate) fn value_after(words: &[&str], name: &str) -> Option<String> {
+    let position = words.iter().position(|w| *w == name)?;
+    words.get(position + 1).map(|w| w.to_string())
+}
+
 /// First whitespace-separated word of `arg`.
 pub(crate) fn first_word(arg: &str) -> Option<&str> {
     arg.split_whitespace().next()
