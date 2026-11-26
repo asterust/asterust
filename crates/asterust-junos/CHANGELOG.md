@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.9](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.8...asterust-junos-v0.3.9) - 2026-11-26
+
+### Added
+
+- *(junos)* add routing-options ribs, rib-groups, auto-export and fate-sharing
+- *(junos)* add routing-options aggregate, generate and martians
+- *(junos)* add routing-options static routes
+- *(junos)* add routing-options global settings
+
+### Other
+
+- Merge pull request #90 from asterust/feat/junos-routing-options-ribs
+- Merge pull request #89 from asterust/feat/junos-routing-options-aggregate
+- Merge pull request #88 from asterust/feat/junos-routing-options-static
+- Merge pull request #87 from asterust/feat/junos-routing-options-global
+
 ## [0.3.8](https://github.com/asterust/asterust/compare/asterust-junos-v0.3.7...asterust-junos-v0.3.8) - 2026-11-26
 
 ### Other
