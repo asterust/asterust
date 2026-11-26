@@ -4,15 +4,21 @@ mod accounting;
 mod addressing;
 mod archival;
 mod auth;
+mod autoinstallation;
 mod commit;
+mod extensions;
+mod flow_tap_dtcp;
 mod internet;
 mod license;
 mod location;
 mod login;
 mod ntp;
+mod pixel_tracing;
 mod ports;
 mod processes;
+mod schema;
 mod scripts;
+mod service_deployment;
 mod services;
 mod subscriber;
 mod syslog;
@@ -21,15 +27,21 @@ pub use accounting::{Accounting, AccountingDestination};
 pub use addressing::{BackupRouter, NameServer, StaticHostMapping};
 pub use archival::{Archival, ArchivalConfiguration};
 pub use auth::{MasterPassword, RadiusServer, RootAuthentication, TacplusServer};
+pub use autoinstallation::{Autoinstallation, AutoinstallationInterface};
 pub use commit::Commit;
+pub use extensions::{ExtensionApplication, ExtensionProvider, Extensions, ProviderLicense};
+pub use flow_tap_dtcp::{FlowTapDtcp, FlowTapDtcpSsh};
 pub use internet::{IcmpRateLimit, InternetOptions};
 pub use license::{License, LicenseAutoupdate, LicenseRenew};
 pub use location::Location;
 pub use login::{Login, LoginClass, LoginPassword, LoginRetryOptions, LoginUser};
 pub use ntp::{Ntp, NtpAuthenticationKey, NtpHost};
+pub use pixel_tracing::PixelTracing;
 pub use ports::{Auxiliary, Console, Ports};
 pub use processes::Process;
+pub use schema::Schema;
 pub use scripts::Scripts;
+pub use service_deployment::{ServiceDeployment, ServiceDeploymentServer};
 pub use services::{
     Netconf, NetconfSsh, OutboundSshClient, OutboundSshServer, Services, SshService, WebManagement, WebManagementHttp,
     WebManagementHttps, XnmClearText, XnmSsl,
@@ -47,14 +59,18 @@ use addressing::{name_servers, parse_backup_router, static_host_mappings};
 use archival::parse_archival;
 use asterust::config::Config;
 use auth::{parse_master_password, password_methods, radius_servers, root_authentication, tacplus_servers};
+use autoinstallation::parse_autoinstallation;
 use commit::parse_commit;
+use extensions::parse_extensions;
 use internet::parse_internet_options;
 use license::parse_license;
 use location::parse_location;
 use login::parse_login;
 use ntp::parse_ntp;
+use pixel_tracing::parse_pixel_tracing;
 use ports::parse_ports;
 use processes::parse_processes;
+use schema::parse_schema;
 use scripts::parse_scripts;
 use services::parse_services;
 use subscriber::parse_dynamic_profile_options;
@@ -87,6 +103,10 @@ pub struct System {
     pub commit: Option<Commit>,
     pub processes: Vec<Process>,
     pub dynamic_profile_options: Option<DynamicProfileOptions>,
+    pub extensions: Option<Extensions>,
+    pub autoinstallation: Option<Autoinstallation>,
+    pub schema: Option<Schema>,
+    pub pixel_tracing: Option<PixelTracing>,
     pub scripts: Option<Scripts>,
     pub no_multicast_echo: bool,
     pub no_ping_record_route: bool,
@@ -144,6 +164,10 @@ pub fn system(config: &Config) -> Option<System> {
             .map(parse_processes)
             .unwrap_or_default(),
         dynamic_profile_options: child_block(system, "dynamic-profile-options").map(parse_dynamic_profile_options),
+        extensions: child_block(system, "extensions").map(parse_extensions),
+        autoinstallation: child_block(system, "autoinstallation").map(parse_autoinstallation),
+        schema: child_block(system, "schema").map(parse_schema),
+        pixel_tracing: child_block(system, "pixel-tracing").map(parse_pixel_tracing),
         scripts: child_block(system, "scripts").map(parse_scripts),
         no_multicast_echo: has_leaf(system, "no-multicast-echo"),
         no_ping_record_route: has_leaf(system, "no-ping-record-route"),
