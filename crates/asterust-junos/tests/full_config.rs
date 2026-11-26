@@ -21,6 +21,11 @@ system {
             class super-user;
         }
     }
+    services {
+        ssh {
+            root-login deny;
+        }
+    }
 }
 interfaces {
     ge-0/0/0 {
@@ -117,6 +122,8 @@ fn extracts_every_supported_view_from_one_config() {
     assert!(device.system().unwrap().ntp.unwrap().servers[0].prefer);
     assert_eq!(device.system().unwrap().syslog.unwrap().hosts[0].address, "192.0.2.5");
     assert_eq!(device.system().unwrap().login.unwrap().users[0].name, "admin");
+    let ssh = device.system().unwrap().services.unwrap().ssh.unwrap();
+    assert_eq!(ssh.root_login.as_deref(), Some("deny"));
 }
 
 #[test]
