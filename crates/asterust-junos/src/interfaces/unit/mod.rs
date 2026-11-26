@@ -1,7 +1,12 @@
 //! `interfaces { <name> { unit <n> { ... } } }`.
 
+mod family;
+
+pub use family::{AddressArp, FamilyFilter, FamilyPolicer, FamilySampling, RpfCheck, UnitAddress, UnitFamily};
+
 use crate::{arg_of, args_of, named_children};
 use asterust::config::ConfigLine;
+use family::parse_family;
 
 /// A logical `unit <n>` of an interface. Addresses are the raw `address` values (e.g. `"10.0.0.1/24"`;
 /// IS-IS NETs for `family iso`).
@@ -16,6 +21,8 @@ pub struct InterfaceUnit {
     pub inet_addresses: Vec<String>,
     pub inet6_addresses: Vec<String>,
     pub iso_addresses: Vec<String>,
+    /// The settings of each `family`, in the order written.
+    pub family_settings: Vec<UnitFamily>,
 }
 
 pub(super) fn parse_unit(number: &str, unit: &ConfigLine) -> InterfaceUnit {
@@ -36,5 +43,9 @@ pub(super) fn parse_unit(number: &str, unit: &ConfigLine) -> InterfaceUnit {
         inet6_addresses: addresses("inet6"),
         iso_addresses: addresses("iso"),
         families: families.iter().map(|(name, _)| name.to_string()).collect(),
+        family_settings: families
+            .iter()
+            .map(|(name, family)| parse_family(name, family))
+            .collect(),
     }
 }

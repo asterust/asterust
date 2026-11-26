@@ -5,7 +5,7 @@ Typed views of common Juniper JunOS config statements, extracted from a config t
 
 | Module | Block | Extracted |
 | --- | --- | --- |
-| `interfaces` | `interfaces` | description, disable, mtu, speed, encapsulation, vlan-tagging, flexible-vlan-tagging, native-vlan-id, per-unit-scheduler, no-gratuitous-arp-request, hold-time, ether-options (also gigether-options and fastether-options: auto-negotiation, flow-control, loopback, source-filtering, speed, link-mode, 802.3ad bundle membership), aggregated-ether-options (lacp, link-speed, minimum-links, flow-control, loopback, source-filtering), units (description, vlan-id, families, inet/inet6/iso addresses) |
+| `interfaces` | `interfaces` | description, disable, mtu, speed, encapsulation, vlan-tagging, flexible-vlan-tagging, native-vlan-id, per-unit-scheduler, no-gratuitous-arp-request, hold-time, ether-options (also gigether-options and fastether-options: auto-negotiation, flow-control, loopback, source-filtering, speed, link-mode, 802.3ad bundle membership), aggregated-ether-options (lacp, link-speed, minimum-links, flow-control, loopback, source-filtering), units (description, vlan-id, families, inet/inet6/iso addresses, and per family: mtu, filter, rpf-check, policer, sampling, address options such as primary, preferred, destination and arp) |
 | `protocols::ospf` | `protocols ospf` | areas and their interfaces (passive, metric) |
 | `protocols::bgp` | `protocols bgp` | groups (type, peer-as, local-as, local-address, cluster, families, import/export policies) and neighbors |
 | `protocols::isis` | `protocols isis` | interfaces (passive, point-to-point) |

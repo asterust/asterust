@@ -1,0 +1,86 @@
+//! `interfaces { <name> { unit <n> { family <name> { address <address> { ... } } } } }`.
+
+use crate::{active_children, has_leaf, split_name};
+use asterust::config::ConfigLine;
+
+/// A static `arp` entry of an address.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct AddressArp {
+    pub address: String,
+    pub mac: Option<String>,
+    /// The MAC is written with `multicast-mac`.
+    pub multicast_mac: bool,
+    /// The device also answers ARP requests for the address.
+    pub publish: bool,
+}
+
+/// An `address <address>` of a family, with its options. VRRP groups are not extracted.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct UnitAddress {
+    /// e.g. `"10.0.0.1/24"`.
+    pub address: String,
+    pub primary: bool,
+    pub preferred: bool,
+    pub master_only: bool,
+    pub eui_64: bool,
+    pub destination: Option<String>,
+    pub broadcast: Option<String>,
+    pub arps: Vec<AddressArp>,
+}
+
+pub(super) fn parse_addresses(family: &ConfigLine) -> Vec<UnitAddress> {
+    active_children(family)
+        .filter_map(|line| Some((line, line.arg("address")?)))
+        .map(|(line, arg)| parse_address(line, arg))
+        .collect()
+}
+
+fn parse_address(line: &ConfigLine, arg: &str) -> UnitAddress {
+    let (address, inline) = split_name(arg);
+    let inline: Vec<&str> = inline.split_whitespace().collect();
+    let flag = |name: &str| has_leaf(line, name) || inline.contains(&name);
+    let value = |keyword: &str| {
+        active_children(line)
+            .find_map(|c| c.arg(keyword))
+            .map(|arg| arg.trim_matches('"').to_string())
+    };
+    UnitAddress {
+        address: address.to_string(),
+        primary: flag("primary"),
+        preferred: flag("preferred"),
+        master_only: flag("master-only"),
+        eui_64: flag("eui-64"),
+        destination: value("destination"),
+        broadcast: value("broadcast"),
+        arps: active_children(line)
+            .filter_map(|c| c.arg("arp"))
+            .map(parse_arp)
+            .collect(),
+    }
+}
+
+/// `<ip-address> (mac | multicast-mac) <mac-address> [publish]`.
+fn parse_arp(arg: &str) -> AddressArp {
+    let mut words = arg.split_whitespace();
+    let address = words.next().unwrap_or_default().to_string();
+    let mut arp = AddressArp {
+        address,
+        mac: None,
+        multicast_mac: false,
+        publish: false,
+    };
+    while let Some(word) = words.next() {
+        match word {
+            "mac" => arp.mac = words.next().map(str::to_string),
+            "multicast-mac" => {
+                arp.multicast_mac = true;
+                arp.mac = words.next().map(str::to_string);
+            }
+            "publish" => arp.publish = true,
+            _ => {}
+        }
+    }
+    arp
+}
