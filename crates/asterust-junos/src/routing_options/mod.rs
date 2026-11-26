@@ -14,10 +14,15 @@
 //! - [aggregate (Routing)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/aggregate-edit-routing-options.html)
 //! - [generate](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/generate-edit-routing-options.html)
 //! - [martians](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/martians-edit-routing-options.html)
+//! - [rib (General)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rib-edit-routing-options.html)
+//! - [instance-import](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/instance-import-edit-routing-options.html)
+//! - [instance-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/instance-export-edit-routing-options.html)
 
 mod aggregate;
+mod auto_export;
 mod autonomous_system;
 mod confederation;
+mod fate_sharing;
 mod forwarding_table;
 mod generate;
 mod graceful_restart;
@@ -25,12 +30,16 @@ mod interface_routes;
 mod martians;
 mod maximum_paths;
 mod resolution;
+mod rib;
+mod rib_groups;
 mod route_attributes;
 mod static_routes;
 
 pub use aggregate::{AggregateRoute, AggregateRoutes};
+pub use auto_export::{AutoExport, AutoExportFamily, AutoExportScope};
 pub use autonomous_system::AutonomousSystemOptions;
 pub use confederation::Confederation;
+pub use fate_sharing::{FateSharingEntry, FateSharingGroup};
 pub use forwarding_table::ForwardingTable;
 pub use generate::{GenerateRoute, GenerateRoutes};
 pub use graceful_restart::GracefulRestart;
@@ -38,14 +47,18 @@ pub use interface_routes::{InterfaceRoutes, InterfaceRoutesFamily};
 pub use martians::Martian;
 pub use maximum_paths::MaximumPaths;
 pub use resolution::{Resolution, ResolutionRib};
+pub use rib::Rib;
+pub use rib_groups::RibGroup;
 pub use route_attributes::RouteAttributes;
 pub use static_routes::{QualifiedNextHop, StaticRoute, StaticRoutes};
 
-use crate::{arg_of, child_block, first_word, has_leaf, statement_words, top_level};
+use crate::{arg_of, args_of, child_block, first_word, has_leaf, list_values, statement_words, top_level};
 use aggregate::parse_aggregate_routes;
 use asterust::config::Config;
+use auto_export::parse_auto_export;
 use autonomous_system::parse_autonomous_system_options;
 use confederation::parse_confederation;
+use fate_sharing::parse_fate_sharing;
 use forwarding_table::parse_forwarding_table;
 use generate::parse_generate_routes;
 use graceful_restart::parse_graceful_restart;
@@ -53,6 +66,8 @@ use interface_routes::parse_interface_routes;
 use martians::parse_martians;
 use maximum_paths::parse_maximum_paths;
 use resolution::parse_resolution;
+use rib::parse_ribs;
+use rib_groups::parse_rib_groups;
 use static_routes::parse_static_routes;
 
 /// Global routing options.
@@ -78,6 +93,12 @@ pub struct RoutingOptions {
     pub aggregate: Option<AggregateRoutes>,
     pub generate: Option<GenerateRoutes>,
     pub martians: Vec<Martian>,
+    pub ribs: Vec<Rib>,
+    pub rib_groups: Vec<RibGroup>,
+    pub instance_import: Vec<String>,
+    pub instance_export: Vec<String>,
+    pub auto_export: Option<AutoExport>,
+    pub fate_sharing: Vec<FateSharingGroup>,
     /// The `syslog` setting of `options`, as written, e.g. `"level info"` or `"upto notice"`.
     pub options_syslog: Option<String>,
 }
@@ -116,6 +137,20 @@ pub fn routing_options(config: &Config) -> Option<RoutingOptions> {
         aggregate: child_block(root, "aggregate").map(parse_aggregate_routes),
         generate: child_block(root, "generate").map(parse_generate_routes),
         martians: parse_martians(root),
+        ribs: parse_ribs(root),
+        rib_groups: parse_rib_groups(root),
+        instance_import: args_of(root, "instance-import")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
+        instance_export: args_of(root, "instance-export")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
+        auto_export: child_block(root, "auto-export").map(parse_auto_export),
+        fate_sharing: child_block(root, "fate-sharing")
+            .map(parse_fate_sharing)
+            .unwrap_or_default(),
         options_syslog: statement_words(root, "options").and_then(|words| {
             let start = words.iter().position(|word| *word == "syslog")?;
             Some(words[start + 1..].join(" "))
@@ -162,6 +197,17 @@ mod tests {
         assert!(!options.nonstop_routing);
         assert_eq!(options.nsr_phantom_holdtime, None);
         assert_eq!(options.options_syslog, None);
+    }
+
+    // Not from documentation: written from the CLI Reference syntax pages. See the README "Sources".
+    #[test]
+    fn extracts_instance_import_and_export_lists() {
+        let options = routing_options(&juniper::parse_braces(
+            "routing-options {\n    instance-import [ IMPORT-A IMPORT-B ];\n    instance-export EXPORT-A;\n}\n",
+        ))
+        .unwrap();
+        assert_eq!(options.instance_import, ["IMPORT-A", "IMPORT-B"]);
+        assert_eq!(options.instance_export, ["EXPORT-A"]);
     }
 
     #[test]
