@@ -10,10 +10,11 @@
 //! - [vrf-import](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrf-import-edit-routing-instances-vp.html)
 //! - [vrf-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/vrf-export-edit-routing-instances-vp.html)
 
+use crate::protocols::bgp::{parse_srv6, BgpSrv6};
 use crate::{active_children, arg_of, args_of, child_block, list_values, top_level};
 use asterust::config::{Config, ConfigLine};
 
-/// A routing instance. Protocol configuration nested inside the instance is not extracted.
+/// A routing instance. Of the protocol configuration nested inside the instance only `bgp_srv6` is extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct RoutingInstance {
@@ -29,6 +30,8 @@ pub struct RoutingInstance {
     /// Policies from `vrf-import` / `vrf-export`.
     pub vrf_import_policies: Vec<String>,
     pub vrf_export_policies: Vec<String>,
+    /// `protocols bgp source-packet-routing srv6`, the SRv6 service SIDs of the VRF.
+    pub bgp_srv6: Option<BgpSrv6>,
 }
 
 impl RoutingInstance {
@@ -83,6 +86,9 @@ fn parse_instance(line: &ConfigLine) -> RoutingInstance {
         vrf_target_export: target("export"),
         vrf_import_policies: policies("vrf-import"),
         vrf_export_policies: policies("vrf-export"),
+        bgp_srv6: child_block(line, "protocols")
+            .and_then(|protocols| child_block(protocols, "bgp"))
+            .and_then(parse_srv6),
     }
 }
 

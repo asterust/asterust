@@ -19,6 +19,7 @@ mod neighbor;
 mod output_queue_priority;
 mod path_selection;
 mod peer_options;
+mod srv6;
 
 pub use dynamic_neighbor::{DynamicNeighbor, PeerAutoDiscovery};
 pub use family::{AddPath, AddPathSend, BgpFamily, EntropyLabel, FamilyGracefulRestart, PrefixLimit};
@@ -27,6 +28,8 @@ pub use neighbor::BgpNeighbor;
 pub use output_queue_priority::OutputQueuePriority;
 pub use path_selection::PathSelection;
 pub use peer_options::{BgpBfd, BgpGracefulRestart, BgpMultipath, BgpPeerOptions, LocalAs, Multihop, RemovePrivate};
+pub(crate) use srv6::parse_srv6;
+pub use srv6::{BgpSrv6, BgpSrv6Locator, BgpSrv6MicroSid};
 
 use crate::{child_block, has_leaf, named_children, statement_words, top_level};
 use asterust::config::Config;
@@ -49,6 +52,8 @@ pub struct Bgp {
     pub output_queue_priority: Option<OutputQueuePriority>,
     /// `low` or `medium`, from `multipath-build-priority`.
     pub multipath_build_priority: Option<String>,
+    /// `source-packet-routing srv6`.
+    pub srv6: Option<BgpSrv6>,
 }
 
 /// Returns the `protocols bgp` block, or `None` if BGP is not configured.
@@ -77,6 +82,7 @@ pub fn bgp(config: &Config) -> Option<Bgp> {
         output_queue_priority: parse_output_queue_priority(bgp),
         multipath_build_priority: statement_words(bgp, "multipath-build-priority")
             .and_then(|words| words.first().map(|word| word.to_string())),
+        srv6: parse_srv6(bgp),
     })
 }
 

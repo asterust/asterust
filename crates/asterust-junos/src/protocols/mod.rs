@@ -15,6 +15,7 @@ pub use bgp::{
     BgpPeerOptions, DynamicNeighbor, EntropyLabel, FamilyGracefulRestart, LocalAs, Multihop, OutputQueuePriority,
     PathSelection, PeerAutoDiscovery, PrefixLimit, RemovePrivate,
 };
+pub use bgp::{BgpSrv6, BgpSrv6Locator, BgpSrv6MicroSid};
 pub use isis::{
     Isis, IsisBackupSpfOptions, IsisBfd, IsisDynamicOverload, IsisGracefulRestart, IsisInterface, IsisInterfaceLevel,
     IsisLevel, IsisOverload, IsisSourcePacketRouting, IsisSpfOptions, IsisTeFamily, IsisTopologies,

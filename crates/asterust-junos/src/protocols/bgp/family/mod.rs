@@ -21,6 +21,8 @@
 //! - [extended-nexthop](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/autogen-protocols-bgp-group-family-inet-unicast-extended-nexthop.html)
 //! - [entropy-label (protocols bgp)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/entropy-label-edit-protocols-bgp-family-inet-labeled-unicast.html)
 //! - [graceful-restart (Long-Lived for BGP Restarter)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/graceful-restart-long-lived-per-family-edit-protocols-bgp.html)
+//! - [advertise-srv6-service](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/advertise-srv6-service-edit-protocols-bgp-family-inet-unicast.html)
+//! - [accept-srv6-service](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/accept-srv6-service-edit-protocols-bgp-family-inet-unicast.html)
 //! - [extended-nexthop-color](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/extended-nexthop-color-edit-protocols-bgp-family-inet.html)
 //! - [extended-nexthop-tunnel](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/extended-nexthop-tunnel.html)
 //! - [BGP Route Prioritization](https://networkingdocs.hpe.com/documentation/us/en/software/junos/bgp/topics/topic-map/bgp-route-prioritization.html)
@@ -82,6 +84,10 @@ pub struct BgpFamily {
     pub per_group_label: bool,
     pub explicit_null: bool,
     pub extended_nexthop: bool,
+    /// Sends the SRv6 service SID with the routes of this family.
+    pub advertise_srv6_service: bool,
+    /// Accepts the SRv6 service SID of received routes.
+    pub accept_srv6_service: bool,
     /// Resolves colored prefixes over `inetcolor.0` or `inet6color.0` for segment routing traffic engineering.
     pub extended_nexthop_color: bool,
     pub extended_nexthop_tunnel: bool,
@@ -136,6 +142,8 @@ fn parse_family(afi: &str, safi: Option<&str>, node: &ConfigLine) -> BgpFamily {
         per_group_label: has_leaf(node, "per-group-label"),
         explicit_null: statement_words(node, "explicit-null").is_some(),
         extended_nexthop: has_leaf(node, "extended-nexthop"),
+        advertise_srv6_service: has_leaf(node, "advertise-srv6-service"),
+        accept_srv6_service: has_leaf(node, "accept-srv6-service"),
         extended_nexthop_color: has_leaf(node, "extended-nexthop-color"),
         extended_nexthop_tunnel: has_leaf(node, "extended-nexthop-tunnel"),
         output_queue_priority: priority(node, "output-queue-priority"),
