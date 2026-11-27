@@ -8,7 +8,8 @@
 mod term;
 
 pub use term::{
-    CommunityAction, CommunityOperation, PolicyAction, PolicyActions, PolicyConditions, PolicyTerm, RouteFilter,
+    CommunityAction, CommunityOperation, PolicyAction, PolicyActions, PolicyConditions, PolicySrv6Action, PolicyTerm,
+    RouteFilter,
 };
 
 use crate::{active_children, named_children};
