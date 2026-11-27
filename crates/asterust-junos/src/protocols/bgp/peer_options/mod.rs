@@ -45,6 +45,7 @@ pub use multihop::Multihop;
 pub use multipath::BgpMultipath;
 pub use remove_private::RemovePrivate;
 
+use super::family::{parse_families, BgpFamily};
 use crate::{arg_of, has_leaf, statement_words, toggle};
 use asterust::config::ConfigLine;
 use bfd_liveness_detection::parse_bfd;
@@ -65,6 +66,8 @@ pub struct BgpPeerOptions {
     pub bfd_liveness_detection: Option<BgpBfd>,
     pub graceful_restart: Option<BgpGracefulRestart>,
     pub multipath: Option<BgpMultipath>,
+    /// The `family` statements of this level, which replace (not extend) those of an outer level.
+    pub address_families: Vec<BgpFamily>,
     /// `aes-128-cmac-96`, `hmac-sha-1-96` or `md5`.
     pub authentication_algorithm: Option<String>,
     /// An `authentication-key` is configured.
@@ -114,6 +117,7 @@ pub(super) fn parse_peer_options(line: &ConfigLine) -> BgpPeerOptions {
         bfd_liveness_detection: parse_bfd(line),
         graceful_restart: parse_graceful_restart(line),
         multipath: parse_multipath(line),
+        address_families: parse_families(line),
         authentication_algorithm: field("authentication-algorithm"),
         has_authentication_key: arg_of(line, "authentication-key").is_some(),
         authentication_key_chain: field("authentication-key-chain"),
