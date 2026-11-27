@@ -12,12 +12,14 @@
 //! - [precision-timers](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/precision-timers-edit-protocols-bgp.html)
 
 mod dynamic_neighbor;
+mod family;
 mod group;
 mod neighbor;
 mod path_selection;
 mod peer_options;
 
 pub use dynamic_neighbor::DynamicNeighbor;
+pub use family::{AddPath, AddPathSend, BgpFamily, PrefixLimit};
 pub use group::BgpGroup;
 pub use neighbor::BgpNeighbor;
 pub use path_selection::PathSelection;

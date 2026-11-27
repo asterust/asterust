@@ -10,8 +10,8 @@ pub mod isis;
 pub mod ospf;
 
 pub use bgp::{
-    Bgp, BgpBfd, BgpGracefulRestart, BgpGroup, BgpMultipath, BgpNeighbor, BgpPeerOptions, DynamicNeighbor, LocalAs,
-    Multihop, PathSelection, RemovePrivate,
+    AddPath, AddPathSend, Bgp, BgpBfd, BgpFamily, BgpGracefulRestart, BgpGroup, BgpMultipath, BgpNeighbor,
+    BgpPeerOptions, DynamicNeighbor, LocalAs, Multihop, PathSelection, PrefixLimit, RemovePrivate,
 };
 pub use isis::{Isis, IsisInterface};
 pub use ospf::{Ospf, OspfArea, OspfInterface};
