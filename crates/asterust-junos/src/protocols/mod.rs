@@ -15,4 +15,6 @@ pub use bgp::{
     PathSelection, PeerAutoDiscovery, PrefixLimit, RemovePrivate,
 };
 pub use isis::{Isis, IsisInterface};
-pub use ospf::{Ospf, OspfArea, OspfInterface};
+pub use ospf::{
+    Ospf, OspfArea, OspfAuthentication, OspfBfd, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor,
+};

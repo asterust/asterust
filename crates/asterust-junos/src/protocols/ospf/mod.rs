@@ -7,17 +7,13 @@
 //! - [area](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/area-edit-protocols-ospf.html)
 //! - [interface (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interface-edit-protocols-ospf.html)
 
-use crate::{arg_of, child_block, has_leaf, named_children, top_level};
-use asterust::config::Config;
+mod interface;
 
-/// An `interface <name>` entry under an OSPF area.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct OspfInterface {
-    pub name: String,
-    pub passive: bool,
-    pub metric: Option<u32>,
-}
+pub use interface::{OspfAuthentication, OspfBfd, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor};
+
+use crate::{child_block, named_children, top_level};
+use asterust::config::Config;
+use interface::parse_interface;
 
 /// An `area <id>` and its interfaces.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -53,11 +49,7 @@ pub fn ospf(config: &Config) -> Option<Ospf> {
         .map(|(id, area)| OspfArea {
             id: id.to_string(),
             interfaces: named_children(area, "interface")
-                .map(|(name, iface)| OspfInterface {
-                    name: name.to_string(),
-                    passive: has_leaf(iface, "passive"),
-                    metric: arg_of(iface, "metric").and_then(|m| m.parse().ok()),
-                })
+                .map(|(name, iface)| parse_interface(name, iface))
                 .collect(),
         })
         .collect();
