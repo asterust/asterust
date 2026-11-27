@@ -22,29 +22,51 @@
 //! - [strict-dual-isis (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/strict-dual-isis-edit-protocols-isis.html)
 //! - [disable (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/disable-edit-protocols-isis.html), from the Junos 12.3 archive
 //! - [traceoptions (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/traceoptions-edit-protocols-isis.html)
+//! - [traffic-engineering (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/traffic-engineering-edit-protocols-isis.html)
+//! - [backup-spf-options (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/backup-spf-options-edit-protocols-isis.html)
+//! - [topologies (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/topologies-edit-protocols-isis.html)
+//! - [no-external-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/protocols-isis-no-external-export-protocol.html)
+//! - [source-packet-routing (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/source-packet-routing-edit-protocols-isis.html)
 
+mod backup_spf_options;
+mod dynamic_overload;
 mod graceful_restart;
 mod interface;
 mod level;
+mod no_external_export;
 mod overload;
+mod source_packet_routing;
 mod spf_options;
+mod topologies;
+mod traffic_engineering;
 
+pub use backup_spf_options::IsisBackupSpfOptions;
+pub use dynamic_overload::IsisDynamicOverload;
 pub use graceful_restart::IsisGracefulRestart;
 pub use interface::{IsisBfd, IsisInterface, IsisInterfaceLevel};
 pub use level::IsisLevel;
 pub use overload::IsisOverload;
+pub use source_packet_routing::IsisSourcePacketRouting;
 pub use spf_options::IsisSpfOptions;
+pub use topologies::IsisTopologies;
+pub use traffic_engineering::{IsisTeFamily, IsisTrafficEngineering};
 
 use super::traceoptions::{parse_traceoptions, Traceoptions};
 use crate::{
     arg_of, args_of, child_block, has_leaf, list_values, named_children, statement_words, top_level, value_after,
 };
 use asterust::config::Config;
+use backup_spf_options::parse_backup_spf_options;
+use dynamic_overload::parse_dynamic_overload;
 use graceful_restart::parse_graceful_restart;
 use interface::parse_interface;
 use level::parse_level;
+use no_external_export::parse_no_external_export;
 use overload::parse_overload;
+use source_packet_routing::parse_source_packet_routing;
 use spf_options::parse_spf_options;
+use topologies::parse_topologies;
+use traffic_engineering::parse_traffic_engineering;
 
 /// The `protocols isis` configuration. The NET lives on the loopback's `family iso` address, see
 /// [`crate::interfaces::InterfaceUnit::iso_addresses`].
@@ -83,6 +105,13 @@ pub struct Isis {
     pub spf_options: Option<IsisSpfOptions>,
     pub graceful_restart: Option<IsisGracefulRestart>,
     pub traceoptions: Option<Traceoptions>,
+    pub traffic_engineering: Option<IsisTrafficEngineering>,
+    pub backup_spf_options: Option<IsisBackupSpfOptions>,
+    pub topologies: Option<IsisTopologies>,
+    pub dynamic_overload: Option<IsisDynamicOverload>,
+    /// The protocols of `no-external-export`, whose routes are not exported into IS-IS.
+    pub no_external_export: Vec<String>,
+    pub source_packet_routing: Option<IsisSourcePacketRouting>,
 }
 
 /// Returns the `protocols isis` block, or `None` if IS-IS is not configured.
@@ -135,6 +164,12 @@ pub fn isis(config: &Config) -> Option<Isis> {
         spf_options: parse_spf_options(isis),
         graceful_restart: parse_graceful_restart(isis),
         traceoptions: parse_traceoptions(isis),
+        traffic_engineering: parse_traffic_engineering(isis),
+        backup_spf_options: parse_backup_spf_options(isis),
+        topologies: parse_topologies(isis),
+        dynamic_overload: parse_dynamic_overload(isis),
+        no_external_export: parse_no_external_export(isis),
+        source_packet_routing: parse_source_packet_routing(isis),
     })
 }
 
