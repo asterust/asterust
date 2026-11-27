@@ -16,5 +16,6 @@ pub use bgp::{
 };
 pub use isis::{Isis, IsisInterface};
 pub use ospf::{
-    Ospf, OspfArea, OspfAuthentication, OspfBfd, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor,
+    Ospf, OspfArea, OspfAreaRange, OspfAuthentication, OspfBfd, OspfInterface, OspfInterfaceTopology, OspfMd5Key,
+    OspfNeighbor, OspfNssa, OspfStub, OspfVirtualLink,
 };

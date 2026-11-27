@@ -7,21 +7,17 @@
 //! - [area](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/area-edit-protocols-ospf.html)
 //! - [interface (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interface-edit-protocols-ospf.html)
 
+mod area;
+mod authentication;
 mod interface;
 
-pub use interface::{OspfAuthentication, OspfBfd, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor};
+pub use area::{OspfArea, OspfAreaRange, OspfNssa, OspfStub, OspfVirtualLink};
+pub use authentication::{OspfAuthentication, OspfMd5Key};
+pub use interface::{OspfBfd, OspfInterface, OspfInterfaceTopology, OspfNeighbor};
 
 use crate::{child_block, named_children, top_level};
+use area::parse_area;
 use asterust::config::Config;
-use interface::parse_interface;
-
-/// An `area <id>` and its interfaces.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct OspfArea {
-    pub id: String,
-    pub interfaces: Vec<OspfInterface>,
-}
 
 /// The `protocols ospf` configuration. `ospf3` is not covered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -46,12 +42,7 @@ pub struct Ospf {
 pub fn ospf(config: &Config) -> Option<Ospf> {
     let ospf = child_block(top_level(config, "protocols")?, "ospf")?;
     let areas = named_children(ospf, "area")
-        .map(|(id, area)| OspfArea {
-            id: id.to_string(),
-            interfaces: named_children(area, "interface")
-                .map(|(name, iface)| parse_interface(name, iface))
-                .collect(),
-        })
+        .map(|(id, area)| parse_area(id, area))
         .collect();
     Some(Ospf { areas })
 }

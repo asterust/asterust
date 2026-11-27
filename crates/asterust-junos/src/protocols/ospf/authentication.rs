@@ -1,5 +1,5 @@
 //! `authentication`
-//! `protocols { ospf { area <id> { interface <name> { authentication { ... } } } } }`.
+//! `protocols { ospf { area <id> { interface <name> { authentication { ... } } } } }`; also valid on a `virtual-link`.
 //!
 //! # See also
 //!
@@ -8,7 +8,7 @@
 use crate::{arg_of, child_block, named_children, split_name};
 use asterust::config::ConfigLine;
 
-/// The `authentication` of an OSPF interface. The `simple-password` and the MD5 key values are never extracted.
+/// The `authentication` of an OSPF interface or virtual link. The `simple-password` and the MD5 key values are never extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct OspfAuthentication {
