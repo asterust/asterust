@@ -7,11 +7,12 @@
 //! - [authentication (BGP BFD Liveness Detection)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/authentication-edit-protocols-bgp-liveness-detection.html)
 //! - [detection-time (BFD Liveness Detection)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/detection-time-edit-protocols-bgp-bfd-liveness-detection.html)
 //! - [transmit-interval (BFD Liveness Detection)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/transmit-interval-edit-protocols-bgp-liveness-detection.html)
+//! - [BFD strict mode for BGP peer sessions](https://supportportal.juniper.net/s/article/BFD-strict-mode-for-BGP-peer-sessions)
 
-use crate::{arg_of, child_block, has_leaf};
+use crate::{arg_of, child_block, has_leaf, statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The BFD session of a BGP peer. The `strict-bfd` block is not extracted.
+/// The BFD session of a BGP peer.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct BgpBfd {
@@ -37,10 +38,15 @@ pub struct BgpBfd {
     /// The name of the key chain; the keys are not extracted.
     pub authentication_key_chain: Option<String>,
     pub authentication_loose_check: bool,
+    /// `strict-bfd` (CLI Reference) or `strict-mode` (support article): no session until BFD is up.
+    pub strict_mode: bool,
+    /// Seconds, from `bfd-up-wait-interval` or `bfd-wait-timeout`.
+    pub strict_mode_wait_timeout: Option<String>,
 }
 
 pub(super) fn parse_bfd(line: &ConfigLine) -> Option<BgpBfd> {
     let bfd = child_block(line, "bfd-liveness-detection")?;
+    let strict = statement_words(bfd, "strict-bfd").or_else(|| statement_words(bfd, "strict-mode"));
     let field = |keyword: &str| arg_of(bfd, keyword).map(str::to_string);
     let nested = |block: &str, keyword: &str| {
         child_block(bfd, block)
@@ -63,6 +69,10 @@ pub(super) fn parse_bfd(line: &ConfigLine) -> Option<BgpBfd> {
         authentication_key_chain: nested("authentication", "key-chain"),
         authentication_loose_check: child_block(bfd, "authentication")
             .is_some_and(|auth| has_leaf(auth, "loose-check")),
+        strict_mode: strict.is_some(),
+        strict_mode_wait_timeout: strict.and_then(|words| {
+            value_after(&words, "bfd-up-wait-interval").or_else(|| value_after(&words, "bfd-wait-timeout"))
+        }),
     })
 }
 
@@ -130,5 +140,50 @@ protocols {
         assert!(!bfd.no_adaptation);
         assert_eq!(bfd.authentication_algorithm, None);
         assert_eq!(neighbors[1].options.bfd_liveness_detection, None);
+    }
+
+    // Not from documentation: written from the CLI Reference and the support article. See the README "Sources".
+    const STRICT: &str = r#"
+protocols {
+    bgp {
+        group EBGP {
+            neighbor 192.0.2.2 {
+                bfd-liveness-detection {
+                    strict-bfd {
+                        bfd-up-wait-interval 30;
+                    }
+                }
+            }
+            neighbor 192.0.2.3 {
+                bfd-liveness-detection {
+                    strict-mode bfd-wait-timeout 20;
+                }
+            }
+            neighbor 192.0.2.4 {
+                bfd-liveness-detection {
+                    strict-mode;
+                }
+            }
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_strict_mode_in_both_spellings() {
+        let bgp = bgp(&juniper::parse_braces(STRICT)).unwrap();
+        let bfd = |index: usize| {
+            bgp.groups[0].neighbors[index]
+                .options
+                .bfd_liveness_detection
+                .clone()
+                .unwrap()
+        };
+        assert!(bfd(0).strict_mode);
+        assert_eq!(bfd(0).strict_mode_wait_timeout.as_deref(), Some("30"));
+        assert!(bfd(1).strict_mode);
+        assert_eq!(bfd(1).strict_mode_wait_timeout.as_deref(), Some("20"));
+        assert!(bfd(2).strict_mode);
+        assert_eq!(bfd(2).strict_mode_wait_timeout, None);
     }
 }
