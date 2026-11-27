@@ -7,6 +7,7 @@
 
 pub mod bgp;
 pub mod isis;
+pub mod mpls;
 pub mod ospf;
 pub mod source_packet_routing;
 mod traceoptions;
@@ -22,6 +23,7 @@ pub use isis::{
     IsisLevel, IsisOverload, IsisSourcePacketRouting, IsisSpfOptions, IsisTeFamily, IsisTopologies,
     IsisTrafficEngineering,
 };
+pub use mpls::{Mpls, MplsAdminGroup, MplsInterface, MplsLogUpdown, MplsPathMtu};
 pub use ospf::{
     Ospf, OspfArea, OspfAreaRange, OspfAuthentication, OspfBackupSpfOptions, OspfBfd, OspfDatabaseProtection,
     OspfGracefulRestart, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor, OspfNssa, OspfOverload,
