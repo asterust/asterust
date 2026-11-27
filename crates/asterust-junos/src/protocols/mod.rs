@@ -11,7 +11,8 @@ pub mod ospf;
 
 pub use bgp::{
     AddPath, AddPathSend, Bgp, BgpBfd, BgpFamily, BgpGracefulRestart, BgpGroup, BgpMultipath, BgpNeighbor,
-    BgpPeerOptions, DynamicNeighbor, LocalAs, Multihop, PathSelection, PrefixLimit, RemovePrivate,
+    BgpPeerOptions, DynamicNeighbor, EntropyLabel, FamilyGracefulRestart, LocalAs, Multihop, PathSelection,
+    PeerAutoDiscovery, PrefixLimit, RemovePrivate,
 };
 pub use isis::{Isis, IsisInterface};
 pub use ospf::{Ospf, OspfArea, OspfInterface};

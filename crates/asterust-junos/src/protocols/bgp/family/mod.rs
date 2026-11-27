@@ -18,16 +18,25 @@
 //! - [defer-initial-multipath-build](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/defer-initial-multipath-build-edit-protocols-bgp-family-inet-unicast.html)
 //! - [per-group-label](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/per-group-label-edit-protocols-bgp.html)
 //! - [explicit-null (Protocols BGP)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/explicit-null-edit-protocols-bgp.html)
+//! - [extended-nexthop](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/autogen-protocols-bgp-group-family-inet-unicast-extended-nexthop.html)
+//! - [entropy-label (protocols bgp)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/entropy-label-edit-protocols-bgp-family-inet-labeled-unicast.html)
+//! - [graceful-restart (Long-Lived for BGP Restarter)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/graceful-restart-long-lived-per-family-edit-protocols-bgp.html)
 
 mod add_path;
+mod entropy_label;
+mod graceful_restart;
 mod prefix_limit;
 
 pub use add_path::{AddPath, AddPathSend};
+pub use entropy_label::EntropyLabel;
+pub use graceful_restart::FamilyGracefulRestart;
 pub use prefix_limit::PrefixLimit;
 
 use crate::{active_children, arg_of, has_leaf, named_children, statement_words, value_after};
 use add_path::parse_add_path;
 use asterust::config::ConfigLine;
+use entropy_label::parse_entropy_label;
+use graceful_restart::parse_family_graceful_restart;
 use prefix_limit::parse_prefix_limit;
 
 const SAFIS: [&str; 7] = [
@@ -69,6 +78,9 @@ pub struct BgpFamily {
     pub auto_discovery_only: bool,
     pub per_group_label: bool,
     pub explicit_null: bool,
+    pub extended_nexthop: bool,
+    pub entropy_label: Option<EntropyLabel>,
+    pub graceful_restart: Option<FamilyGracefulRestart>,
 }
 
 /// Reads the `family` statements of a `bgp`, `group` or `neighbor` block, one entry per address and sub-address family.
@@ -113,6 +125,9 @@ fn parse_family(afi: &str, safi: Option<&str>, node: &ConfigLine) -> BgpFamily {
         auto_discovery_only: has_leaf(node, "auto-discovery-only"),
         per_group_label: has_leaf(node, "per-group-label"),
         explicit_null: statement_words(node, "explicit-null").is_some(),
+        extended_nexthop: has_leaf(node, "extended-nexthop"),
+        entropy_label: parse_entropy_label(node),
+        graceful_restart: parse_family_graceful_restart(node),
     }
 }
 
