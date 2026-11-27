@@ -8,6 +8,7 @@
 pub mod bgp;
 pub mod isis;
 pub mod ospf;
+pub mod source_packet_routing;
 mod traceoptions;
 
 pub use bgp::{
@@ -27,4 +28,5 @@ pub use ospf::{
     OspfPostConvergenceLfa, OspfSourcePacketRouting, OspfSpfOptions, OspfStub, OspfTopology, OspfTrafficEngineering,
     OspfVirtualLink,
 };
+pub use source_packet_routing::{PathSegmentList, SegmentHop, SegmentList, SourcePacketRouting, SourceRoutingPath};
 pub use traceoptions::{TraceFlag, Traceoptions};
