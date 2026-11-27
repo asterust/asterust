@@ -1,8 +1,8 @@
 //! `mpls`
 //! `protocols { mpls { ... } }`.
 //!
-//! This covers the router-wide options and the interfaces. LSPs, paths, traffic engineering database settings and
-//! segment routing statements are not extracted yet.
+//! This covers the router-wide options, the interfaces and the dynamic label-switched paths. Paths, static and container
+//! LSPs, traffic engineering database settings and segment routing statements are not extracted yet.
 //!
 //! # See also
 //!
@@ -24,16 +24,21 @@
 //! - [Basic MPLS Configuration](https://networkingdocs.hpe.com/documentation/us/en/software/junos/mpls/topics/topic-map/mpls-basic-configuration.html)
 
 mod interface;
+mod label_switched_path;
 mod log_updown;
+mod lsp_path;
 mod path_mtu;
 
 pub use interface::MplsInterface;
+pub use label_switched_path::{MplsFastReroute, MplsLabelSwitchedPath};
 pub use log_updown::MplsLogUpdown;
+pub use lsp_path::{MplsAdminGroupConstraints, MplsLspPath};
 pub use path_mtu::MplsPathMtu;
 
 use crate::{arg_of, child_block, has_leaf, named_children, split_name, top_level};
 use asterust::config::{Config, ConfigLine};
 use interface::parse_interface;
+use label_switched_path::parse_label_switched_path;
 use log_updown::parse_log_updown;
 use path_mtu::parse_path_mtu;
 
@@ -46,8 +51,7 @@ pub struct MplsAdminGroup {
     pub value: String,
 }
 
-/// The `protocols mpls` configuration. The `label-switched-path`, `path`, `static-label-switched-path`,
-/// `container-label-switched-path`, `traffic-engineering` database, `diffserv-te`, `statistics`, `traceoptions`,
+/// The `protocols mpls` configuration. The `path`, `static-label-switched-path`, `container-label-switched-path`, `traffic-engineering` database, `diffserv-te`, `statistics`, `traceoptions`,
 /// `class-of-service`, `ldp-tunneling` and segment routing statements are not extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
@@ -77,6 +81,7 @@ pub struct Mpls {
     pub rsvp_error_hold_time: Option<String>,
     pub path_mtu: Option<MplsPathMtu>,
     pub log_updown: Option<MplsLogUpdown>,
+    pub label_switched_paths: Vec<MplsLabelSwitchedPath>,
 }
 
 /// Returns the `protocols mpls` block, or `None` if MPLS is not configured.
@@ -115,6 +120,9 @@ pub fn mpls(config: &Config) -> Option<Mpls> {
         rsvp_error_hold_time: field("rsvp-error-hold-time"),
         path_mtu: parse_path_mtu(mpls),
         log_updown: parse_log_updown(mpls),
+        label_switched_paths: named_children(mpls, "label-switched-path")
+            .map(|(name, lsp)| parse_label_switched_path(name, lsp))
+            .collect(),
     })
 }
 
@@ -215,6 +223,148 @@ protocols {
         assert!(mpls.interfaces.iter().all(|i| !i.disable));
         assert!(!mpls.explicit_null);
         assert_eq!(mpls.path_mtu, None);
+    }
+
+    #[test]
+    fn reads_the_guide_label_switched_path() {
+        let mpls = mpls(&juniper::parse_braces(DOC_BASIC)).unwrap();
+        assert_eq!(mpls.label_switched_paths.len(), 1);
+        let lsp = &mpls.label_switched_paths[0];
+        assert_eq!(lsp.name, "lsp_to_pe2_ge1");
+        assert_eq!(lsp.to.as_deref(), Some("127.1.1.3"));
+        assert_eq!(lsp.from, None);
+        assert!(lsp.primary.is_empty());
+        assert_eq!(lsp.fast_reroute, None);
+    }
+
+    // Not from documentation: written from the CLI Reference pages of `label-switched-path`, `primary`, `secondary` and
+    // `fast-reroute`. See the README "Sources".
+    const LSPS: &str = r#"
+protocols {
+    mpls {
+        label-switched-path to-R3 {
+            description "to R3";
+            to 10.255.0.3;
+            from 10.255.0.1;
+            adaptive;
+            bandwidth 100m;
+            class-of-service 3;
+            metric 50;
+            preference 5;
+            priority 3 3;
+            no-record;
+            random;
+            retry-limit 10;
+            retry-timer 30;
+            revert-timer 120;
+            optimize-timer 600;
+            link-protection;
+            soft-preemption;
+            ldp-tunneling;
+            install 10.9.0.0/24 active;
+            install 10.9.1.0/24;
+            admin-group {
+                include-any [ gold silver ];
+                exclude red;
+            }
+            fast-reroute {
+                bandwidth 10m;
+                hop-limit 5;
+                include-all [ gold ];
+            }
+            primary via-A {
+                bandwidth 50m;
+                hop-limit 8;
+                priority 4 4;
+                record;
+                select manual;
+                standby;
+            }
+            secondary via-B;
+            secondary via-C standby;
+        }
+        label-switched-path DOWN {
+            to 10.255.0.4;
+            admin-down;
+            disable;
+            no-cspf;
+            node-link-protection;
+            fast-reroute;
+            most-fill;
+            no-self-ping;
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_the_label_switched_path_options() {
+        let mpls = mpls(&juniper::parse_braces(LSPS)).unwrap();
+        assert_eq!(mpls.label_switched_paths.len(), 2);
+        let lsp = &mpls.label_switched_paths[0];
+        assert_eq!(lsp.description.as_deref(), Some("to R3"));
+        assert_eq!(lsp.to.as_deref(), Some("10.255.0.3"));
+        assert_eq!(lsp.from.as_deref(), Some("10.255.0.1"));
+        assert!(lsp.adaptive);
+        assert_eq!(lsp.bandwidth.as_deref(), Some("100m"));
+        assert_eq!(lsp.class_of_service.as_deref(), Some("3"));
+        assert_eq!(lsp.metric.as_deref(), Some("50"));
+        assert_eq!(lsp.preference.as_deref(), Some("5"));
+        assert_eq!(lsp.priority.as_deref(), Some("3 3"));
+        assert_eq!(lsp.record, Some(false));
+        assert_eq!(lsp.path_selection.as_deref(), Some("random"));
+        assert_eq!(lsp.retry_limit.as_deref(), Some("10"));
+        assert_eq!(lsp.retry_timer.as_deref(), Some("30"));
+        assert_eq!(lsp.revert_timer.as_deref(), Some("120"));
+        assert_eq!(lsp.optimize_timer.as_deref(), Some("600"));
+        assert!(lsp.link_protection);
+        assert!(lsp.soft_preemption);
+        assert!(lsp.ldp_tunneling);
+        assert_eq!(lsp.install, ["10.9.0.0/24", "10.9.1.0/24"]);
+        assert_eq!(lsp.admin_group.include_any, ["gold", "silver"]);
+        assert_eq!(lsp.admin_group.exclude, ["red"]);
+        assert!(lsp.admin_group.include_all.is_empty());
+    }
+
+    #[test]
+    fn reads_fast_reroute_and_flags() {
+        let mpls = mpls(&juniper::parse_braces(LSPS)).unwrap();
+        let reroute = mpls.label_switched_paths[0].fast_reroute.as_ref().unwrap();
+        assert_eq!(reroute.bandwidth.as_deref(), Some("10m"));
+        assert_eq!(reroute.hop_limit.as_deref(), Some("5"));
+        assert_eq!(reroute.include_all, ["gold"]);
+        assert_eq!(reroute.bandwidth_percent, None);
+
+        let down = &mpls.label_switched_paths[1];
+        assert!(down.admin_down);
+        assert!(down.disable);
+        assert!(down.no_cspf);
+        assert!(down.node_link_protection);
+        assert!(down.no_self_ping);
+        assert_eq!(down.path_selection.as_deref(), Some("most-fill"));
+        assert_eq!(down.fast_reroute, Some(MplsFastReroute::default()));
+        assert_eq!(down.record, None);
+    }
+
+    #[test]
+    fn reads_primary_and_secondary_paths() {
+        let mpls = mpls(&juniper::parse_braces(LSPS)).unwrap();
+        let lsp = &mpls.label_switched_paths[0];
+        assert_eq!(lsp.primary.len(), 1);
+        let primary = &lsp.primary[0];
+        assert_eq!(primary.name, "via-A");
+        assert_eq!(primary.bandwidth.as_deref(), Some("50m"));
+        assert_eq!(primary.hop_limit.as_deref(), Some("8"));
+        assert_eq!(primary.priority.as_deref(), Some("4 4"));
+        assert_eq!(primary.record, Some(true));
+        assert_eq!(primary.select.as_deref(), Some("manual"));
+        assert!(primary.standby);
+
+        assert_eq!(lsp.secondary.len(), 2);
+        assert_eq!(lsp.secondary[0].name, "via-B");
+        assert!(!lsp.secondary[0].standby);
+        assert_eq!(lsp.secondary[1].name, "via-C");
+        assert!(lsp.secondary[1].standby);
     }
 
     #[test]
