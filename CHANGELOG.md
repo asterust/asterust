@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/asterust/asterust/compare/asterust-v0.2.5...asterust-v0.2.6) - 2026-11-27
+
+### Added
+
+- *(junos)* parse policy actions load-balance, resolution-map, multipath-resolve and srv6
+- *(junos)* parse protocols source-packet-routing segment lists and source-routing-paths
+
+### Other
+
+- Merge pull request #110 from asterust/docs/junos-cli-reference-links
+- add rustdoc style and CLI Reference link guidance to AGENTS.md
+
 ## [0.2.5](https://github.com/asterust/asterust/compare/asterust-v0.2.4...asterust-v0.2.5) - 2026-11-26
 
 ### Other

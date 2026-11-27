@@ -1,6 +1,6 @@
 [package]
 name = "asterust"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 description = "Vendor-aware hierarchical configuration parsing for network device CLI output (Cisco-style indentation, Juniper-style braces)."
 license = "MIT OR Apache-2.0"
