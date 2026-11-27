@@ -16,7 +16,9 @@ pub use bgp::{
     PathSelection, PeerAutoDiscovery, PrefixLimit, RemovePrivate,
 };
 pub use isis::{
-    Isis, IsisBfd, IsisGracefulRestart, IsisInterface, IsisInterfaceLevel, IsisLevel, IsisOverload, IsisSpfOptions,
+    Isis, IsisBackupSpfOptions, IsisBfd, IsisDynamicOverload, IsisGracefulRestart, IsisInterface, IsisInterfaceLevel,
+    IsisLevel, IsisOverload, IsisSourcePacketRouting, IsisSpfOptions, IsisTeFamily, IsisTopologies,
+    IsisTrafficEngineering,
 };
 pub use ospf::{
     Ospf, OspfArea, OspfAreaRange, OspfAuthentication, OspfBackupSpfOptions, OspfBfd, OspfDatabaseProtection,
