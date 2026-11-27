@@ -1,8 +1,8 @@
 //! `mpls`
 //! `protocols { mpls { ... } }`.
 //!
-//! This covers the router-wide options, the interfaces and the dynamic label-switched paths. Paths, static and container
-//! LSPs, traffic engineering database settings and segment routing statements are not extracted yet.
+//! This covers the router-wide options, the interfaces, the paths and the dynamic, static and container label-switched
+//! paths. Traffic engineering database settings and segment routing statements are not extracted yet.
 //!
 //! # See also
 //!
@@ -21,26 +21,38 @@
 //! - [rsvp-error-hold-time](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rsvp-error-hold-time-edit-protocols-mpls.html)
 //! - [expand-loose-hop](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/expand-loose-hop-edit-protocols-mpls.html)
 //! - [disable (Protocols MPLS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/disable-edit-protocols-mpls.html)
+//! - [path (Protocols MPLS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/path-edit-protocols-mpls.html)
+//! - [static-label-switched-path](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/static-label-switched-path-edit-protocols-mpls.html)
+//! - [container-label-switched-path](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/container-label-switched-path-edit-protocols-mpls.html)
 //! - [Basic MPLS Configuration](https://networkingdocs.hpe.com/documentation/us/en/software/junos/mpls/topics/topic-map/mpls-basic-configuration.html)
 
+mod container_lsp;
 mod interface;
 mod label_switched_path;
 mod log_updown;
 mod lsp_path;
+mod path;
 mod path_mtu;
+mod static_lsp;
 
+pub use container_lsp::MplsContainerLsp;
 pub use interface::MplsInterface;
 pub use label_switched_path::{MplsFastReroute, MplsLabelSwitchedPath};
 pub use log_updown::MplsLogUpdown;
 pub use lsp_path::{MplsAdminGroupConstraints, MplsLspPath};
+pub use path::{MplsPath, MplsPathHop};
 pub use path_mtu::MplsPathMtu;
+pub use static_lsp::{MplsStaticBypass, MplsStaticIngress, MplsStaticLsp, MplsStaticNodeProtection, MplsStaticTransit};
 
 use crate::{arg_of, child_block, has_leaf, named_children, split_name, top_level};
 use asterust::config::{Config, ConfigLine};
+use container_lsp::parse_container_lsp;
 use interface::parse_interface;
 use label_switched_path::parse_label_switched_path;
 use log_updown::parse_log_updown;
+use path::parse_path;
 use path_mtu::parse_path_mtu;
+use static_lsp::parse_static_lsp;
 
 /// An `admin-groups` entry: a link color name and its bit.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -51,7 +63,7 @@ pub struct MplsAdminGroup {
     pub value: String,
 }
 
-/// The `protocols mpls` configuration. The `path`, `static-label-switched-path`, `container-label-switched-path`, `traffic-engineering` database, `diffserv-te`, `statistics`, `traceoptions`,
+/// The `protocols mpls` configuration. The `traffic-engineering` database, `diffserv-te`, `statistics`, `traceoptions`,
 /// `class-of-service`, `ldp-tunneling` and segment routing statements are not extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
@@ -82,6 +94,10 @@ pub struct Mpls {
     pub path_mtu: Option<MplsPathMtu>,
     pub log_updown: Option<MplsLogUpdown>,
     pub label_switched_paths: Vec<MplsLabelSwitchedPath>,
+    /// The explicit hop lists that LSP paths refer to by name.
+    pub paths: Vec<MplsPath>,
+    pub static_label_switched_paths: Vec<MplsStaticLsp>,
+    pub container_label_switched_paths: Vec<MplsContainerLsp>,
 }
 
 /// Returns the `protocols mpls` block, or `None` if MPLS is not configured.
@@ -122,6 +138,15 @@ pub fn mpls(config: &Config) -> Option<Mpls> {
         log_updown: parse_log_updown(mpls),
         label_switched_paths: named_children(mpls, "label-switched-path")
             .map(|(name, lsp)| parse_label_switched_path(name, lsp))
+            .collect(),
+        paths: named_children(mpls, "path")
+            .map(|(name, path)| parse_path(name, path))
+            .collect(),
+        static_label_switched_paths: named_children(mpls, "static-label-switched-path")
+            .map(|(name, lsp)| parse_static_lsp(name, lsp))
+            .collect(),
+        container_label_switched_paths: named_children(mpls, "container-label-switched-path")
+            .map(|(name, lsp)| parse_container_lsp(name, lsp))
             .collect(),
     })
 }
@@ -365,6 +390,158 @@ protocols {
         assert!(!lsp.secondary[0].standby);
         assert_eq!(lsp.secondary[1].name, "via-C");
         assert!(lsp.secondary[1].standby);
+    }
+
+    // Not from documentation: written from the CLI Reference pages of `path`, `static-label-switched-path` and
+    // `container-label-switched-path`. See the README "Sources".
+    const STATIC_AND_PATHS: &str = r#"
+protocols {
+    mpls {
+        path via-A {
+            10.0.0.2 strict;
+            10.0.0.3 loose;
+            core-hop abstract;
+            r5.example.net;
+        }
+        path unconstrained;
+        static-label-switched-path ingress-lsp {
+            ingress {
+                to 10.255.0.9;
+                push 1000001;
+                next-hop 10.1.1.2;
+                bandwidth 10m;
+                class-of-service 2;
+                description "static ingress";
+                metric 5;
+                preference 4;
+                no-install-to-address;
+                install 10.7.0.0/24 active;
+                link-protection bypass-name byp1;
+                node-protection bypass-name byp2 next-next-label 3000;
+            }
+        }
+        static-label-switched-path transit-lsp {
+            transit 1000001 {
+                swap 1000002;
+                next-hop ge-0/0/1.0;
+                bandwidth 5m;
+                link-protection bypass-name byp1;
+            }
+            transit 1000009 {
+                pop;
+                next-hop 10.1.2.2/ge-0/0/2.0;
+            }
+            bypass byp1 {
+                to 10.255.0.4;
+                next-hop 10.1.3.2;
+                next-table inet.0 push 2000;
+                description "backup";
+            }
+        }
+        container-label-switched-path CONT {
+            to 10.255.0.7;
+            description "multi-LSP";
+            suffix -member;
+            label-switched-path-template TEMPLATE-A;
+            splitting-merging {
+                maximum-member-lsps 4;
+            }
+        }
+        container-label-switched-path CONT-OFF {
+            disable;
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_paths() {
+        let mpls = mpls(&juniper::parse_braces(STATIC_AND_PATHS)).unwrap();
+        assert_eq!(mpls.paths.len(), 2);
+        let path = &mpls.paths[0];
+        assert_eq!(path.name, "via-A");
+        let hops: Vec<(&str, Option<&str>)> = path
+            .hops
+            .iter()
+            .map(|h| (h.address.as_str(), h.qualifier.as_deref()))
+            .collect();
+        assert_eq!(
+            hops,
+            [
+                ("10.0.0.2", Some("strict")),
+                ("10.0.0.3", Some("loose")),
+                ("core-hop", Some("abstract")),
+                ("r5.example.net", None),
+            ]
+        );
+        assert_eq!(mpls.paths[1].name, "unconstrained");
+        assert!(mpls.paths[1].hops.is_empty());
+    }
+
+    #[test]
+    fn reads_static_ingress() {
+        let mpls = mpls(&juniper::parse_braces(STATIC_AND_PATHS)).unwrap();
+        assert_eq!(mpls.static_label_switched_paths.len(), 2);
+        let lsp = &mpls.static_label_switched_paths[0];
+        assert_eq!(lsp.name, "ingress-lsp");
+        assert!(lsp.transit.is_empty());
+        let ingress = lsp.ingress.as_ref().unwrap();
+        assert_eq!(ingress.to.as_deref(), Some("10.255.0.9"));
+        assert_eq!(ingress.push.as_deref(), Some("1000001"));
+        assert_eq!(ingress.next_hop.as_deref(), Some("10.1.1.2"));
+        assert_eq!(ingress.bandwidth.as_deref(), Some("10m"));
+        assert_eq!(ingress.class_of_service.as_deref(), Some("2"));
+        assert_eq!(ingress.description.as_deref(), Some("static ingress"));
+        assert_eq!(ingress.metric.as_deref(), Some("5"));
+        assert_eq!(ingress.preference.as_deref(), Some("4"));
+        assert!(ingress.no_install_to_address);
+        assert_eq!(ingress.install, ["10.7.0.0/24"]);
+        assert_eq!(ingress.link_protection.as_deref(), Some("byp1"));
+        let node = ingress.node_protection.as_ref().unwrap();
+        assert_eq!(node.bypass_name.as_deref(), Some("byp2"));
+        assert_eq!(node.next_next_label.as_deref(), Some("3000"));
+    }
+
+    #[test]
+    fn reads_static_transit_and_bypass() {
+        let mpls = mpls(&juniper::parse_braces(STATIC_AND_PATHS)).unwrap();
+        let lsp = &mpls.static_label_switched_paths[1];
+        assert_eq!(lsp.ingress, None);
+        assert_eq!(lsp.transit.len(), 2);
+        assert_eq!(lsp.transit[0].incoming_label, "1000001");
+        assert_eq!(lsp.transit[0].swap.as_deref(), Some("1000002"));
+        assert_eq!(lsp.transit[0].next_hop.as_deref(), Some("ge-0/0/1.0"));
+        assert_eq!(lsp.transit[0].bandwidth.as_deref(), Some("5m"));
+        assert_eq!(lsp.transit[0].link_protection.as_deref(), Some("byp1"));
+        assert!(!lsp.transit[0].pop);
+        assert!(lsp.transit[1].pop);
+        assert_eq!(lsp.transit[1].next_hop.as_deref(), Some("10.1.2.2/ge-0/0/2.0"));
+
+        assert_eq!(lsp.bypasses.len(), 1);
+        let bypass = &lsp.bypasses[0];
+        assert_eq!(bypass.name, "byp1");
+        assert_eq!(bypass.to.as_deref(), Some("10.255.0.4"));
+        assert_eq!(bypass.next_hop.as_deref(), Some("10.1.3.2"));
+        assert_eq!(bypass.next_table.as_deref(), Some("inet.0 push 2000"));
+        assert_eq!(bypass.description.as_deref(), Some("backup"));
+    }
+
+    #[test]
+    fn reads_container_lsps() {
+        let mpls = mpls(&juniper::parse_braces(STATIC_AND_PATHS)).unwrap();
+        assert_eq!(mpls.container_label_switched_paths.len(), 2);
+        let container = &mpls.container_label_switched_paths[0];
+        assert_eq!(container.name, "CONT");
+        assert_eq!(container.to.as_deref(), Some("10.255.0.7"));
+        assert_eq!(container.description.as_deref(), Some("multi-LSP"));
+        assert_eq!(container.suffix.as_deref(), Some("-member"));
+        assert_eq!(container.label_switched_path_template.as_deref(), Some("TEMPLATE-A"));
+        assert!(container.splitting_merging);
+        assert!(!container.disable);
+
+        let off = &mpls.container_label_switched_paths[1];
+        assert!(off.disable);
+        assert!(!off.splitting_merging);
     }
 
     #[test]
