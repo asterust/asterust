@@ -11,15 +11,13 @@
 //! - [link-protection (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/link-protection-edit-protocols-ospf.html)
 //! - [no-advertise-adjacency-segment (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-advertise-adjacency-segment-edit-protocols-ospf-interface-level.html)
 
-mod authentication;
 mod bfd;
 
-pub use authentication::{OspfAuthentication, OspfMd5Key};
 pub use bfd::OspfBfd;
 
+use super::authentication::{parse_authentication, OspfAuthentication};
 use crate::{arg_of, has_leaf, named_children, split_name, statement_words, value_after};
 use asterust::config::ConfigLine;
-use authentication::parse_authentication;
 use bfd::parse_bfd;
 
 /// An `interface <name>` entry under an OSPF area. Values are kept as written. The `passive` traffic-engineering
