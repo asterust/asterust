@@ -7,6 +7,7 @@
 //! # See also
 //!
 //! - [policy-statement](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/policy-statement-edit-policy-options.html)
+//! - [load-balance (ecmp)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/load-balance-edit-policy-options-policy-statement-then.html)
 //! - [route-filter](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/route-filter-edit-policy-options.html)
 
 use crate::{list_values, split_keyword, split_name, statements, unquote};
@@ -66,6 +67,17 @@ pub struct CommunityAction {
     pub community: String,
 }
 
+/// A `then srv6 locator <name> <sid>` action, which selects the SRv6 service SID that BGP advertises for the route.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct PolicySrv6Action {
+    pub locator: String,
+    /// `end-dt4-sid`, `micro-dt46-sid` and the like.
+    pub sid_type: Option<String>,
+    /// The static SID value, if given.
+    pub sid_value: Option<String>,
+}
+
 /// The actions of a term's `then` statement. Actions not listed here are ignored.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
@@ -77,6 +89,12 @@ pub struct PolicyActions {
     pub next_hop: Option<String>,
     pub as_path_prepend: Option<String>,
     pub communities: Vec<CommunityAction>,
+    /// Everything after `load-balance`, e.g. `"per-packet"`. A `load-balance { ...; }` block is not read.
+    pub load_balance: Option<String>,
+    /// The `resolution-map` to apply, which is defined under `policy-options`.
+    pub resolution_map: Option<String>,
+    pub multipath_resolve: bool,
+    pub srv6: Option<PolicySrv6Action>,
 }
 
 /// One term of a policy statement.
@@ -143,10 +161,24 @@ fn parse_actions(line: &ConfigLine) -> PolicyActions {
             ("next-hop", _) => actions.next_hop = value(),
             ("as-path-prepend", _) => actions.as_path_prepend = value(),
             ("community", _) => actions.communities.extend(parse_community_action(arg)),
+            ("load-balance", _) => actions.load_balance = Some(arg.to_string()).filter(|a| !a.is_empty()),
+            ("resolution-map", _) => actions.resolution_map = value(),
+            ("multipath-resolve", "") => actions.multipath_resolve = true,
+            ("srv6", _) => actions.srv6 = parse_srv6_action(arg),
             _ => {}
         }
     }
     actions
+}
+
+fn parse_srv6_action(arg: &str) -> Option<PolicySrv6Action> {
+    let (locator, sid) = split_name(arg.strip_prefix("locator")?.trim());
+    let (sid_type, sid_value) = split_keyword(sid);
+    Some(PolicySrv6Action {
+        locator: unquote(locator).to_string(),
+        sid_type: Some(sid_type).filter(|t| !t.is_empty()).map(str::to_string),
+        sid_value: Some(sid_value).filter(|v| !v.is_empty()).map(str::to_string),
+    })
 }
 
 fn parse_community_action(arg: &str) -> Option<CommunityAction> {

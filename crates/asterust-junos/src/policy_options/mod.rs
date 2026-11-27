@@ -10,15 +10,17 @@ mod as_path_group;
 mod community;
 mod policy_statement;
 mod prefix_list;
+mod resolution_map;
 
 pub use as_path::AsPath;
 pub use as_path_group::AsPathGroup;
 pub use community::Community;
 pub use policy_statement::{
-    CommunityAction, CommunityOperation, PolicyAction, PolicyActions, PolicyConditions, PolicyStatement, PolicyTerm,
-    RouteFilter,
+    CommunityAction, CommunityOperation, PolicyAction, PolicyActions, PolicyConditions, PolicySrv6Action,
+    PolicyStatement, PolicyTerm, RouteFilter,
 };
 pub use prefix_list::PrefixList;
+pub use resolution_map::ResolutionMap;
 
 use crate::{active_children, named_children, top_level};
 use as_path::parse_as_path;
@@ -27,6 +29,7 @@ use asterust::config::Config;
 use community::parse_community;
 use policy_statement::parse_policy;
 use prefix_list::parse_prefix_list;
+use resolution_map::parse_resolution_map;
 
 /// The top-level `policy-options` configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -37,6 +40,7 @@ pub struct PolicyOptions {
     pub prefix_lists: Vec<PrefixList>,
     pub as_paths: Vec<AsPath>,
     pub as_path_groups: Vec<AsPathGroup>,
+    pub resolution_maps: Vec<ResolutionMap>,
 }
 
 /// Returns the top-level `policy-options` block, or `None` if there is none.
@@ -65,6 +69,9 @@ pub fn policy_options(config: &Config) -> Option<PolicyOptions> {
         as_paths: active_children(root).filter_map(parse_as_path).collect(),
         as_path_groups: named_children(root, "as-path-group")
             .map(|(name, line)| parse_as_path_group(name, line))
+            .collect(),
+        resolution_maps: named_children(root, "resolution-map")
+            .map(|(name, line)| parse_resolution_map(name, line))
             .collect(),
     })
 }
@@ -323,5 +330,120 @@ policy-options {
     #[test]
     fn no_policy_options_is_none() {
         assert!(policy_options(&juniper::parse_braces("system {\n host-name r1;\n}\n")).is_none());
+    }
+
+    // Device R1 `show policy-options` of "Example: Configuring Static SR-TE Policy for an SRv6 Tunnel" (BGP User Guide,
+    // BGP Egress Traffic Engineering), with the guide's column padding removed; see the README "Sources".
+    const DOC_SRV6_TE: &str = r#"
+policy-options {
+    policy-statement LBPP {
+        term 1 {
+            then {
+                load-balance per-packet;
+            }
+        }
+    }
+    policy-statement mpath-resolve {
+        then multipath-resolve;
+    }
+    policy-statement v4vpn1_res_map1 {
+        term 1 {
+            from protocol bgp;
+            then {
+                accept;
+                resolution-map map1;
+            }
+        }
+    }
+    policy-statement v6vpn1_res_map1 {
+        term 1 {
+            from {
+                family inet6-vpn;
+                protocol bgp;
+            }
+            then {
+                accept;
+                resolution-map map1;
+            }
+        }
+    }
+    community to_CE0_community members target:65500:1;
+    resolution-map map1 {
+        mode ip-color;
+    }
+}
+"#;
+
+    // Not from documentation: the `srv6` action is written from the uSID example at srv6.md and the `resolution-map`
+    // list from the CLI Reference. See the README "Sources".
+    const SRV6_ACTION: &str = r#"
+policy-options {
+    policy-statement LL-PREFIXES {
+        term VOICE {
+            from community VOICE;
+            then {
+                srv6 locator LOC128 micro-dt46-sid;
+                accept;
+            }
+        }
+        term STATIC {
+            then srv6 locator LOC1 end-dt4-sid 3001::4;
+        }
+        term PLAIN {
+            then srv6 locator LOC2;
+        }
+    }
+    resolution-map map2 {
+        mode [ color-only ip-color ];
+    }
+}
+"#;
+
+    #[test]
+    fn doc_load_balance_and_multipath_resolve() {
+        let options = parse(DOC_SRV6_TE);
+        let balance = &options.policy_statements[0].terms[0].then;
+        assert_eq!(balance.load_balance.as_deref(), Some("per-packet"));
+        assert!(!balance.multipath_resolve);
+
+        let resolve = &options.policy_statements[1].terms[0].then;
+        assert!(resolve.multipath_resolve);
+        assert_eq!(resolve.load_balance, None);
+    }
+
+    #[test]
+    fn doc_resolution_map_action_and_definition() {
+        let options = parse(DOC_SRV6_TE);
+        let term = &options.policy_statements[3].terms[0];
+        assert_eq!(term.from.families, ["inet6-vpn"]);
+        assert_eq!(term.then.resolution_map.as_deref(), Some("map1"));
+        assert_eq!(term.then.action, Some(PolicyAction::Accept));
+
+        assert_eq!(options.resolution_maps.len(), 1);
+        assert_eq!(options.resolution_maps[0].name, "map1");
+        assert_eq!(options.resolution_maps[0].modes, ["ip-color"]);
+    }
+
+    #[test]
+    fn srv6_actions() {
+        let options = parse(SRV6_ACTION);
+        let terms = &options.policy_statements[0].terms;
+
+        let dynamic = terms[0].then.srv6.as_ref().unwrap();
+        assert_eq!(dynamic.locator, "LOC128");
+        assert_eq!(dynamic.sid_type.as_deref(), Some("micro-dt46-sid"));
+        assert_eq!(dynamic.sid_value, None);
+        assert_eq!(terms[0].then.action, Some(PolicyAction::Accept));
+
+        let fixed = terms[1].then.srv6.as_ref().unwrap();
+        assert_eq!(fixed.locator, "LOC1");
+        assert_eq!(fixed.sid_type.as_deref(), Some("end-dt4-sid"));
+        assert_eq!(fixed.sid_value.as_deref(), Some("3001::4"));
+
+        let bare = terms[2].then.srv6.as_ref().unwrap();
+        assert_eq!(bare.locator, "LOC2");
+        assert_eq!(bare.sid_type, None);
+
+        assert_eq!(options.resolution_maps[0].modes, ["color-only", "ip-color"]);
     }
 }
