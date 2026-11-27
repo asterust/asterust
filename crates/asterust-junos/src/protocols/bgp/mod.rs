@@ -18,8 +18,8 @@ mod neighbor;
 mod path_selection;
 mod peer_options;
 
-pub use dynamic_neighbor::DynamicNeighbor;
-pub use family::{AddPath, AddPathSend, BgpFamily, PrefixLimit};
+pub use dynamic_neighbor::{DynamicNeighbor, PeerAutoDiscovery};
+pub use family::{AddPath, AddPathSend, BgpFamily, EntropyLabel, FamilyGracefulRestart, PrefixLimit};
 pub use group::BgpGroup;
 pub use neighbor::BgpNeighbor;
 pub use path_selection::PathSelection;
