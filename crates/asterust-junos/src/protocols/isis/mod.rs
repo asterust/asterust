@@ -6,17 +6,13 @@
 //! - [isis](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/isis-edit-protocols.html)
 //! - [interface (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/interface-edit-protocols-isis.html)
 
-use crate::{child_block, has_leaf, named_children, top_level};
-use asterust::config::Config;
+mod interface;
 
-/// An `interface <name>` entry under IS-IS.
-#[derive(Clone, Debug, PartialEq, Eq)]
-#[non_exhaustive]
-pub struct IsisInterface {
-    pub name: String,
-    pub passive: bool,
-    pub point_to_point: bool,
-}
+pub use interface::{IsisBfd, IsisInterface, IsisInterfaceLevel};
+
+use crate::{child_block, named_children, top_level};
+use asterust::config::Config;
+use interface::parse_interface;
 
 /// The `protocols isis` configuration. The NET lives on the loopback's `family iso` address, see
 /// [`crate::interfaces::InterfaceUnit::iso_addresses`].
@@ -43,11 +39,7 @@ pub fn isis(config: &Config) -> Option<Isis> {
     let isis = child_block(top_level(config, "protocols")?, "isis")?;
     Some(Isis {
         interfaces: named_children(isis, "interface")
-            .map(|(name, iface)| IsisInterface {
-                name: name.to_string(),
-                passive: has_leaf(iface, "passive"),
-                point_to_point: has_leaf(iface, "point-to-point"),
-            })
+            .map(|(name, iface)| parse_interface(name, iface))
             .collect(),
     })
 }
