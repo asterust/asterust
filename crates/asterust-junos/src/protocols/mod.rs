@@ -14,7 +14,7 @@ pub use bgp::{
     BgpPeerOptions, DynamicNeighbor, EntropyLabel, FamilyGracefulRestart, LocalAs, Multihop, OutputQueuePriority,
     PathSelection, PeerAutoDiscovery, PrefixLimit, RemovePrivate,
 };
-pub use isis::{Isis, IsisInterface};
+pub use isis::{Isis, IsisBfd, IsisInterface, IsisInterfaceLevel};
 pub use ospf::{
     Ospf, OspfArea, OspfAreaRange, OspfAuthentication, OspfBackupSpfOptions, OspfBfd, OspfDatabaseProtection,
     OspfGracefulRestart, OspfInterface, OspfInterfaceTopology, OspfMd5Key, OspfNeighbor, OspfNssa, OspfOverload,
