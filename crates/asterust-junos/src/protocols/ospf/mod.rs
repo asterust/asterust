@@ -12,6 +12,8 @@
 //! - [rib-group (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rib-group-edit-protocols-ospf.html)
 //! - [no-rfc-1583](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-rfc-1583-edit-protocols-ospf.html)
 //! - [no-nssa-abr](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-nssa-abr-edit-protocols-ospf.html)
+//! - [preference (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/preference-edit-protocols-ospf.html), from the Junos 12.3 archive
+//! - [external-preference (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/external-preference-edit-protocols-ospf.html), from the Junos 12.3 archive
 
 mod area;
 mod authentication;
@@ -22,7 +24,7 @@ mod spf_options;
 
 pub use area::{OspfArea, OspfAreaRange, OspfNssa, OspfStub, OspfVirtualLink};
 pub use authentication::{OspfAuthentication, OspfMd5Key};
-pub use interface::{OspfBfd, OspfInterface, OspfInterfaceTopology, OspfNeighbor};
+pub use interface::{OspfBfd, OspfInterface, OspfInterfaceTopology, OspfNeighbor, OspfPostConvergenceLfa};
 
 pub use graceful_restart::OspfGracefulRestart;
 pub use overload::OspfOverload;
@@ -44,7 +46,9 @@ pub struct Ospf {
     pub disable: bool,
     /// Bits per second as written, e.g. `100g`.
     pub reference_bandwidth: Option<String>,
+    /// Default 10.
     pub preference: Option<String>,
+    /// For external routes; default 150.
     pub external_preference: Option<String>,
     pub export_policies: Vec<String>,
     pub import_policies: Vec<String>,
