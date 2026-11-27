@@ -8,8 +8,7 @@
 use crate::{arg_of, args_of, has_leaf, list_values, toggle};
 use asterust::config::ConfigLine;
 
-/// The global `forwarding-table` settings. `chained-composite-next-hop` and the EVPN and SRv6 statements are not
-/// extracted.
+/// The global `forwarding-table` settings. `chained-composite-next-hop` and the EVPN statements are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct ForwardingTable {
@@ -26,6 +25,8 @@ pub struct ForwardingTable {
     pub multicast_composite_delete_defer_timeout: Option<String>,
     /// `active-paths` or `feasible-paths`.
     pub unicast_reverse_path: Option<String>,
+    /// Merges SRv6 chain next hops in the platform layer.
+    pub srv6_chain_merge: bool,
 }
 
 pub(super) fn parse_forwarding_table(table: &ConfigLine) -> ForwardingTable {
@@ -39,6 +40,7 @@ pub(super) fn parse_forwarding_table(table: &ConfigLine) -> ForwardingTable {
         remnant_holdtime: field("remnant-holdtime"),
         multicast_composite_delete_defer_timeout: field("multicast-composite-delete-defer-timeout"),
         unicast_reverse_path: field("unicast-reverse-path"),
+        srv6_chain_merge: has_leaf(table, "srv6-chain-merge"),
     }
 }
 
@@ -62,6 +64,7 @@ routing-options {
         remnant-holdtime 300;
         multicast-composite-delete-defer-timeout 60;
         unicast-reverse-path feasible-paths;
+        srv6-chain-merge;
     }
 }
 "#,
@@ -76,6 +79,7 @@ routing-options {
         assert_eq!(table.remnant_holdtime.as_deref(), Some("300"));
         assert_eq!(table.multicast_composite_delete_defer_timeout.as_deref(), Some("60"));
         assert_eq!(table.unicast_reverse_path.as_deref(), Some("feasible-paths"));
+        assert!(table.srv6_chain_merge);
     }
 
     #[test]
