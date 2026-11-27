@@ -8,6 +8,7 @@
 pub mod bgp;
 pub mod isis;
 pub mod ospf;
+mod traceoptions;
 
 pub use bgp::{
     AddPath, AddPathSend, Bgp, BgpBfd, BgpFamily, BgpGracefulRestart, BgpGroup, BgpMultipath, BgpNeighbor,
@@ -23,3 +24,4 @@ pub use ospf::{
     OspfPostConvergenceLfa, OspfSourcePacketRouting, OspfSpfOptions, OspfStub, OspfTopology, OspfTrafficEngineering,
     OspfVirtualLink,
 };
+pub use traceoptions::{TraceFlag, Traceoptions};
