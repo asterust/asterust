@@ -24,6 +24,10 @@
 //! - [Configuring Flexible Algorithm for Segment Routing](https://networkingdocs.hpe.com/documentation/us/en/software/junos/is-is/segment-routing/topics/task/isis-configuring-flex-algo-sr.html)
 //! - [Flexible Algorithms in IS-IS for Segment Routing Traffic Engineering](https://networkingdocs.hpe.com/documentation/us/en/software/junos/is-is/topics/topic-map/infocus-isis-flex-algo-sr.html)
 //! - [How to Configure Flexible Algorithms in OSPF for Segment Routing Traffic Engineering](https://networkingdocs.hpe.com/documentation/us/en/software/junos/ospf/topics/topic-map/ospf-flex-algo-sr.html)
+//! - [srv6 (Routing Options)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/srv6-edit-routing-options-source-packet-routing.html)
+//! - [locator](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/locator-edit-routing-options-source-packet-routing-srv6.html)
+//! - [micro-sid](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/routing-options-source-packet-routing-srv6-locator-micro-sid.html)
+//! - [block](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/routing-options-source-packet-routing-srv6-block.html)
 
 mod aggregate;
 mod auto_export;
@@ -41,6 +45,7 @@ mod resolution;
 mod rib;
 mod rib_groups;
 mod route_attributes;
+mod srv6;
 mod static_routes;
 
 pub use aggregate::{AggregateRoute, AggregateRoutes};
@@ -59,6 +64,7 @@ pub use resolution::{Resolution, ResolutionRib};
 pub use rib::Rib;
 pub use rib_groups::RibGroup;
 pub use route_attributes::RouteAttributes;
+pub use srv6::{Srv6, Srv6Block, Srv6Locator, Srv6MicroSid};
 pub use static_routes::{QualifiedNextHop, StaticRoute, StaticRoutes};
 
 use crate::{arg_of, args_of, child_block, first_word, has_leaf, list_values, statement_words, top_level};
@@ -78,6 +84,7 @@ use maximum_paths::parse_maximum_paths;
 use resolution::parse_resolution;
 use rib::parse_ribs;
 use rib_groups::parse_rib_groups;
+use srv6::parse_srv6;
 use static_routes::parse_static_routes;
 
 /// Global routing options.
@@ -110,6 +117,8 @@ pub struct RoutingOptions {
     pub auto_export: Option<AutoExport>,
     pub fate_sharing: Vec<FateSharingGroup>,
     pub flex_algorithms: Vec<FlexAlgorithm>,
+    /// `source-packet-routing srv6`.
+    pub srv6: Option<Srv6>,
     /// The `syslog` setting of `options`, as written, e.g. `"level info"` or `"upto notice"`.
     pub options_syslog: Option<String>,
 }
@@ -163,6 +172,7 @@ pub fn routing_options(config: &Config) -> Option<RoutingOptions> {
             .map(parse_fate_sharing)
             .unwrap_or_default(),
         flex_algorithms: parse_flex_algorithms(root),
+        srv6: parse_srv6(root),
         options_syslog: statement_words(root, "options").and_then(|words| {
             let start = words.iter().position(|word| *word == "syslog")?;
             Some(words[start + 1..].join(" "))
