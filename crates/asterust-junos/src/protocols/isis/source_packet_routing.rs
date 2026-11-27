@@ -8,10 +8,10 @@
 //! - [strict-asla-based-flex-algorithm](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/protocols-isis-source-packet-routing-strict-asla-based-flex-algorithm.html)
 //! - [ultimate-hop-popping (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ultimate-hop-popping-edit-protocols-isis-source-packet-routing.html)
 
-use crate::{child_block, has_leaf, statement_words, value_after};
+use crate::{args_of, child_block, has_leaf, list_values, statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The IS-IS `source-packet-routing` (SPRING) statement. The `flex-algorithm`, `srv6`, `udp-tunneling`,
+/// The IS-IS `source-packet-routing` (SPRING) statement. The `srv6`, `udp-tunneling`,
 /// `sensor-based-stats` and `traffic-statistics` children are not extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
@@ -32,6 +32,8 @@ pub struct IsisSourcePacketRouting {
     pub srgb_index_range: Option<String>,
     /// Milliseconds, from `adjacency-segment { hold-time ...; }`.
     pub adjacency_segment_hold_time: Option<String>,
+    /// The flexible algorithm ids this router participates in, from `flex-algorithm 128;` or `flex-algorithm [ 128 129 ];`.
+    pub flex_algorithms: Vec<String>,
 }
 
 pub(super) fn parse_source_packet_routing(isis: &ConfigLine) -> Option<IsisSourcePacketRouting> {
@@ -53,6 +55,10 @@ pub(super) fn parse_source_packet_routing(isis: &ConfigLine) -> Option<IsisSourc
         srgb_start_label: srgb.as_ref().and_then(|words| value_after(words, "start-label")),
         srgb_index_range: srgb.as_ref().and_then(|words| value_after(words, "index-range")),
         adjacency_segment_hold_time: adjacency.and_then(|words| value_after(&words, "hold-time")),
+        flex_algorithms: args_of(spr, "flex-algorithm")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
     })
 }
 
@@ -127,5 +133,27 @@ protocols {
         assert_eq!(spr.node_segment_ipv6_index, None);
         assert_eq!(spr.srgb_start_label.as_deref(), Some("800000"));
         assert_eq!(spr.srgb_index_range.as_deref(), Some("80000"));
+        assert!(spr.flex_algorithms.is_empty());
+    }
+
+    // Not from documentation: written from the CLI Reference and the IS-IS User Guide. See the README "Sources".
+    const FLEX: &str = r#"
+protocols {
+    isis {
+        source-packet-routing {
+            flex-algorithm [ 128 129 ];
+            flex-algorithm 130;
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_the_flex_algorithm_participation() {
+        let spr = isis(&juniper::parse_braces(FLEX))
+            .unwrap()
+            .source_packet_routing
+            .unwrap();
+        assert_eq!(spr.flex_algorithms, ["128", "129", "130"]);
     }
 }

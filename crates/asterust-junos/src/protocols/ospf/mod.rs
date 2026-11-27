@@ -89,6 +89,9 @@ pub struct Ospf {
     pub domain_vpn_tag: Option<String>,
     /// `iana` or `vendor`.
     pub route_type_community: Option<String>,
+    /// The preference of OSPF flexible algorithm routes (25.4 and later). Its syntax is not documented; the single
+    /// argument is kept as written.
+    pub flex_algorithm_preference: Option<String>,
 }
 
 /// Returns the `protocols ospf` block, or `None` if OSPF is not configured.
@@ -137,6 +140,7 @@ pub fn ospf(config: &Config) -> Option<Ospf> {
         domain_id: arg_of(ospf, "domain-id").map(str::to_string),
         domain_vpn_tag: arg_of(ospf, "domain-vpn-tag").map(str::to_string),
         route_type_community: arg_of(ospf, "route-type-community").map(str::to_string),
+        flex_algorithm_preference: arg_of(ospf, "flex-algorithm-preference").map(str::to_string),
     })
 }
 
@@ -239,6 +243,7 @@ protocols {
         domain-id 10.0.0.1:5;
         domain-vpn-tag 12345;
         route-type-community vendor;
+        flex-algorithm-preference 20;
     }
 }
 "#;
@@ -251,6 +256,7 @@ protocols {
         assert_eq!(ospf.domain_id.as_deref(), Some("10.0.0.1:5"));
         assert_eq!(ospf.domain_vpn_tag.as_deref(), Some("12345"));
         assert_eq!(ospf.route_type_community.as_deref(), Some("vendor"));
+        assert_eq!(ospf.flex_algorithm_preference.as_deref(), Some("20"));
         assert!(ospf.topologies.is_empty());
         assert_eq!(ospf.traffic_engineering, None);
         assert_eq!(ospf.database_protection, None);
