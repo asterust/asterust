@@ -25,12 +25,17 @@ pub struct OspfTrafficEngineering {
     pub lsp_metric_into_summary: bool,
     /// Under `shortcuts`, or directly under `traffic-engineering` as the `ospf` page shows it.
     pub ignore_lsp_metrics: bool,
+    /// An `advertisement` statement is configured.
+    pub advertisement: bool,
+    /// `advertisement always;`.
+    pub advertisement_always: bool,
 }
 
 pub(super) fn parse_traffic_engineering(ospf: &ConfigLine) -> Option<OspfTrafficEngineering> {
     let words = statement_words(ospf, "traffic-engineering")?;
     let shortcuts = child_block(ospf, "traffic-engineering").and_then(|te| statement_words(te, "shortcuts"));
     let in_shortcuts = |flag: &str| shortcuts.as_ref().is_some_and(|words| words.contains(&flag));
+    let advertisement = child_block(ospf, "traffic-engineering").and_then(|te| statement_words(te, "advertisement"));
     Some(OspfTrafficEngineering {
         advertise_unnumbered_interfaces: words.contains(&"advertise-unnumbered-interfaces"),
         credibility_protocol_preference: words.contains(&"credibility-protocol-preference"),
@@ -40,6 +45,8 @@ pub(super) fn parse_traffic_engineering(ospf: &ConfigLine) -> Option<OspfTraffic
         shortcuts: shortcuts.is_some(),
         lsp_metric_into_summary: in_shortcuts("lsp-metric-into-summary"),
         ignore_lsp_metrics: words.contains(&"ignore-lsp-metrics") || in_shortcuts("ignore-lsp-metrics"),
+        advertisement: advertisement.is_some(),
+        advertisement_always: advertisement.is_some_and(|words| words.contains(&"always")),
     })
 }
 
@@ -78,6 +85,29 @@ protocols {
         assert!(te.lsp_metric_into_summary);
         assert!(te.ignore_lsp_metrics);
         assert!(!te.multicast_rpf_routes);
+    }
+
+    // Adapted from "How to Configure Flexible Algorithms in OSPF for Segment Routing Traffic Engineering" (OSPF User
+    // Guide), Device R0 `show protocols` (OSPF part); see the README "Sources".
+    const ADVERTISEMENT: &str = r#"
+protocols {
+    ospf {
+        traffic-engineering {
+            advertisement always;
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_advertisement_always() {
+        let te = ospf(&juniper::parse_braces(ADVERTISEMENT))
+            .unwrap()
+            .traffic_engineering
+            .unwrap();
+        assert!(te.advertisement);
+        assert!(te.advertisement_always);
+        assert!(!te.shortcuts);
     }
 
     #[test]

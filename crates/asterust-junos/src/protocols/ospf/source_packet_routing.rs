@@ -8,10 +8,10 @@
 //! - [ldp-stitching (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/protocols-ospf-source-packet-routing-ldp-stitching.html)
 //! - [Configuring Segment Routing Microloop Avoidance in OSPFv2 Networks](https://networkingdocs.hpe.com/documentation/us/en/software/junos/segment-routing/topics/example/ospfv2-microloop-avoidance-configuring.html)
 
-use crate::{arg_of, child_block, has_leaf, statement_words, value_after};
+use crate::{arg_of, args_of, child_block, has_leaf, list_values, statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The OSPF `source-packet-routing` (SPRING) statement. The `flex-algorithm` entries are not extracted.
+/// The OSPF `source-packet-routing` (SPRING) statement. The `flex-algorithm` participation is `flex_algorithms`; the definitions are in `routing-options`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct OspfSourcePacketRouting {
@@ -32,6 +32,8 @@ pub struct OspfSourcePacketRouting {
     pub adjacency_segment_hold_time: Option<String>,
     /// The argument of `prefix-segment`, as the Segment Routing User Guide example writes it.
     pub prefix_segment: Option<String>,
+    /// The flexible algorithm ids this router participates in, from `flex-algorithm 128;` or `flex-algorithm [ 128 129 ];`.
+    pub flex_algorithms: Vec<String>,
 }
 
 pub(super) fn parse_source_packet_routing(ospf: &ConfigLine) -> Option<OspfSourcePacketRouting> {
@@ -51,6 +53,10 @@ pub(super) fn parse_source_packet_routing(ospf: &ConfigLine) -> Option<OspfSourc
         srgb_index_range: srgb.as_ref().and_then(|words| value_after(words, "index-range")),
         adjacency_segment_hold_time: adjacency.and_then(|words| value_after(&words, "hold-time")),
         prefix_segment: arg_of(spr, "prefix-segment").map(str::to_string),
+        flex_algorithms: args_of(spr, "flex-algorithm")
+            .into_iter()
+            .flat_map(list_values)
+            .collect(),
     })
 }
 
@@ -123,5 +129,35 @@ protocols {
         assert_eq!(spr.srgb_start_label.as_deref(), Some("16000"));
         assert_eq!(spr.srgb_index_range.as_deref(), Some("8000"));
         assert_eq!(spr.prefix_segment, None);
+        assert!(spr.flex_algorithms.is_empty());
+    }
+
+    // Adapted from "How to Configure Flexible Algorithms in OSPF for Segment Routing Traffic Engineering" (OSPF User
+    // Guide), Device R0 `show protocols` (OSPF part), plus entries written from the CLI Reference; see the README
+    // "Sources".
+    const FLEX: &str = r#"
+protocols {
+    ospf {
+        source-packet-routing {
+            prefix-segment prefix-sid;
+            srgb start-label 80000 index-range 5000;
+            flex-algorithm [ 128 129 ];
+            flex-algorithm 130;
+            flex-algorithm 131 {
+                color 1310;
+            }
+        }
+    }
+}
+"#;
+
+    #[test]
+    fn reads_the_flex_algorithm_participation() {
+        let spr = ospf(&juniper::parse_braces(FLEX))
+            .unwrap()
+            .source_packet_routing
+            .unwrap();
+        assert_eq!(spr.flex_algorithms, ["128", "129", "130", "131"]);
+        assert_eq!(spr.srgb_start_label.as_deref(), Some("80000"));
     }
 }

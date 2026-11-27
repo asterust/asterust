@@ -17,12 +17,20 @@
 //! - [rib (General)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rib-edit-routing-options.html)
 //! - [instance-import](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/instance-import-edit-routing-options.html)
 //! - [instance-export](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/instance-export-edit-routing-options.html)
+//! - [flex-algorithm](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/flex-algorithm-edit-routing-options.html)
+//! - [definition](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/definition-edit-routing-options-flex-algorithm.html)
+//! - [flex-algorithm (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/flex-algorithm-ospf-edit-routing-options.html)
+//! - [definition (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/definition-ospf-edit-routing-options.html)
+//! - [Configuring Flexible Algorithm for Segment Routing](https://networkingdocs.hpe.com/documentation/us/en/software/junos/is-is/segment-routing/topics/task/isis-configuring-flex-algo-sr.html)
+//! - [Flexible Algorithms in IS-IS for Segment Routing Traffic Engineering](https://networkingdocs.hpe.com/documentation/us/en/software/junos/is-is/topics/topic-map/infocus-isis-flex-algo-sr.html)
+//! - [How to Configure Flexible Algorithms in OSPF for Segment Routing Traffic Engineering](https://networkingdocs.hpe.com/documentation/us/en/software/junos/ospf/topics/topic-map/ospf-flex-algo-sr.html)
 
 mod aggregate;
 mod auto_export;
 mod autonomous_system;
 mod confederation;
 mod fate_sharing;
+mod flex_algorithm;
 mod forwarding_table;
 mod generate;
 mod graceful_restart;
@@ -40,6 +48,7 @@ pub use auto_export::{AutoExport, AutoExportFamily, AutoExportScope};
 pub use autonomous_system::AutonomousSystemOptions;
 pub use confederation::Confederation;
 pub use fate_sharing::{FateSharingEntry, FateSharingGroup};
+pub use flex_algorithm::{FlexAlgorithm, FlexAlgorithmDefinition};
 pub use forwarding_table::ForwardingTable;
 pub use generate::{GenerateRoute, GenerateRoutes};
 pub use graceful_restart::GracefulRestart;
@@ -59,6 +68,7 @@ use auto_export::parse_auto_export;
 use autonomous_system::parse_autonomous_system_options;
 use confederation::parse_confederation;
 use fate_sharing::parse_fate_sharing;
+use flex_algorithm::parse_flex_algorithms;
 use forwarding_table::parse_forwarding_table;
 use generate::parse_generate_routes;
 use graceful_restart::parse_graceful_restart;
@@ -99,6 +109,7 @@ pub struct RoutingOptions {
     pub instance_export: Vec<String>,
     pub auto_export: Option<AutoExport>,
     pub fate_sharing: Vec<FateSharingGroup>,
+    pub flex_algorithms: Vec<FlexAlgorithm>,
     /// The `syslog` setting of `options`, as written, e.g. `"level info"` or `"upto notice"`.
     pub options_syslog: Option<String>,
 }
@@ -151,6 +162,7 @@ pub fn routing_options(config: &Config) -> Option<RoutingOptions> {
         fate_sharing: child_block(root, "fate-sharing")
             .map(parse_fate_sharing)
             .unwrap_or_default(),
+        flex_algorithms: parse_flex_algorithms(root),
         options_syslog: statement_words(root, "options").and_then(|words| {
             let start = words.iter().position(|word| *word == "syslog")?;
             Some(words[start + 1..].join(" "))
