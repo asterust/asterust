@@ -34,7 +34,7 @@ use bfd::parse_bfd;
 use level::parse_level;
 
 /// An `interface <name>` entry under IS-IS. Values are kept as written. The `delay-measurement` block and the
-/// `srv6-adjacency-segment` and `application-specific` blocks of a level are not extracted.
+/// `application-specific` blocks of a level are not extracted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct IsisInterface {

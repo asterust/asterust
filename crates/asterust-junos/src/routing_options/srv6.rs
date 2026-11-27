@@ -97,16 +97,7 @@ fn parse_block(arg: &str, block: &ConfigLine) -> Srv6Block {
 
 fn parse_locator(arg: &str, locator: &ConfigLine) -> Srv6Locator {
     let (name, rest) = split_name(arg);
-    let end_sid = active_children(locator).find_map(|c| c.arg("end-sid").map(|sid| (sid, c)));
-    let (end_sid_value, end_sid_flavors) = match end_sid {
-        Some((arg, node)) => {
-            let (sid, inline) = split_name(arg);
-            let mut flavors = flavors_of(node);
-            flavors.extend(inline_flavors(inline));
-            (Some(sid.to_string()), flavors)
-        }
-        None => (None, Vec::new()),
-    };
+    let (end_sid, end_sid_flavors) = sid_with_flavors(rest, locator, "end-sid");
     Srv6Locator {
         name: name.to_string(),
         prefix: first_word(rest).map(str::to_string),
@@ -115,7 +106,7 @@ fn parse_locator(arg: &str, locator: &ConfigLine) -> Srv6Locator {
             .and_then(first_word)
             .map(str::to_string),
         anycast: has_leaf(locator, "anycast"),
-        end_sid: end_sid_value,
+        end_sid,
         dynamic_end_sid: has_leaf(locator, "dynamic-end-sid"),
         end_sid_flavors,
         micro_sid: active_children(locator)
@@ -155,8 +146,27 @@ pub(crate) fn flavors_of(node: &ConfigLine) -> Vec<String> {
     flavors
 }
 
+/// The SID of `<keyword> <sid>` and its flavors. The statement is a child of `node`, or in the collapsed one-line
+/// `inline` text.
+pub(crate) fn sid_with_flavors(inline: &str, node: &ConfigLine, keyword: &str) -> (Option<String>, Vec<String>) {
+    if let Some((arg, statement)) = active_children(node).find_map(|c| c.arg(keyword).map(|arg| (arg, c))) {
+        let (sid, rest) = split_name(arg);
+        let mut flavors = flavors_of(statement);
+        flavors.extend(inline_flavors(rest));
+        return (Some(sid.to_string()), flavors);
+    }
+    let words: Vec<&str> = inline.split_whitespace().collect();
+    match words.iter().position(|word| *word == keyword) {
+        Some(at) => (
+            words.get(at + 1).map(|sid| sid.to_string()),
+            inline_flavors(&words[(at + 2).min(words.len())..].join(" ")),
+        ),
+        None => (None, Vec::new()),
+    }
+}
+
 /// Flavors in a collapsed one-line statement such as `end-sid 2001:db8::1 flavor usd`.
-pub(crate) fn inline_flavors(inline: &str) -> Vec<String> {
+fn inline_flavors(inline: &str) -> Vec<String> {
     inline
         .split_once("flavor")
         .map(|(_, flavors)| list_values(flavors))

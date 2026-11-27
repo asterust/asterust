@@ -64,6 +64,7 @@ pub use resolution::{Resolution, ResolutionRib};
 pub use rib::Rib;
 pub use rib_groups::RibGroup;
 pub use route_attributes::RouteAttributes;
+pub(crate) use srv6::{flavors_of, sid_with_flavors};
 pub use srv6::{Srv6, Srv6Block, Srv6Locator, Srv6MicroSid};
 pub use static_routes::{QualifiedNextHop, StaticRoute, StaticRoutes};
 
