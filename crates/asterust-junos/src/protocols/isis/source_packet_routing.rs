@@ -8,10 +8,11 @@
 //! - [strict-asla-based-flex-algorithm](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/protocols-isis-source-packet-routing-strict-asla-based-flex-algorithm.html)
 //! - [ultimate-hop-popping (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/ultimate-hop-popping-edit-protocols-isis-source-packet-routing.html)
 
+use super::srv6::{parse_srv6, IsisSrv6};
 use crate::{args_of, child_block, has_leaf, list_values, statement_words, value_after};
 use asterust::config::ConfigLine;
 
-/// The IS-IS `source-packet-routing` (SPRING) statement. The `srv6`, `udp-tunneling`,
+/// The IS-IS `source-packet-routing` (SPRING) statement. The `udp-tunneling`,
 /// `sensor-based-stats` and `traffic-statistics` children are not extracted.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
@@ -34,6 +35,7 @@ pub struct IsisSourcePacketRouting {
     pub adjacency_segment_hold_time: Option<String>,
     /// The flexible algorithm ids this router participates in, from `flex-algorithm 128;` or `flex-algorithm [ 128 129 ];`.
     pub flex_algorithms: Vec<String>,
+    pub srv6: Option<IsisSrv6>,
 }
 
 pub(super) fn parse_source_packet_routing(isis: &ConfigLine) -> Option<IsisSourcePacketRouting> {
@@ -59,6 +61,7 @@ pub(super) fn parse_source_packet_routing(isis: &ConfigLine) -> Option<IsisSourc
             .into_iter()
             .flat_map(list_values)
             .collect(),
+        srv6: parse_srv6(spr),
     })
 }
 

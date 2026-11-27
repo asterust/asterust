@@ -37,6 +37,7 @@ mod no_external_export;
 mod overload;
 mod source_packet_routing;
 mod spf_options;
+mod srv6;
 mod topologies;
 mod traffic_engineering;
 
@@ -48,6 +49,7 @@ pub use level::IsisLevel;
 pub use overload::IsisOverload;
 pub use source_packet_routing::IsisSourcePacketRouting;
 pub use spf_options::IsisSpfOptions;
+pub use srv6::{IsisSrv6, IsisSrv6AdjacencySegment, IsisSrv6Locator};
 pub use topologies::IsisTopologies;
 pub use traffic_engineering::{IsisTeFamily, IsisTrafficEngineering};
 

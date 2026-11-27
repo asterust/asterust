@@ -14,6 +14,7 @@
 //! - [ipv4-multicast-metric](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/ipv4-multicast-metric-edit-protocols-isis.html), from the Junos 12.3 archive
 //! - [ipv6-unicast-metric](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/ipv6-unicast-metric-edit-protocols-isis.html), from the Junos 12.3 archive
 
+use crate::protocols::isis::srv6::{parse_adjacency_segments, parse_lan_neighbor_segments, IsisSrv6AdjacencySegment};
 use crate::{active_children, split_name, value_after};
 use asterust::config::ConfigLine;
 
@@ -41,6 +42,8 @@ pub struct IsisInterfaceLevel {
     /// A `hello-authentication-key` is configured.
     pub has_hello_authentication_key: bool,
     pub hello_authentication_key_chain: Option<String>,
+    /// The `srv6-adjacency-segment` locators of the level and of its `lan-neighbor` entries.
+    pub srv6_adjacency_segments: Vec<IsisSrv6AdjacencySegment>,
 }
 
 /// `arg` is the text after `level`, e.g. `1 disable` or `2`.
@@ -65,6 +68,11 @@ pub(super) fn parse_level(arg: &str, level: &ConfigLine) -> IsisInterfaceLevel {
         hello_authentication_type: value_after(&words, "hello-authentication-type"),
         has_hello_authentication_key: words.contains(&"hello-authentication-key"),
         hello_authentication_key_chain: value_after(&words, "hello-authentication-key-chain"),
+        srv6_adjacency_segments: {
+            let mut segments = parse_adjacency_segments(level, None);
+            segments.extend(parse_lan_neighbor_segments(level));
+            segments
+        },
     }
 }
 
