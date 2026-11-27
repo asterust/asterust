@@ -10,15 +10,19 @@
 //! - [topology (OSPF Interface)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/topology-edit-protocols-ospf-interface.html)
 //! - [link-protection (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/link-protection-edit-protocols-ospf.html)
 //! - [no-advertise-adjacency-segment (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-advertise-adjacency-segment-edit-protocols-ospf-interface-level.html)
+//! - [post-convergence-lfa (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/post-convergence-lfa-edit-protocols-ospf.html)
 
 mod bfd;
+mod post_convergence_lfa;
 
 pub use bfd::OspfBfd;
+pub use post_convergence_lfa::OspfPostConvergenceLfa;
 
 use super::authentication::{parse_authentication, OspfAuthentication};
 use crate::{arg_of, has_leaf, named_children, split_name, statement_words, value_after};
 use asterust::config::ConfigLine;
 use bfd::parse_bfd;
+use post_convergence_lfa::parse_post_convergence_lfa;
 
 /// An `interface <name>` entry under an OSPF area. Values are kept as written. The `passive` traffic-engineering
 /// settings, `bandwidth-based-metrics`, `lan-neighbor` and `ipv4-adjacency-segment` are not extracted.
@@ -66,6 +70,7 @@ pub struct OspfInterface {
     pub no_advertise_adjacency_segment: bool,
     pub dynamic_neighbors: bool,
     pub strict_bfd: bool,
+    pub post_convergence_lfa: Option<OspfPostConvergenceLfa>,
 }
 
 /// A `neighbor <address> [eligible]` of a non-broadcast interface.
@@ -134,6 +139,7 @@ pub(super) fn parse_interface(name: &str, iface: &ConfigLine) -> OspfInterface {
         no_advertise_adjacency_segment: has_leaf(iface, "no-advertise-adjacency-segment"),
         dynamic_neighbors: has_leaf(iface, "dynamic-neighbors"),
         strict_bfd: has_leaf(iface, "strict-bfd"),
+        post_convergence_lfa: parse_post_convergence_lfa(iface),
     }
 }
 
