@@ -14,28 +14,47 @@
 //! - [no-nssa-abr](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/no-nssa-abr-edit-protocols-ospf.html)
 //! - [preference (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/preference-edit-protocols-ospf.html), from the Junos 12.3 archive
 //! - [external-preference (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/external-preference-edit-protocols-ospf.html), from the Junos 12.3 archive
+//! - [traffic-engineering (OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/traffic-engineering-edit-protocols-ospf.html)
+//! - [database-protection](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/database-protection-edit-protocols-ospf.html)
+//! - [prefix-export-limit (Protocols OSPF)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/prefix-export-limit-edit-protocols-ospf.html)
+//! - [lsa-refresh-interval](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/lsa-refresh-interval-edit-protocols-ospf.html)
 
 mod area;
 mod authentication;
+mod backup_spf_options;
+mod database_protection;
 mod graceful_restart;
 mod interface;
 mod overload;
+mod source_packet_routing;
 mod spf_options;
+mod topology;
+mod traffic_engineering;
 
 pub use area::{OspfArea, OspfAreaRange, OspfNssa, OspfStub, OspfVirtualLink};
 pub use authentication::{OspfAuthentication, OspfMd5Key};
 pub use interface::{OspfBfd, OspfInterface, OspfInterfaceTopology, OspfNeighbor, OspfPostConvergenceLfa};
 
+pub use backup_spf_options::OspfBackupSpfOptions;
+pub use database_protection::OspfDatabaseProtection;
 pub use graceful_restart::OspfGracefulRestart;
 pub use overload::OspfOverload;
+pub use source_packet_routing::OspfSourcePacketRouting;
 pub use spf_options::OspfSpfOptions;
+pub use topology::OspfTopology;
+pub use traffic_engineering::OspfTrafficEngineering;
 
 use crate::{arg_of, args_of, child_block, has_leaf, list_values, named_children, top_level};
 use area::parse_area;
 use asterust::config::Config;
+use backup_spf_options::parse_backup_spf_options;
+use database_protection::parse_database_protection;
 use graceful_restart::parse_graceful_restart;
 use overload::parse_overload;
+use source_packet_routing::parse_source_packet_routing;
 use spf_options::parse_spf_options;
+use topology::parse_topology;
+use traffic_engineering::parse_traffic_engineering;
 
 /// The `protocols ospf` configuration. `ospf3` is not covered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -58,6 +77,18 @@ pub struct Ospf {
     pub overload: Option<OspfOverload>,
     pub spf_options: Option<OspfSpfOptions>,
     pub graceful_restart: Option<OspfGracefulRestart>,
+    pub traffic_engineering: Option<OspfTrafficEngineering>,
+    pub database_protection: Option<OspfDatabaseProtection>,
+    pub backup_spf_options: Option<OspfBackupSpfOptions>,
+    pub source_packet_routing: Option<OspfSourcePacketRouting>,
+    pub topologies: Vec<OspfTopology>,
+    pub prefix_export_limit: Option<String>,
+    /// Minutes.
+    pub lsa_refresh_interval: Option<String>,
+    pub domain_id: Option<String>,
+    pub domain_vpn_tag: Option<String>,
+    /// `iana` or `vendor`.
+    pub route_type_community: Option<String>,
 }
 
 /// Returns the `protocols ospf` block, or `None` if OSPF is not configured.
@@ -94,6 +125,18 @@ pub fn ospf(config: &Config) -> Option<Ospf> {
         overload: parse_overload(ospf),
         spf_options: parse_spf_options(ospf),
         graceful_restart: parse_graceful_restart(ospf),
+        traffic_engineering: parse_traffic_engineering(ospf),
+        database_protection: parse_database_protection(ospf),
+        backup_spf_options: parse_backup_spf_options(ospf),
+        source_packet_routing: parse_source_packet_routing(ospf),
+        topologies: named_children(ospf, "topology")
+            .map(|(name, topology)| parse_topology(name, topology))
+            .collect(),
+        prefix_export_limit: arg_of(ospf, "prefix-export-limit").map(str::to_string),
+        lsa_refresh_interval: arg_of(ospf, "lsa-refresh-interval").map(str::to_string),
+        domain_id: arg_of(ospf, "domain-id").map(str::to_string),
+        domain_vpn_tag: arg_of(ospf, "domain-vpn-tag").map(str::to_string),
+        route_type_community: arg_of(ospf, "route-type-community").map(str::to_string),
     })
 }
 
@@ -185,6 +228,34 @@ protocols {
         assert_eq!(ospf.overload, None);
         assert_eq!(ospf.spf_options, None);
         assert_eq!(ospf.graceful_restart, None);
+    }
+
+    // Not from documentation: written from the CLI Reference syntax pages. See the README "Sources".
+    const SIMPLE: &str = r#"
+protocols {
+    ospf {
+        prefix-export-limit 5000;
+        lsa-refresh-interval 30;
+        domain-id 10.0.0.1:5;
+        domain-vpn-tag 12345;
+        route-type-community vendor;
+    }
+}
+"#;
+
+    #[test]
+    fn reads_the_single_argument_options() {
+        let ospf = ospf(&juniper::parse_braces(SIMPLE)).unwrap();
+        assert_eq!(ospf.prefix_export_limit.as_deref(), Some("5000"));
+        assert_eq!(ospf.lsa_refresh_interval.as_deref(), Some("30"));
+        assert_eq!(ospf.domain_id.as_deref(), Some("10.0.0.1:5"));
+        assert_eq!(ospf.domain_vpn_tag.as_deref(), Some("12345"));
+        assert_eq!(ospf.route_type_community.as_deref(), Some("vendor"));
+        assert!(ospf.topologies.is_empty());
+        assert_eq!(ospf.traffic_engineering, None);
+        assert_eq!(ospf.database_protection, None);
+        assert_eq!(ospf.backup_spf_options, None);
+        assert_eq!(ospf.source_packet_routing, None);
     }
 
     #[test]
