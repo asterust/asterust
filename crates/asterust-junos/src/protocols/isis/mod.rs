@@ -21,6 +21,7 @@
 //! - [rfc7775-compliance](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/rfc7775-compliance-edit-protocols-isis.html)
 //! - [strict-dual-isis (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/strict-dual-isis-edit-protocols-isis.html)
 //! - [disable (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/en_US/junos12.3/topics/reference/configuration-statement/disable-edit-protocols-isis.html), from the Junos 12.3 archive
+//! - [traceoptions (Protocols IS-IS)](https://networkingdocs.hpe.com/documentation/us/en/software/junos/cli-reference/topics/ref/statement/traceoptions-edit-protocols-isis.html)
 
 mod graceful_restart;
 mod interface;
@@ -34,6 +35,7 @@ pub use level::IsisLevel;
 pub use overload::IsisOverload;
 pub use spf_options::IsisSpfOptions;
 
+use super::traceoptions::{parse_traceoptions, Traceoptions};
 use crate::{
     arg_of, args_of, child_block, has_leaf, list_values, named_children, statement_words, top_level, value_after,
 };
@@ -80,6 +82,7 @@ pub struct Isis {
     pub overload: Option<IsisOverload>,
     pub spf_options: Option<IsisSpfOptions>,
     pub graceful_restart: Option<IsisGracefulRestart>,
+    pub traceoptions: Option<Traceoptions>,
 }
 
 /// Returns the `protocols isis` block, or `None` if IS-IS is not configured.
@@ -131,6 +134,7 @@ pub fn isis(config: &Config) -> Option<Isis> {
         overload: parse_overload(isis),
         spf_options: parse_spf_options(isis),
         graceful_restart: parse_graceful_restart(isis),
+        traceoptions: parse_traceoptions(isis),
     })
 }
 
